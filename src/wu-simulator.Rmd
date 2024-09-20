@@ -1,0 +1,638 @@
+# What we want to achieve
+1. ED DSL / Experimental design formalism: What are the language constructs/programs that need abstraction? 
+2. CD++ DSL: --
+3. CD -> Experimental design compilation: How would different causal diagrams lead to different experimental design programs?
+> Focus this week is ED DSL
+
+# My process
+1. Try to "simulate" data and "run the experiment"
+2. From this, how could I abstract these details into an Experiment object/class? 
+3. Generate "table of assignments" 
+
+[Paper ACM DOI](https://dl.acm.org/doi/pdf/10.1145/3586183.3606731)
+
+# Install packages
+```{r}
+# install.packages("nloptr", type = "source") # lme4 dependency installed via Homebrew
+# install.packages('lme4')
+# library('lme4')
+
+# install.packages("knitr")
+# install.packages("kableExtra")
+# library(knitr)
+# library(kableExtra)
+```
+
+# Generate and assign experimental conditions
+```{r}
+# Generates condition order
+# @returns list of condition order
+assign_condition_order = function(conditions, rep) {
+    # Shuffle condition order
+    order = sample(conditions)
+
+    # Repeat
+    order = rep(order, rep)
+    
+    stopifnot(length(order) == 4)
+    return(order)
+}
+
+# Assigns conditions to each participant
+# @returns list of conditions for each participant
+assign_conditions = function(conditions, total_num) {
+
+    num_conditions = length(conditions)
+    if (num_conditions < total_num) {
+        # Assert that the total number of conditions desired is a multiple of possible conditions
+        stopifnot((total_num %% num_conditions)==0)
+        rep = total_num / num_conditions
+        cond_order = assign_condition_order(conditions, rep)
+    } else if (num_conditions == total_num) {
+        cond_order = assign_conditions_order(conditions, 1)
+    } else {
+        stopifnot(num_conditions > total_num)
+        cond_order = sample(conditions, total_num)
+    }
+
+    return(cond_order)
+}
+```
+
+# Generate and assign experimental tasks
+```{r}
+# Generates task order
+# @returns list of task order
+assign_task_order = function() {
+    # Every other 1212 or 2121
+    rand_n = sample(1:20, 1)
+    if (rand_n %% 2 == 0) {
+        tasks = list(1,2,1,2) # not 0 and 1 because R is 1-indexed
+    }
+    else {
+        stopifnot(rand_n %% 2 == 1)
+        tasks = list(2,1,2,1) # not 0 and 1 because R is 1-indexed
+    }
+
+    return(tasks)
+}
+
+# Assigns tasks to each participant
+# @returns list of tasks for each participant
+assign_tasks = function(creation_tasks, editing_tasks) {
+    tasks = list()
+    task_order = assign_task_order()
+    for (t in task_order) {
+        if (length(tasks) < 2) {
+            tasks = append(tasks, creation_tasks[t])
+        } else {
+            tasks = append(tasks, editing_tasks[t])
+        }
+    }
+
+    stopifnot(length(tasks) == 4)
+    return(tasks)
+}
+```
+
+# Draw observations for outcome variables
+```{r}
+# @returns time value that observed for a participant on a @param task under
+# @param condition
+observe_time = function(task, condition) {
+    # Give obsevation value depending on/from condition distribution
+    # Values from Appendix A
+    if (task == "c1") {
+        if (condition == "ffl") {
+            mean = 253.3
+            std = 97.65
+        } else if (condition == "latex") {
+            mean = 242.8
+            std = 101.1
+        }
+    } else if (task == "c2") {
+        if (condition == "ffl") {
+            mean = 258.1
+            std = 98.6
+        } else if (condition == "latex") {
+            mean = 229.2
+            std = 95.8
+        }
+    } else if (task == "e1") {
+        if (condition == "ffl") {
+            mean = 157.3
+            std = 66.4
+        } else if (condition == "latex") {
+            mean = 206
+            std = 81.3
+        }
+    } else {
+        stopifnot(task == "e2")
+        if (condition == "ffl") {
+            mean = 223.4
+            std = 87.5
+        } else if (condition == "latex") {
+            mean = 350.4
+            std = 68.1
+        }
+    }
+
+    time = rnorm(1, mean = mean, sd = std) # draw from normal distribution
+    
+    # Must be a positive time
+    while(time < 0) {
+        time = rnorm(1, mean = mean, sd = std) # draw from normal distribution
+    }
+    # time = runif(n=1, min=1, max=390) # max = 6min 30s in seconds
+
+    return(time)
+}
+
+# @returns boolean success on task for a participant on a @param task under
+# @param condition
+observe_success = function(task, condition) {
+    # Give obsevation value depending on/from condition distribution
+    # Values from Appendix A
+    if (task == "c1") {
+        if (condition == "ffl") {
+            succ_prob = .79
+            fail_prob = .21 
+        } else if (condition == "latex") {
+            succ_prob = .86
+            fail_prob = .14 
+        }
+    } else if (task == "c2") {
+        if (condition == "ffl") {
+            succ_prob = .86
+            fail_prob = .14 
+        } else if (condition == "latex") {
+            succ_prob = .93
+            fail_prob = .07
+        }
+    } else if (task == "e1") {
+        if (condition == "ffl") {
+            succ_prob = 1.
+            fail_prob = 0.
+        } else if (condition == "latex") {
+            succ_prob = .93
+            fail_prob = .07 
+        }
+    } else {
+        stopifnot(task == "e2")
+        if (condition == "ffl") {
+            succ_prob = .93
+            fail_prob = .07
+        } else if (condition == "latex") {
+            succ_prob = .43
+            fail_prob = .57
+        }
+    }
+    succ = sample(c(TRUE, FALSE), size=1, prob=c(succ_prob, fail_prob))
+    # succ = sample(c(TRUE, FALSE), size=1) # default prob=.5 - random, 50/50 chance of success
+
+    return(succ)
+}
+```
+
+# Run experiment
+```{r}
+# @param id is the identifier (i.e., PID) associated with the data
+# @param data is a vector of lists of data observations
+# @returns dataframe for @param id participant's observations in @param data
+create_dataframe = function(id, data) {
+    dataframe = cbind(pid=id, data)
+
+    return(dataframe)
+}
+
+# Run a single participant through experiment
+run_participant = function(pid, creation_tasks, editing_tasks, conditions) {
+    # Create tasks and conditions for this participant
+    tasks = assign_tasks(creation_tasks, editing_tasks)
+    conditions = assign_conditions(conditions, total_num=length(tasks))
+
+    # Collect data for this participant
+    time_data = list()
+    succ_data = list()
+    for (i in 1:length(tasks)) {
+        task = tasks[i]
+        cond = conditions[i]
+
+        out = observe_time(task, cond)
+        time_data = append(time_data, out)
+        out = observe_success(task, cond)
+        succ_data = append(succ_data, out)
+    }
+
+    # Check that participant contributes exactly only one observation per task, condition pair
+    stopifnot(length(tasks) == length(conditions), length(tasks) == length(time_data), length(tasks) == length(succ_data))
+    
+    # Create a dataframe for the time and success observations
+    df = create_dataframe(pid, data=cbind(time=time_data, succ=succ_data, condition=conditions, task=tasks))
+    # df = create_dataframe(pid, data=cbind(time=as.numeric(time_data), succ=as.logical(succ_data), condition=as.factor(conditions), task=as.factor(tasks)))
+    # df = create_dataframe(pid, data=cbind(time=as.numeric(time_data), succ=succ_data, condition=as.factor(conditions), task=as.factor(tasks)))
+    # df = create_dataframe(pid, data=cbind(
+    #         time=as.numeric(unlist(time_data)), 
+    #         succ=as.logical(unlist(succ_data)), 
+    #         condition=as.factor(unlist(conditions)), 
+    #         task=as.factor(unlist(tasks))
+    #         ))
+
+    # Output
+    return(df)
+}
+    
+# Run all participants
+run_experiment = function(num_participants) {
+    creation_tasks = list("c1", "c2")
+    editing_tasks = list("e1", "e2")
+    conditions = list("ffl", "latex")
+
+    agg_df = NULL 
+    for (pid in 0:(num_participants-1)) {
+        # Run experiment with participant, collect data
+        p_df = run_participant(pid, creation_tasks, editing_tasks, conditions)
+
+        # Combine individual participant data with all participant data (aggregate)
+        if (!is.null(agg_df)) {
+            agg_df = rbind(agg_df, p_df)
+        } else {
+            stopifnot(is.null(agg_df))
+            agg_df = p_df
+        }
+    }
+
+    return(agg_df)
+}
+```
+# Sample program running experiment, outputing data to file
+```{r}
+# Generate additional data points to simulate a population
+
+# index start at 137
+
+
+pid_data = list()
+time_data = list()
+succ_data = list()
+cond_data = list()
+task_data = list()
+for(i in 34:100) { # pid start at 34
+    pid_data = append(pid_data, i)
+    time = rnorm(1, mean = 225, sd = 75) # draw from normal distribution; make up mean, std; assume same distribution for creation and editing tasks
+    time_data = append(time_data, time)
+    if (time < 360) {
+        succ = TRUE
+    } else {
+        succ = FALSE
+    }
+    # succ = sample(c(TRUE, FALSE), size=1, prob=c(.5, .5)) # 50/50 change of success/failure
+    succ_data = append(succ_data, succ)
+    cond = "latex" # only latex
+    cond_data = append(cond_data, cond)
+    task = "other" # other real-world tasks
+    task_data = append(task_data, task)
+}
+
+df = cbind(pid_data, time_data, succ_data, cond_data, task_data)
+
+row.names(df) <- 137:(136 + nrow(df))
+print(df)
+write.csv(df, "tmp.csv")
+
+```
+```{r}
+# Run experiment
+# Imagine: power analysis inform number of participants
+num_participants = 1000 # number of participants in published paper
+df = run_experiment(num_participants)
+print(df)
+# df = as.data.frame(df)
+write.csv(df, file = "wu-sim-pop.csv")
+```
+
+# Sample program running experiment and analyzing data collected from it
+```{r}
+# Run experiment
+# Imagine: power analysis inform number of participants
+num_participants = 34 # number of participants in published paper
+df = run_experiment(num_participants)
+print(df)
+df = as.data.frame(df)
+write.csv(df, file = "wu-sim-data.csv")
+
+# Analyze data
+# Transform to data frame
+df = as.data.frame(df)
+# Update data types to fit data
+df$time = as.numeric(unlist(df$time))
+df$succ = as.factor(unlist(df$succ))
+df$condition = as.factor(unlist(df$condition))
+df$task = as.factor(unlist(df$task))
+df$pid = as.factor(unlist(df$pid))
+
+# Fit statistical model
+# y = B1x1 + B2x2
+# condition = ffl, latex
+# time = Blatex  + Btaskc2 + Btaske1 + Btaske2
+# time = condition + task 
+model = lmer(time ~ condition + task + (1|pid), df) 
+# Show model results
+# sink() # redirect output to terminal 
+summary(model)
+print(isSingular(model)) # Singularity could be a problem but let's ignore for now
+
+# no effect: 360s , 360s
+# ffl is better: 180s (ffl), 360s (latex)
+```
+
+===
+# Experiment class
+```{r}
+# Define ExperimentTemplate class
+setClass(
+  Class = "ExperimentTemplate",
+  slots = list(
+    tasks = "list",
+    conditions = "list"
+  )
+)
+
+# Define constructor
+ExperimentTemplate <- function(tasks, conditions) {
+  # Validate and create an instance of the class
+  new("ExperimentTemplate", tasks = tasks, conditions = conditions)
+}
+
+# Define print (toString) method
+# Simple print method showing values of instance variables
+setMethod(
+  f = "show",
+  signature = "ExperimentTemplate",
+  definition = function(object) {
+    cat("ExperimentTemplate Object:\n")
+    cat("tasks:", unlist(object@tasks), "\n")
+    cat("conditions:", unlist(object@conditions), "\n")
+  }
+)
+
+```
+
+# TODO: Work with ExperimentTemplate class
+```{r}
+# This might not make sense for all experiments
+get_all_pairs = function(tasks, conditions) {
+
+    # get unique task options
+    task_opt1 = list("c1", "c2", "e1", "e2")
+    task_opt2 = list("c2", "c1", "e2", "e1")
+    unique_task_order = data.frame(task_opt1=unlist(task_opt1), task_opt2=unlist(task_opt2))
+    stopifnot(length(unique_task_order) == 2)
+
+    # get unique condition options
+    cond_opt1 = list("ffl", "latex", "ffl", "latex")
+    cond_opt2 = list("latex", "ffl", "latex", "ffl")
+    unique_cond_order = data.frame(cond_opt1=unlist(cond_opt1), cond_opt2=unlist(cond_opt2))
+    # unique_condition_order = permutations(n=length(conditions), r=2, v=as.list(conditions))
+    # unique_condition_order = as.data.frame(unique_condition_order)
+    # unique_condition_order = rbind(unique_condition_order, unique_condition_order) 
+    stopifnot(length(unique_cond_order) == 2)
+
+    # get "cross product" of unique task, condition options    
+    all_combinations = NULL
+    for (task in unique_task_order) {
+        for (cond in unique_cond_order) {
+            stopifnot(length(task) == length(cond))
+            combined_list = list()
+            for (i in 1:length(task)) {
+                t = task[i]
+                c = cond[i]
+
+                task_cond_pair = list(
+                        "task" = t, 
+                        "condition" = c
+                    )
+                combined_list[i] = list(task_cond_pair)
+            }
+            stopifnot(length(combined_list) == length(task))
+            all_combinations = rbind(all_combinations, option=combined_list)
+        }
+    }
+    return(all_combinations)
+}
+
+construct_table = function(all_combinations) {
+    df = as.data.frame(all_combinations)
+
+    # Get Latex for table
+    table_tex = kable(df, format="latex")
+
+    # Write table out to a local tex file
+    sink(file="./outputs/table.tex")
+    cat("\\documentclass{article}\n")
+    cat("\\begin{document}\n")
+    cat(table_tex)
+    cat("\\end{document}\n")
+    sink()
+}
+
+# TODO: Output tables of (task, condition) pairs that are allowable
+setMethod(
+  f = "summary",
+  signature = "ExperimentTemplate",
+  definition = function(object) {
+    cat("Visualize here")
+
+    # get all unique combinations -- might not always make sense (i.e., truly random draws)
+    all_task_condition_combinations = get_all_pairs(object@tasks, object@conditions)
+    # create table showing unique combinations
+    construct_table(all_task_condition_combinations)
+  }
+)
+```
+
+# Example of generating diagram from experimental design spec
+```{r}
+creation_tasks = list("c1", "c2")
+editing_tasks = list("e1", "e2")
+conditions = list("ffl", "latex")
+tasks = assign_tasks(creation_tasks, editing_tasks)
+conditions = assign_conditions(conditions, total_num=length(tasks))
+
+all_combinations = get_all_pairs(tasks, conditions)
+construct_table(all_combinations) # output latex file
+
+# Ultimately want to be able to do: 
+# exp = Experiment(tasks, conditions)
+# show(exp)
+# summary(exp)
+```
+
+# General ExperimentTemplate program I want to write for Wu et al. UIST 2023
+> Currently focusing on "Alternative" program in [separate classes file](./classes.Rmd)
+```{r}
+exp = ExperimentTemplate()
+exp.tasks = list(...) # unique tasks
+exp.conditions = list(...) # unique conditions
+exp.assign(tasks, conditions) # specify how to assign unique tasks, conditions
+
+all_possible_assignments = exp.compute_all_assignments() # not sure if this should be something user explicitly specifies
+exp.construct_assignment_table() # output latex file
+
+
+# Alternative
+exp = ExperimentTemplate()
+total_trials = 4 # each trial is defined as a (task, condition) pair
+c1 = task("c1")
+c2 = task("c2")
+e1 = task("e1")
+e2 = task("e2")
+# Technical challenge: How to specify that there are groups of tasks --> task_group
+creation_tasks = task_group("c1", "c2")
+editing_tasks = task_group("e1", "e2")
+tasks = order_task_groups(creation_tasks, editing_tasks) # order_task_groups to indicate that the creation_tasks should always come before the editing_tasks?
+
+ffl = condition("ffl")
+latex = condition("latex")
+conditions = conditions("ffl", "latex") # Is there anything else that conditions contain besides a name?
+
+# Provide helpers for constructing the assignemnts -- these might eventually be an internal API synthesized from higher-level constraints/spec
+# Technical challenge: There are rules that are implicit in how researchers order trials, etc. that we capture explicitly
+Rules that need to be encoded: 
+- both (all) creation first then both (all) editing
+- every other task has the same condition (i.e., ffl or latex)
+
+enforce("Task Order Rule", creation_tasks, editing_tasks) # creation tasks come first then editing tasks
+enforce("Condition Order Rule", "alternate") # IDEA: maybe we provide preloaded primitives that are common???: Options could be: alternative, random
+
+valid_orders = list(
+                    list(ffl, latex, ffl, latex),
+                    list(latex, ffl, latex, ffl)
+)
+# Conditions
+alternate_on_trials(conditions, total_trials) # should return valid_orders
+# another option, not employed in this paper: random(conditions, total_trials)
+
+
+# Tasks
+tg_1 = TaskGroup(c1, e1)
+tg_2 = TaskGroup(c2, e2) # If I do this, I find myself drawing the squares/table in my mind --> Maybe we could provide different visualization functions?
+# If tasks can be part of multiple groups:
+order_on_trials(creation_tasks, editing_tasks, total_trials) # TO IMPL/EXPL: How is total_trials used????
+alterate_on_trials({tg_1, tg2}, total_trials)
+# TO IMPL/EXPL: Then what do the functions internally generate? Boolean functions? 
+# That all get executed, solved for later?
+
+
+# TODO: Where do we specify/assign repetitions?
+use assign_conditions function defined earlier??
+
+assignments = assign(tasks, conditions) 
+# Then, assign to exp
+exp.assignments = assignments
+
+print(exp) # toString
+visualize(exp) # output latex table
+
+# Key questions
+Q: Does exp need to know what the tasks and conditions are? 
+A: seems like so although it might not be strictly necessary. Just seems like that those should be encapsulated in an exp. 
+
+Recurring idea/theme: basic constructs, operations to construct assignments and specify details about valid task + condition pairs (i.e., assignment process)
+```
+
+
+====
+
+## Aug 16 Feedback/Discussion from Adam, Emery
+> learn these parameters -- look up in dictionary that gets populated during the experiment
+priors --> schema
+observation -- values in DB
+compute "learned" posteriors from priors + observations
+
+DB framework?
+Experiment queries part of the database
+Statistical analysis estimates query over entire DB
+What if?:
+- User provides a DB schema + data collection code (like what I showed here) and then we can use the two to come up with a valid randomization scheme + data analysis; 
+Maybe the data collection code is somehow a SQL query but yes - I expect it’s not enough but it gives structure that we want / need (I think)
+
+sampling + causal model = view of DB (experiment)
+
+constraints that impact parameters (sampling?) -- constraints in 
+- eg. Wu et al paper - math majors, etc. 
+- eg. PL - power consumption example
+
+- Alexandra work: https://people.cs.umass.edu/~ameli/projects/causality/
+
+Planout - disconnect between design + analysis
+
+
+# Learned along the way (i) how to define an experiment and (ii) what seem to be necessary language constructs
+## Defining an experiment  
+- An experiment template (?) is a set of tasks and conditions that can be assigned
+    - "ExperimentTemplate"
+- An experiment is a set of participants, their assigned tasks, their assigned conditions, and observations for each (task, condition) pair
+    - "ConcreteExperiment"
+    - run(exp) returns a ConcreteExperiment instance (?)
+
+## Necsseary language constructs for assignment 
+(Current focus: on assignment; Current limitation: There may be different ones for measurement, sampling)
+- Condition
+- Task
+- Experiment
+- Unit (ID)
+- not sure about: distributions from which observations come? -- could this be somethiing we infer/pick defaults for users?
+
+# TODOs: Continue focusing on Experimental Design DSL
+- clean up diagram generation
+- generalize the Experiment class some more (not fully general form yet)
+- show how different experiment programs lead to different output tables
+- look into statistical model singularity issue -- What did the original dataset look like? 
+## Goal working towards in a couple weeks: 
+- represent a few different papers involved in a meta-analysis, see how they differ in experimental design and how to capture
+- discuss evaluation methods for this DSL?
+
+## Out of scope for now: 
+- CD++
+    - Want to be able to get data for different causal diagrams
+    - Maybe the function signatures would be helpful for determining what causal diagrams are feasible + language constructs
+- Causal diagram to experimental design compilation
+
+## Far-fetched ideas: 
+- apply some structure-learning algo to data I generate? original data set? 
+
+===
+
+
+
+
+# Code testing sandbox
+```{r}
+# Drawing from binomial distribution for SUCCESS counts 
+# Draw 5 observations from a binomial distribution with 10 trials and success probability 0.5
+set.seed(123)  # Set seed for reproducibility
+observations <- rbinom(n = 1, size = 4, prob = 0.5) # n = number of observations, size = number of trials, 
+# so max is 4 value in observations is 4, minimum is 0
+sink() # redirect output to terminal in case elsewhere
+print(observations)
+
+
+```
+
+
+======
+# Sample causal diagram
+```{r}
+interface -> time
+task x->x interface
+task x->x time / task -> time 
+
+# IGNORE FOR NOW: Confounders that we have omitted: 
+# latex_fam -> time
+```
+
+
+# Code snippets back burner
+```{r}
+```
