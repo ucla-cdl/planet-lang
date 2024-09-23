@@ -30,7 +30,6 @@ setClass(
   )
 )
 
-#' @export
 # toString for Task
 # @prints tasks in this Task
 setMethod(
