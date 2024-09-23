@@ -1,6 +1,5 @@
 #' Creates Instance of Experiment Object  
 #'
-#'
 #' @return An Experiment object 
 #'
 #' @examples
@@ -40,6 +39,21 @@ setMethod(
     cat("tasks:", unlist(object@tasks), "\n")
     cat("conditions:", unlist(object@conditions), "\n")
     cat("trials:", unlist(object@trials), "\n")
+  }
+)
+
+
+# this method needs a lot of work
+setGeneric("assign_condition_order", function(object) standardGeneric("assign_condition_order"))
+
+setMethod(
+  f = "assign_condition_order",
+  signature = "Experiment",
+  definition = function(object) {
+    # Shuffle condition order
+    order = sample(object@conditions)
+    
+    return(order) 
   }
 )
 
