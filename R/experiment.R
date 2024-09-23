@@ -5,12 +5,33 @@
 #' @param trials List of trial objects, which represent an instance of a task completed by a single participant 
 #'
 #' @return An Experiment object 
-#' @export
-#' @import methods
 #'
 #' @examples
-#' x <- "alfa,bravo,charlie,delta"
-#' strsplit1(x, split = ",")
+#' exp <- Experiment()
+#' @import methods
+#' @export
+# Define constructor
+Experiment <- function() {
+  # TODO: Set default values for the pivs
+  # Validate and create an instance of the class
+  new("Experiment", tasks=list(), conditions=list(), trials=list())
+}
+
+#' @export
+# toString for Experiment
+# @prints tasks in this Experiment
+setMethod(
+  f = "show",
+  signature = "Experiment",
+  definition = function(object) {
+    cat("Experiment Object:\n")
+    cat("tasks:", unlist(object@tasks), "\n")
+    cat("conditions:", unlist(object@conditions), "\n")
+    cat("trials:", unlist(object@trials), "\n")
+  }
+)
+
+
 # Define Experiment class
 setClass(
   Class = "Experiment",
@@ -21,9 +42,4 @@ setClass(
   )
 )
 
-# Define constructor
-Experiment <- function() {
-  # TODO: Set default values for the pivs
-  # Validate and create an instance of the class
-  new("Experiment", tasks=list(), conditions=list(), trials=list())
-}
+
