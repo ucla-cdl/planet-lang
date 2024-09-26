@@ -143,7 +143,3 @@ As complated by the authors:
 ```{r}
 
 ```
-
-
-Example program for Wu et al. UIST 2023
-Look through Anna for theorems
