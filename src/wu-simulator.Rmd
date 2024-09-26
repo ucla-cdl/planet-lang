@@ -125,7 +125,7 @@ task_order_with_constraints = function(rotation, sequence) {
             # group types with a constraint, since all other tasks 
             # then would not affect the intersection 
             intersection = intersect(rotation_group, group)
-
+            selection = sample(intersection, 1)
             # removes the intersection we just grabed from the group...
             # FIXME: We need to do this for all task sets...
             # probably something more efficient 
