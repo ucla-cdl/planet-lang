@@ -57,6 +57,8 @@ assign_conditions = function(conditions, total_num) {
 
     return(cond_order)
 }
+
+assign_conditions(list("ffl", "latex"), 4)
 ```
 
 # Generate and assign experimental tasks
@@ -93,7 +95,102 @@ assign_tasks = function(creation_tasks, editing_tasks) {
     stopifnot(length(tasks) == 4)
     return(tasks)
 }
+
+assign_tasks(list("c1", "c2"), list("e1", "e2"))
 ```
+
+```{r}
+
+get_curr_rotation = function(rotation, index) {
+    index = (index%%2) + 1
+    return(rotation[[index]])
+}
+
+task_order_with_constraints = function(rotation, sequence) {
+    # order of values we will returnuuu
+    order = list()
+
+    # (this is messy)... tells us where to start in rotation list 
+    # starts with 2 since 2 % 2 returns 0 and R is 1 indexed
+    curr_rotation = 2
+    for (group in sequence) {
+        # while some element of current group has not been visited 
+        while (length(group)) {
+            # wraps rotation index to prevent overflow
+            rotation_group = get_curr_rotation(rotation, curr_rotation)
+
+            # any available elem is the intersection of these 
+            # two groups based on constraints
+            # NOTE: I think we only need to intersect task
+            # group types with a constraint, since all other tasks 
+            # then would not affect the intersection 
+            intersection = intersect(rotation_group, group)
+
+            # removes the intersection we just grabed from the group...
+            # FIXME: We need to do this for all task sets...
+            # probably something more efficient 
+            group = group[!group %in% list(intersection[[1]])]
+
+            # next group in rotation order 
+            curr_rotation = curr_rotation + 1
+            # add selected value to order 
+            order = append(order, intersection)
+        }
+
+    }
+    return(order)
+}
+
+
+randomize = function(groups) {
+    return(sample(groups))
+}
+
+
+test = function() {
+    # lists of lists when each element is a group of a 
+    # certain type of tasks
+    sequence = list(list("c1", "c2"), list("e1", "e2")) 
+    rotation = list(list("e1", "c1"), list("e2", "c2"))
+
+    # Following paper: this constraint randomizes the order of 
+    # ONE task group type (the given index)
+    rotation = randomize(rotation)
+    
+    task_order_with_constraints(rotation, sequence)
+    
+}
+
+
+# NOTES: no constraints means that sequence and rotation only contain one 
+# list, which is the list of all tasks... intersection is always the entire set of tasks
+
+# IGNORE: messy testing code
+task_order_rotation = function() {
+    rotation = list(list("e1", "c1"), list("e2", "c2"))
+
+    order = list()
+
+    for (i in 2:5) {
+        print(i)
+        index = (i%%2)+1
+        sample = sample(1:length(rotation[[index]])) 
+        elem = rotation[[index]][sample]
+        rotation[[index]] = rotation[[index]][-sample]
+        order = append(order, elem)
+    }
+    return(order)
+}
+
+
+# order = append(order, sample(group, length(group), replace = FALSE))
+
+
+
+
+```
+
+
 
 # Draw observations for outcome variables
 ```{r}
