@@ -112,7 +112,7 @@ visualize = function() {
 setClass(
   Class = "Task",
   slots = list(
-    name = "char",
+    name = "character"
   )
 )
 
@@ -192,7 +192,7 @@ visualize <- function(taskGroup) {
 setClass(
   Class = "Condition",
   slots = list(
-    name = "char", # Is there anything else that conditions contain besides a name?
+    name = "character" # Is there anything else that conditions contain besides a name?
   )
 )
 # Define constructor
