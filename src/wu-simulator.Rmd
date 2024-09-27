@@ -101,15 +101,15 @@ assign_tasks(list("c1", "c2"), list("e1", "e2"))
 
 ```{r}
 
-get_curr_rotation = function(rotation, index) {
-    index = (index%%2) + 1
+get_curr_rotation = function(rotation, index, n) {
+    index = (index%%n) + 1
     return(rotation[[index]])
 }
 
 task_order_with_constraints = function(rotation, sequence) {
     # order of values we will returnuuu
     order = list()
-
+    len_rotation = length(rotation)
     # (this is messy)... tells us where to start in rotation list 
     # starts with 2 since 2 % 2 returns 0 and R is 1 indexed
     curr_rotation = 2
@@ -117,7 +117,7 @@ task_order_with_constraints = function(rotation, sequence) {
         # while some element of current group has not been visited 
         while (length(group)) {
             # wraps rotation index to prevent overflow
-            rotation_group = get_curr_rotation(rotation, curr_rotation)
+            rotation_group = get_curr_rotation(rotation, curr_rotation, len_rotation)
 
             # any available elem is the intersection of these 
             # two groups based on constraints
@@ -126,11 +126,12 @@ task_order_with_constraints = function(rotation, sequence) {
             # then would not affect the intersection 
             intersection = intersect(rotation_group, group)
             selection = sample(intersection, 1)
+            
             # removes the intersection we just grabed from the group...
             # FIXME: We need to do this for all task sets...
             # probably something more efficient 
             group = group[!group %in% list(selection[[1]])]
-            group = group[!group %in% list(selection[[1]])]
+            rotation_group = rotation_group[!rotation_group %in% list(selection[[1]])]
             # next group in rotation order 
             curr_rotation = curr_rotation + 1
             # add selected value to order 
@@ -152,6 +153,10 @@ test = function() {
     # certain type of tasks
     sequence = list(list("c1", "c2"), list("e1", "e2")) 
     rotation = list(list("e1", "c1"), list("e2", "c2"))
+    
+    # TESTING INPUT
+    #sequence = list(list("c1", "c2", "c3"), list("e1", "e2", "e3")) 
+    #rotation = list(list("e1", "c1"), list("e2", "c2"), list("e3", "c3"))
 
     # Following paper: this constraint randomizes the order of 
     # ONE task group type (the given index)
