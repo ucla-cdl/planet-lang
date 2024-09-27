@@ -11,7 +11,7 @@
 #' @export
 # @returns Task object
 # @param name of task
-task = function(name) {
+task <- function(name) {
     return(Task(name))
 }
 
@@ -40,5 +40,3 @@ setMethod(
     cat("name:", unlist(object@name), "\n")
   }
 )
-
-

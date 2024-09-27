@@ -8,24 +8,25 @@
 #' @export
 
 # public method that calls Experiment constructor 
-experiment <- function() {
-  Experiment()
+experiment <- function(name) {
+  Experiment(name)
 }
 
 # Define constructor
-Experiment <- function() {
+Experiment <- function(name) {
   # TODO: Set default values for the pivs
   # Validate and create an instance of the class
-  new("Experiment", tasks=list(), conditions=list(), trials=list())
+  new("Experiment", name=name, tasks=list(), conditions=list(), trials=list())
 }
 
 # Define Experiment class
 setClass(
   Class = "Experiment",
   slots = list(
+    name = "character",
     tasks = "list",
     conditions = "list",
-    trials = "list" # for now -- likely want to have own class/data structure
+    trials = "list" # TODO: for now -- likely want to have own class/data structure
   )
 )
 

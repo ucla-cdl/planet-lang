@@ -12,14 +12,14 @@
 
 # @returns Condition object
 # @param name of task
-condition = function(name) {
+condition <- function(name) {
     return(Condition(name))
 }
 
 # Define constructor
 Condition <- function(name) {
   # Validate and create an instance of the class
-  new("Condition", name = name)
+  new("Condition", name=name)
 }
 
 # Specify conditions
@@ -27,6 +27,7 @@ Condition <- function(name) {
 setClass(
   Class = "Condition",
   slots = list(
-    name = "character" # Is there anything else that conditions contain besides a name?
+    name = "character" 
+    # Is there anything else that conditions contain besides a name?
   )
 )
