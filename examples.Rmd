@@ -6,7 +6,6 @@ As completed by the authors:
 ```{r}
 library('exp-des-dsl') # TODO: Come up with a memorable name
 
-
 exp = Experiment(total_trials = 4) # 4 trials per run of an experiment
 
 # Declare tasks
@@ -20,16 +19,48 @@ ffl = condition(exp, "ffl")
 latex = condition(exp, "latex")
 
 # Specify task constraints
-sequence(exp, list(c1, c2), list(e1, e2))
-rotate(exp, list(c1, e1), list(c2, e2))
+sequence_constraint = sequence(exp, list(list(c1, c2), list(e1, e2))) => {} # set of all possible orders
+# this would look like 
+#{
+#    {c1, c2, e1, e2},
+#    {c1, c2, e2, e1},
+#    {c2, c1, e1, e2},
+#    {c2, c1, e2, e1}
+#}
 
+group1 = list(c1, e1)
+group2 = list(c2, e2)
+index_groups = list(group1, group2) # "index"
+index_group_order = randomize(index_groups) => list() # with random order of groups
+# example: either list(c1, e1), list(c2, e2) OR list(c1, e1), list(c2, e2)
+rotatate_constraint = rotate(exp, list(list(c1, e1), list(c2, e2))) => {} # set of all possible orders
+# this would look like 
+#{
+#    {c1, c2, e1, e2},
+#    {c1, e2, e1, c2},
+#    {c2, c1, e2, e1},
+#    {c2, e1, e2, c1},
+#    {e1, e2, c1, c2},
+#    {e1, c2, c1, c2},
+#    {e2, e1, c2, c1},
+#    {e2, c1, c2, e1}
+#}
 
-# Specify condition constraints
-???
+possible_orders = intersect(rotate_constraint, sequence_constraint) => {} # set of all possible task orderings
+# returns: 
+# {c1, c2, e1, e2}
+# {c2, c1, e2, e1}
 
-# Output
-get_possible_conditions(exp) => 
-Wu table
+# What if we dont want a random rotation order? 
+# ie. c1, c2, e2, e1
+# specify order using regex-type syntax
+a -> list(c1, e1)
+b -> list(c2, e2)
+
+# third param is a regex specifying: 
+# at list one of group a, followed by two of group b, followed by at least one of group a
+# would need to coordinate with length constraint for this to work 
+order_groups(group1, group2, "{a}+{b}{b}{a}+") 
 
 # ALTERNATIVE TO WHAT AUTHORS DID
 sequence(exp, List(c1, c2, replace=TRUE/FALSE), list(e1, e2))
@@ -48,7 +79,27 @@ entire possible list
 
 # What if I want to enforce repetition?
 > TODO: What does the function for this look like?? 
+# user must specify 
 
+
+# setting constraints based on a group label 
+c1 = task("c1", type=list("Creation",1))
+e1 = task("c1", type=list("Editing",1))
+match_index(c1, type = 1, list(e1, e2)) 
+# params = (task you want to match, type description you want to match, set you are samplign from)
+# output: e1 since e1 is the only element in the list that has an index label of "1"
+
+c1 = task("c1", type=list("Creation",1))
+e1 = task("c1", type=list("Editing",1))
+e2 = task("e2", type=list("Editing",2))
+
+# Type 1 comes before any other Type
+first(1) # 1 is a group label
+before(1,2) # assume Type 2 is defined
+# output looks like 
+# c1, e1, e2
+# e1, c1, e2
+# because e2 is the only task with a 2 index, and all 1 indexed tasks must come before 2-indexed tasks
 
 # Specify constraints for how tasks are assigned
 # Sequence means that the lists must follow the order (i.e., all cs before all es), 
@@ -112,15 +163,7 @@ random(c1, e1)
 random(c2, e2)
 apply_order(cs_order, es)
 
-c1 = task("c1", type=list("Creation",1))
-e1 = task("c1", type=list("Creation",1))
-match_index(c1, type = 1, list(e1, e2))
 
-c1 = task("c1", type=list("Creation",1))
-e1 = task("c1", type=list("Creation",1))
-# Type 1 comes before any other Type
-first(1)
-before(1,2) # assume Type 2 is defined
 
 ===
 before(cs, es)
