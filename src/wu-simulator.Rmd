@@ -129,8 +129,8 @@ task_order_with_constraints = function(rotation, sequence) {
             # removes the intersection we just grabed from the group...
             # FIXME: We need to do this for all task sets...
             # probably something more efficient 
-            group = group[!group %in% list(intersection[[1]])]
-
+            group = group[!group %in% list(selection[[1]])]
+            group = group[!group %in% list(selection[[1]])]
             # next group in rotation order 
             curr_rotation = curr_rotation + 1
             # add selected value to order 
@@ -190,7 +190,9 @@ task_order_rotation = function() {
 
 ```
 
-
+print(seddlection)
+            print(intersection)
+            
 
 # Draw observations for outcome variables
 ```{r}
