@@ -1,0 +1,145 @@
+# Example programs
+
+# Wu et al. UIST 2023
+
+As completed by the authors: 
+```{r}
+library('exp-des-dsl') # TODO: Come up with a memorable name
+
+
+exp = Experiment(total_trials = 4) # 4 trials per run of an experiment
+
+# Declare tasks
+c1 = task(exp, "c1")
+c2 = task(exp, "c2")
+e1 = task(exp, "e1")
+e2 = task(exp, "e2")
+
+# Declare conditions
+ffl = condition(exp, "ffl")
+latex = condition(exp, "latex")
+
+# Specify task constraints
+sequence(exp, list(c1, c2), list(e1, e2))
+rotate(exp, list(c1, e1), list(c2, e2))
+
+
+# Specify condition constraints
+???
+
+# Output
+get_possible_conditions(exp) => 
+Wu table
+
+# ALTERNATIVE TO WHAT AUTHORS DID
+sequence(exp, List(c1, c2, replace=TRUE/FALSE), list(e1, e2))
+
+# Output
+get_possible_conditions(exp) => 
+c1 c2 e2 e1
+c2 c1 e1 e2
+c1 c2 e1 e2
+c2 c1 e2 e1
+
+## ALL POSSIBLE
+# Default: no repetition, max length of total_trials
+get_possible_conditions(exp) => 
+entire possible list
+
+# What if I want to enforce repetition?
+> TODO: What does the function for this look like?? 
+
+
+# Specify constraints for how tasks are assigned
+# Sequence means that the lists must follow the order (i.e., all cs before all es), 
+# but the order within each list can vary. 
+# By default, order of elements in each list becomes the global order. 
+sequence(exp, list(c1, c2), list(e1, e2)) => {}
+# Specify that if c1 is first, then e1 must be first
+rotate(exp, list(c1, e1), list(c2, e2)) => {}
+
+sequence(exp, sequence(...))
+
+sequence() => {}
+
+sequence(), sequence() => {}`
+
+rotate(exp, list(c1, e1), list(c2, e2), list(c3, e3))
+
+c1, c2, c3, c4, ...
+
+
+cs always precede es => e cannot be the first task
+all cs always preced all es => e cannot be the first or second task
+within cs and within es, 
+
+
+
+c1 must always be first => always_first(c1) => always_first_in_group(c1, list(cs, es))
+c1 comes before all other cs in cs => always_first_in_group(c1, cs)
+cs come before es => always_group_is_first(cs, es)
+
+always_first_in_group(c1, list(cs, es))
+always_first_in_group(c2, list(cs, es))
+
+always_first(c1)
+always_second(c2)
+
+
+
+what: if c1 is first in its group, e1 must be first in its group
+how: => rotate()
+
+{} \intersect {} \intersect {} \intersect {} => {}
+
+
+There are two different approaches: 
+- logical constraints on different subsets 
+- generating and intersecting complete sets
+
+
+
+
+
+# cs come before es
+before(exp, list(c1, c2), list(e1, e2))
+# Order between c1 and c2 is randomly picked
+cs_order = random(c1, c2)
+# Order between e1 and e2 is randomly picked
+random(e1, e2)
+# If c1 comes first in cs, e1 also comes first in es
+random(c1, e1)
+random(c2, e2)
+apply_order(cs_order, es)
+
+c1 = task("c1", type=list("Creation",1))
+e1 = task("c1", type=list("Creation",1))
+match_index(c1, type = 1, list(e1, e2))
+
+c1 = task("c1", type=list("Creation",1))
+e1 = task("c1", type=list("Creation",1))
+# Type 1 comes before any other Type
+first(1)
+before(1,2) # assume Type 2 is defined
+
+===
+before(cs, es)
+type_order(1, 2) OR type_order(2, 1) => HOW TO REPRESENT A DISJUNCTION??
+
+
+# Specify constraints for how conditions are assigned
+
+# Get output tasks and conditions
+
+```
+
+Variation on Wu et al. UIST 2023: 
+```{r}
+```
+
+# Huh et al. UIST 2023
+
+As complated by the authors: 
+```{r}
+
+```
