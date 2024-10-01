@@ -3,6 +3,78 @@
 # Wu et al. UIST 2023
 
 As completed by the authors: 
+
+
+Testing task-based constraints:
+```{r}
+e = experiment()
+e.add_tasks(c1, c2, e1, e2)
+e.add_treatment(ffl, latex)
+
+# default, randomized tasks and conditions
+# between participant study by default
+e.design_experiment() -> possible groups
+# group 1: (c1, ffl), group 2: (c2, ffl), etc...
+# group 5: (c1, latex), etc...
+
+# experiment block means is a list of trials
+# that each participant sees
+# one trial per group... example. 
+# block 1: (c1, ff1), (c1, latex)
+# block 2: (c1, latex), (c2, ffl)
+block_length(e, 4)
+# default 1 (see above)
+
+creation = create_group(c1, c2)
+editing = create_group(e1, e2)
+# constraint: if !(seen(c1) and seen(c2)) then !(e1 or e2)
+# also: if len(creation) > 0 then !(e1 or e2)
+all(creation).before(editing)
+# could also look like 
+place_in_order(all(creation), editing)
+comes_first(all(creation))
+
+# alternate example:
+# constraint: if !(seen(c1) or seen(c2)) then !(e1 or e2)
+# alsoL if len()
+# this is satisfied once we pick a creation task
+creation.before(editing)
+
+# once we pick a creation task, remove this from group 
+
+# could we then also say 
+editing.before(creation)
+
+
+
+# IDEA
+num_in_a_row(group1, 1) / max_in_a_row(group1, 1)
+# "push" when we see group one and "pop" when we see group two 
+# / counter for every object this constraint is on
+# if num_group1 == 1, then c2 or e2
+# anything if num_group1 == 1
+
+# to get the paper results with these, we could write: 
+order(all(creation), editing)
+max_in_a_row(group1, 1)
+
+
+
+# then we pass to sat solver with certain constraints
+
+# note: referencing group alone acts as 
+# t1 or t2, or ... tn for all tasks in group
+# entire(group) means t1 and t2, and ... tn 
+# for all tasks in group
+
+# constraint: if !(seen(c1) and seen(c2)) then !(e1 or e2)
+e.enforce_order(both(c1, c2), either(e1, e2))
+# constraint: if (prev(e1) or prev(e2)) then (e2 or c2)
+e.enforce_order(either(e1, c1), either(e2, c2))
+
+
+```
+
 ```{r}
 library('exp-des-dsl') # TODO: Come up with a memorable name
 
@@ -186,3 +258,6 @@ As complated by the authors:
 ```{r}
 
 ```
+
+
+
