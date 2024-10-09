@@ -1,4 +1,7 @@
 from z3 import *
+from itertools import product
+import random
+
 solver = z3.Solver()
 
 # creates a task group, which limits you to choosing
@@ -44,8 +47,6 @@ def constraint_all_share_condition(seg_index, condition_group):
     solver.add(Implies(seg == seg_index, condition_group))
     solver.add(Implies(seg != seg_index, Not(condition_group))) 
    
-
-solver = z3.Solver()
 # note: enforce only pick one, so (c1 and not(c2 or c3 or c4), 
 # (c2 and not(c1 or e1 or e2)), etc...
 
@@ -60,20 +61,14 @@ c2 = Bool("c2")
 e1 = Bool("e1")
 e2 = Bool("e2")
 
-# get these from R objects
-dsl_vars = []
-
 # these should be automatically constructed based on constraints
 creation = create_group((c1, c2))
+editing = create_group((e1, e2))
 g1 = create_group((c1, e1))
 g2 = create_group((c2, e2))
 tasks = (c1, c2, e1, e2)
-# what does it mean to be in a group?
-# c1 in g1 if c1 == True sat Or(c1, c2)
-# shares_group(t1, t2, list(groups...))
+seg = Int("seg")
 
-# length of the creation list
-seg = Int("seg") # based on segment constraint
 
 def segment_conditions(num_segments):
     solver.add(seg > 0, seg <= num_segments)
@@ -94,7 +89,6 @@ def construct_match_variables(variable, num_conditions_in_variable):
 def match_order_from_segment(seg_index):
     
     task_in_group = construct_match_variables("task", 2)
-    print(task_in_group)
     solver.add(Implies( 
             seg != seg_index,
             force_pick_one([task_in_group[test] for test in task_in_group])
@@ -103,9 +97,9 @@ def match_order_from_segment(seg_index):
 
     g = None
     for group in task_in_group:
-        if group == "task0":
+        if group == "task1":
             g = g1
-        elif group == "task1":
+        elif group == "task2":
             g = g2
 
         solver.add(Implies(
@@ -116,53 +110,131 @@ def match_order_from_segment(seg_index):
                     g
                 )
             )
+    
+  
+        
+
+unit_order = []
+def pick_random(unit_conditions, i, solver):
+    index = random.randrange(0, len(unit_conditions[i]))
+    unit_order.append(unit_conditions[i][index][1]())
+    solver.add(unit_conditions[i][index][1]() != True)
+
 
 # alternate model idea: set task condition variables, 
 # not variables on the combinations
-constraint_all_share_condition(1, creation)
-match_order_from_segment(1)
 segment_conditions(2)
+constraint_all_share_condition(1, editing)
+match_order_from_segment(1)
+match_order = True
 
 
-# constraint with respect to a block
-# if not seen_all_creation, then (group1 or group2)
-# if seen(group1) then group2
-# if seen(group2) then group1
+def solver_on_array(unit_conditions):
+    s = z3.Solver()
+    map_to_type = {}
+    group1 = (c1, e1)
+    group2 = (c2, e2)
+    for condition in unit_conditions:
+        if condition in group1:
+            map_to_type[condition] = 1
+        if condition in group2:
+            map_to_type[condition] = 2
 
-# for testing:
-# solver.add(t1_in_group["g2"] == True)
-solver.push()
-solver.add(seg == 1)
-seg_val = 1
-# while the constraints are satisfiable 
-while (solver.check() == sat):
-    print("Model possibility for a condition in segment", seg_val)
-    model = solver.model()
-    # satifing variables
-    print(model)
-    solver.pop()
-    
-    block = [] # constraints to add
-    for var in model:
-        # variable does not equal it's current value
-        if model[var] == True and var != seg:
-            block.append(var() != True)
-            
+    order = [None for i in range(4)]
+    for i in range(len(unit_conditions)):
+        order[i] = Int(str(i))
+        s.add(order[i] == map_to_type[unit_conditions[i]])
 
-    # add constraints so we pick a new var
-    solver.add(Or(block))
 
-    # ugly - ignore this
-    solver.push()
-    solver.add(seg == seg_val)
-    if solver.check() != sat:
-        solver.pop()
+    for i in range(2):
+        s.add(order[i] == order[i + 2])
+
+    if (s.check() == sat):  
+        return unit_conditions
+    else:
+        raise Exception("Segments do not match")
+
+def test_one_at_a_time(num_conditions_per_unit):
+    conditions = [[] for i in range(num_conditions_per_unit)]
+
+    for i in range(num_conditions_per_unit):
+        assert not(i>1) or len(conditions[0]) > 0
         solver.push()
-        seg_val += 1
+        seg_val = 1
+        if i > 1:
+            seg_val = 2
         solver.add(seg == seg_val)
+        
+        # while the constraints are satisfiable 
+        while (solver.check() == sat):
+            print("Model possibility for a condition in segment", seg_val)
+            model = solver.model()
+            # satifing variables
+            print(model)
+            block = [] # constraints to add
+            for var in model:
+                # variable does not equal it's current value
+                if model[var] == True and var != seg:
+                    block.append(var() != True)
+                    if var() in tasks:
+                        conditions[i].append((model, var))
+                    
 
-    print("\n")
+            # add constraints so we pick a new var
+            solver.add(Or(block))
+            print("\n")
+        
+        solver.pop()
 
+        pick_random(conditions, i, solver)
+        print(unit_order)
+
+    if match_order:
+        solver_on_array(unit_order)
+
+
+
+test_one_at_a_time(4)
+
+
+
+
+# solver_on_array([c1, c2, e2, e1])
+
+def test_all():
+    solver.push()
+    solver.add(seg == 1)
+    seg_val = 1
+    # while the constraints are satisfiable 
+    while (solver.check() == sat):
+        print("Model possibility for a condition in segment", seg_val)
+        model = solver.model()
+        # satifing variables
+        print(model)
+        solver.pop()
+        
+        block = [] # constraints to add
+        for var in model:
+            # variable does not equal it's current value
+            if model[var] == True and var != seg:
+                block.append(var() != True)
+                
+
+        # add constraints so we pick a new var
+        solver.add(Or(block))
+
+        # ugly - ignore this
+        solver.push()
+        solver.add(seg == seg_val)
+        if solver.check() != sat:
+            solver.pop()
+            solver.push()
+            seg_val += 1
+            solver.add(seg == seg_val)
+
+        print("\n")
+
+# test_all()
     # NO repeat is explicit
     # number conditions per unit (for each task)
     # total and with resprect to each variable
