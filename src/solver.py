@@ -46,70 +46,22 @@ def constraint_all_share_condition(seg_index, condition_group):
     # since there are a total of 2 creation tasks 
     solver.add(Implies(seg == seg_index, condition_group))
     solver.add(Implies(seg != seg_index, Not(condition_group))) 
+
+    assert solver.check() == sat
    
-# note: enforce only pick one, so (c1 and not(c2 or c3 or c4), 
-# (c2 and not(c1 or e1 or e2)), etc...
-
-# testing model for "all creation tasks come before any other task"
-# tasks based on papers
-# true means we choose this task v
-# for current trial in block
-
-# TODO: construct using task to z3
-c1 = Bool("c1")
-c2 = Bool("c2")
-e1 = Bool("e1")
-e2 = Bool("e2")
-
-# these should be automatically constructed based on constraints
-creation = create_group((c1, c2))
-editing = create_group((e1, e2))
-g1 = create_group((c1, e1))
-g2 = create_group((c2, e2))
-tasks = (c1, c2, e1, e2)
-seg = Int("seg")
-
 
 def segment_conditions(num_segments):
     solver.add(seg > 0, seg <= num_segments)
-
-solver.add(force_pick_one(tasks))
 
 # constructs z3 bools indicating if a certain task 
 # shares a condition with the group specified 
 def construct_match_variables(variable, num_conditions_in_variable):
     var_to_z3 = {}
-    for j in range(1,num_conditions_in_variable+1):
+    for j in range(1, num_conditions_in_variable+1):
         var_to_z3[variable + str(j)] = Bool(variable + str(j))
 
     return var_to_z3
 
-
-# to complete this we need a notion of index
-def match_order_from_segment(seg_index):
-    
-    task_in_group = construct_match_variables("task", 2)
-    solver.add(Implies( 
-            seg != seg_index,
-            force_pick_one([task_in_group[test] for test in task_in_group])
-            )
-    )
-
-    g = None
-    for group in task_in_group:
-        if group == "task1":
-            g = g1
-        elif group == "task2":
-            g = g2
-
-        solver.add(Implies(
-                    And(
-                        task_in_group[group] == True,
-                        seg != seg_index
-                    ),
-                    g
-                )
-            )
     
   
         
@@ -121,144 +73,191 @@ def pick_random(unit_conditions, i, solver):
     solver.add(unit_conditions[i][index][1]() != True)
 
 
+c1l = Bool("c1l")
+c2l = Bool("c2l")
+e1l = Bool("e1l")
+e2l = Bool("e2l")
+c1f = Bool("c1f")
+c2f = Bool("c2f")
+e1f = Bool("e1f")
+e2f = Bool("e2f")
+
+# these should be automatically constructed based on constraints
+# need to create functions that automatically populate...
+tasks = (c1l, c2l, e1l, e2l, c1f, c2f, e1f, e2f)
+group1 = (c1l, e1l, c1f, e1f)
+group2 = (c2l, e2l, c2f, e2f)
+latex = (c1l, c2l, e1l, e2l)
+ffl = (c1f, c2f, e1f, e2f)
+creation = create_group((c1l, c2l, c1f, c2f))
+editing = create_group((e1l, e2l, e1f, e2f))
+g1 = create_group((c1l, e1l, c1f, e1f))
+g2 = create_group((c2l, e2l, c2f, e2f))
+l = create_group(latex)
+f = create_group(ffl)
+seg = Int("seg")
+
+# need to add constraint see all options of var within segment
+
+
+# this needs to be stored in a class
+condition_to_group = {"treatment1":l, "treatment2":f, "task1":g1, "task2":g2}
+# to complete this we need a notion of index
+def match_order_from_segment(seg_index, variable):
+    solver.add(
+        Implies( 
+            seg != seg_index,
+            force_pick_one(
+                [variable[condition] for condition in variable]
+            )
+        )
+    )
+
+    for condition in variable:
+        g = condition_to_group[condition]
+
+        solver.add(
+            Implies(
+                And(
+                    variable[condition] == True,
+                    seg != seg_index
+                ),
+                g
+            )
+        )
+
+# BELOW ARE THE CONSTRAINTS
 # alternate model idea: set task condition variables, 
 # not variables on the combinations
-segment_conditions(2)
-constraint_all_share_condition(1, editing)
-match_order_from_segment(1)
+conditions_per_unit = 4
+# what if we wanted multiple segments?
+num_segments = 2
+assert conditions_per_unit % num_segments == 0
+segment_length = int(conditions_per_unit/num_segments)
+task_in_group = construct_match_variables("task", 2)
+treatment_in_group = construct_match_variables("treatment", 2)
+
+segment_conditions(num_segments)
+constraint_all_share_condition(1, creation)
+match_order_from_segment(1, task_in_group)
+match_order_from_segment(1, treatment_in_group)
+
 match_order = True
+sees_all = True
 
 
-def solver_on_array(unit_conditions):
-    s = z3.Solver()
-    map_to_type = {}
-    group1 = (c1, e1)
-    group2 = (c2, e2)
-    for condition in unit_conditions:
-        if condition in group1:
-            map_to_type[condition] = 1
-        if condition in group2:
-            map_to_type[condition] = 2
+segments = {}
 
-    order = [None for i in range(4)]
-    for i in range(len(unit_conditions)):
-        order[i] = Int(str(i))
-        s.add(order[i] == map_to_type[unit_conditions[i]])
+for i in range(num_segments):
+    segments[i] = []
+
+for i in range(num_segments):
+    for j in range(segment_length):
+        segments[i].append(j + i*segment_length)
 
 
-    for i in range(2):
-        s.add(order[i] == order[i + 2])
 
-    if (s.check() == sat):  
-        return unit_conditions
-    else:
-        raise Exception("Segments do not match")
+index_var = {1:group1, 2:group2}
+condition_var = {1: ffl, 2: latex}
 
-def test_one_at_a_time(num_conditions_per_unit):
+def create_solver(num_conditions_per_unit):
+
+    solver.add(force_pick_one(tasks))
+    # the order of conditions we return to the user 
     conditions = [[] for i in range(num_conditions_per_unit)]
 
     for i in range(num_conditions_per_unit):
-        assert not(i>1) or len(conditions[0]) > 0
-        solver.push()
-        seg_val = 1
-        if i > 1:
+        solver.push() # save state for next index
+        seg_val = 1 # chnage this to loop through each segment
+
+        # need to generalize this if more than two segments
+        if i >= segment_length:
             seg_val = 2
+        
+        # assert which segment we are in
         solver.add(seg == seg_val)
         
+        # note: below is pass 2 of solver
+        #  (we can't know these constraints statically)
+        # when this grows we will need a pop notion for 
+        # segment level AND for task level
+        # right now we just have task-level stack ops
+
+        # this needs to be a function!!!!!
+        if match_order and i >= segment_length: 
+            if unit_order[i-segment_length] in group1:
+                solver.add(task_in_group["task1"] == True)
+            elif unit_order[i-segment_length] in group2:
+                solver.add(task_in_group["task2"] == True)
+
+            if unit_order[i-segment_length] in latex:
+                solver.add(treatment_in_group["treatment1"] == True)
+            elif unit_order[i-segment_length] in ffl:
+                solver.add(treatment_in_group["treatment2"] == True)
+
+        # THIS NEEDS TO BE IT'S OWN FUNCTION
+        # GENERALIZE FOR ANY VARIABLES
+        if i == 1 and sees_all:
+            if unit_order[0] == c1l or unit_order[0] == c1f:
+                solver.add(Not(g1))
+            if unit_order[0] == c2l or unit_order[0] == c2f:
+                solver.add(Not(g2))
+
+            if unit_order[0] == c1l or unit_order[0] == c2l:
+                solver.add(Not(l))
+            if unit_order[0] == c1f or unit_order[0] == c2f:
+                solver.add(Not(f))
+
         # while the constraints are satisfiable 
         while (solver.check() == sat):
-            print("Model possibility for a condition in segment", seg_val)
             model = solver.model()
-            # satifing variables
-            print(model)
+
             block = [] # constraints to add
             for var in model:
                 # variable does not equal it's current value
-                if model[var] == True and var != seg:
+                if model[var] == True:
                     block.append(var() != True)
+                    # the var is true if this satisfies the constraint for this index
                     if var() in tasks:
                         conditions[i].append((model, var))
                     
 
-            # add constraints so we pick a new var
+            # We never want to see this combination for this index
             solver.add(Or(block))
-            print("\n")
         
+        # constraints don't apply for next index
         solver.pop()
 
-        pick_random(conditions, i, solver)
-        print(unit_order)
+        # We did not generate any models
+        if (solver.check() != sat):
+            raise Exception("No possible orderings given constraint")
+        else:
+            # this picks a random variable for this index
+            pick_random(conditions, i, solver)
 
-    if match_order:
-        solver_on_array(unit_order)
-
-
-
-test_one_at_a_time(4)
-
-
-
-
-# solver_on_array([c1, c2, e2, e1])
-
-def test_all():
-    solver.push()
-    solver.add(seg == 1)
-    seg_val = 1
-    # while the constraints are satisfiable 
-    while (solver.check() == sat):
-        print("Model possibility for a condition in segment", seg_val)
-        model = solver.model()
-        # satifing variables
-        print(model)
-        solver.pop()
         
-        block = [] # constraints to add
-        for var in model:
-            # variable does not equal it's current value
-            if model[var] == True and var != seg:
-                block.append(var() != True)
-                
 
-        # add constraints so we pick a new var
-        solver.add(Or(block))
-
-        # ugly - ignore this
-        solver.push()
-        solver.add(seg == seg_val)
-        if solver.check() != sat:
-            solver.pop()
-            solver.push()
-            seg_val += 1
-            solver.add(seg == seg_val)
-
-        print("\n")
-
-# test_all()
-    # NO repeat is explicit
-    # number conditions per unit (for each task)
-    # total and with resprect to each variable
-    # the user does not know how many conditions (give output)
-    # global set of conditions defined as combination of tasks
-    # outut all options
-    # alternitive specificistion ? to all and pick one 
-    # explicit unit object: assign unit any(sleep)
-    # assign on confiditon to unit of type(type)
-    # unit gets one condition(1, type)
-    # get_condition -> selct_random
-    # all(one of tasks type)
-    # specify which task to pull condition from for all constraints
-    # segments_see_same_order(segment1, segment2) -> come up with order 
-    # next step: given example programs -> try latin square 
-    # start the changes, prioritize... be clear on purpose 
-    # strip down examples into core statements...
-    # each program has unique core  (core primitives!)
-
-    ## TALK ABOUT GOALS***
-
- 
+    print(unit_order)
+    
+create_solver(4)
 
 
+# notes from 10/08
+# number conditions per unit (for each task)
+# total and with resprect to each variable
+# the user does not know how many conditions (give output)
+# global set of conditions defined as combination of tasks
+# outut all options
+
+# specify which task to pull condition from for all constraints
+# segments_see_same_order(segment1, segment2) -> come up with order 
+
+# next step: given example programs -> try latin square 
+# start the changes, prioritize... be clear on purpose 
+# strip down examples into core statements...
+# each program has unique core  (core primitives!)
+
+## TALK ABOUT GOALS***
 
 
 # IDEA: 2 models, where m1 gives possibilities for individual entities,
@@ -312,3 +311,64 @@ testing for paper results
 
 # if # groups = # conditions, then btw. unit
 # if len(block) == 1
+
+
+# just for testing - ignore for now
+def test_all():
+    solver.push()
+    solver.add(seg == 1)
+    seg_val = 1
+    # while the constraints are satisfiable 
+    while (solver.check() == sat):
+        print("Model possibility for a condition in segment", seg_val)
+        model = solver.model()
+        # satifing variables
+        print(model)
+        solver.pop()
+        
+        block = [] # constraints to add
+        for var in model:
+            # variable does not equal it's current value
+            if model[var] == True and var != seg:
+                block.append(var() != True)
+                
+
+        # add constraints so we pick a new var
+        solver.add(Or(block))
+
+        # ugly - ignore this
+        solver.push()
+        solver.add(seg == seg_val)
+        if solver.check() != sat:
+            solver.pop()
+            solver.push()
+            seg_val += 1
+            solver.add(seg == seg_val)
+
+        print("\n")
+
+# we want to incorporate this to main solver 
+# check incrementally? z3 array type?
+def solver_on_array(unit_conditions, variable):
+    n = len(unit_conditions)
+
+    map_to_type = {}
+    for condition in unit_conditions:
+        for option in variable:
+            # make these solver constraints
+            if condition in variable[option]:
+                map_to_type[condition] = option
+    
+    order = [None for i in range(n)]
+    for i in range(n):
+        order[i] = Int(str(i))
+        s.add(order[i] == map_to_type[unit_conditions[i]])
+
+    m = len(segments)
+    for i in range(m):
+        s.add(order[i] == order[i + len(segments[0])])
+
+    if (s.check() == sat):  
+        return unit_conditions
+    else:
+        print("Segments do not match")
