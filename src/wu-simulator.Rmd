@@ -44,7 +44,8 @@ assign_conditions = function(conditions, total_num) {
 
     num_conditions = length(conditions)
     if (num_conditions < total_num) {
-        # Assert that the total number of conditions desired is a multiple of possible conditions
+        # Assert that the total number of conditions
+        # desired is a multiple of possible conditions
         stopifnot((total_num %% num_conditions)==0)
         rep = total_num / num_conditions
         cond_order = assign_condition_order(conditions, rep)
@@ -603,7 +604,7 @@ conditions = conditions("ffl", "latex") # Is there anything else that conditions
 
 # Provide helpers for constructing the assignemnts -- these might eventually be an internal API synthesized from higher-level constraints/spec
 # Technical challenge: There are rules that are implicit in how researchers order trials, etc. that we capture explicitly
-Rules that need to be encoded: 
+# Rules that need to be encoded: 
 - both (all) creation first then both (all) editing
 - every other task has the same condition (i.e., ffl or latex)
 

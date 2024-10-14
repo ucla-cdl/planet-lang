@@ -71,8 +71,22 @@ class Condition():
 
     def construct_z3_var(self):
         return Bool(self.name)
-  
 
+class ConditionOrder():
+    def __init__(self, n):
+        # how many conditions the unit sees during the experiment
+        self.n == n
+
+
+
+# SETTING THE CONSTRAINTS
+segment_conditions(e.num_segments)
+constraint_all_share_condition(1, creation)
+# constraint_all_share_condition(1, editing)
+match_order_from_segment(1, task_in_group)
+match_order_from_segment(1, treatment_in_group)
+segment_sees_each_condition(1, "treatment")
+segment_sees_each_condition(1, "task-index")
 
 e = Experiment()
 e.create_var("task-type", 2, conditions=["e", "c"])

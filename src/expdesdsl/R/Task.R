@@ -40,3 +40,8 @@ setMethod(
     cat("name:", unlist(object@name), "\n")
   }
 )
+
+# setMothod(
+#   f = ""
+
+# )

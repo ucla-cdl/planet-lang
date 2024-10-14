@@ -93,6 +93,48 @@ enforce_one_of(pattern("(12)*"), pattern("(21)*"))
 
 ```
 
+shares type method
+```{r}
+# Define constructor
+Task <- function(name) {
+  # Vak()idate and create an instance of the class
+  new("Task", name = name, types = list("all"))
+}
+
+# Define Task class
+setClass(
+  Class = "Task",
+  slots = list(
+    name = "character",
+    types = "list"
+  )
+)
+
+# toString for Task
+# @prints tasks in this Task
+setMethod(
+  f = "show",
+  signature = "Task",
+  definition = function(object) {
+    cat("Task Object:\n")
+    cat("name:", unlist(object@name), "\n")
+    cat("types:", unlist(object@types), "\n")
+  }
+)
+
+setGeneric("shares_type")
+setMethod(
+  f = "shares_type",
+  signature = "Task",
+  definition = function(object) {
+    cat("Task Object:\n")
+    cat("name:", unlist(object@name), "\n")
+    cat("types:", unlist(object@types), "\n") 
+  }
+)
+```
+
+
 10/01 notes 
 ```{r}
 block_length(4) -> a block contains a sequence of 4 trials
@@ -117,8 +159,8 @@ enforce(at_least_one(group2), seg1)
 
 # results in if seg1 then (c1 or e1) and (c2 or e2)
 # NO constraints on seg 2 right now 
-share_type(block(1), block(3))
-share_type(block[2], block[4])
+share_type(block(1), block(3), types=(g1, g2))
+share_type(block(2), block(4))
 
 # or?
 group1 = (c1 or e1)
@@ -127,12 +169,13 @@ match_order(seg1, seg2, list(group1, group2))
 
 
 
-# for conditions, think of as an overlay 
+# for conditions, think of as an overlay
 conditions = (ffl, latex)
+# difference here is that types consists of individual tasks
 apply(conditions, seg1)
-match_order(seg1, seg2, conditions)
--> {ffl, latex, ffl, latex}
-   {latex, ffl, latex, ffl}
+match_order(seg1, seg2, types=conditions)
+# -> {ffl, latex, ffl, latex}
+#    {latex, ffl, latex, ffl}
 # if seg2, then
 #     group1 if seg1[i] in group1
 #     group if seg1[i] in group1
@@ -153,7 +196,7 @@ assist = list(short-assist, long-assist)
 enforce(all(interpretation), seg1) -> if seg1 then (short or long)
 # randomizes interpretation prompts within seg 1
 # ie.   shorta, longa, shortb, longb
-    #   24 possible options
+#       24 possible options
 
 share_type(block[0], block[1], condition_on = "interpretation")
 # if block[0] is base, then block[0] is base
@@ -169,8 +212,8 @@ put_together(base, count = 2)
 enforce(max_in_a_row(group1))
 
 # something like?
-# randomize order of groups with respect to a block segment 
-# so this means we "push"/"pop" the model after the segment 
+# randomize order of groups with respect to a block segment
+# so this means we "push"/"pop" the model after the segment
 # should we have two models?
 random(group1, group2, within=seg1)
 
@@ -191,6 +234,10 @@ if type(blcok[1]) == group2, then (c2 or e2)
 e1 if c1 
 e2 if c2
 ```
+
+Question: do we represent ffl and latex as separate from the tasks? 
+for example, what if the user wants to order: ffl-c1, ffl-c2, latex-c1, latex-c2
+could we use a function gen-conditions(treatment)
 
 ```{r}
 library('exp-des-dsl') # TODO: Come up with a memorable name
@@ -274,9 +321,11 @@ entire possible list
 # setting constraints based on a group label 
 c1 = task("c1", type=list("Creation",1))
 e1 = task("c1", type=list("Editing",1))
-match_index(c1, type = 1, list(e1, e2)) 
-# params = (task you want to match, type description you want to match, set you are samplign from)
-# output: e1 since e1 is the only element in the list that has an index label of "1"
+match_index(c1, type = 1, list(e1, e2))
+# params = (task you want to match, type description you
+# want to match, set you are samplign from)
+# output: e1 since e1 is the only element in the
+# list that has an index label of "1"
 
 c1 = task("c1", type=list("Creation",1))
 e1 = task("c1", type=list("Editing",1))
