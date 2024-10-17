@@ -4,6 +4,9 @@ from collections import namedtuple
 import random
 import itertools
 
+def DEBUG(string, color = "35"):
+    print("\033[+" + color + "+m{}\033[00m" .format(string))
+
 # Condition represents one possible "total condition" 
 # pass in metaconditions to construct Condition, 
 # along with constraints on the condition
@@ -19,7 +22,14 @@ class ExperimentCondition():
         # probably change this name... stores what we need 
         # to add to the solver based on the constraints
         # but we add to the solver in condition order...
-        self.__z3__ = []
+        self.solver = z3.Solver()
+
+        self.evaluation = None
+
+        self.name = self.__class__
+
+    def add_name(self, name):
+        self.name = name
      
 
 
@@ -30,41 +40,58 @@ class ExperimentCondition():
         # the way we represent each class in z3 is different
         # based on class wrapper... # check if instance and then 
         # append proper Z3 class based on variables
-
-    
-
         # messy messy code :(
+        s = self.solver
         for var in self.var_to_z3:
-            if isinstance(self.var_to_z3[var], Any):
-                self.__z3__.append(self.var_to_z3[var].__z3__)
-                s = z3.Solver()
+            s.push()
+
+            if isinstance(self.var_to_z3[var], Exact) or isinstance(self.var_to_z3[var], Any):
+                DEBUG("variable " + str(var) + " does not depend on any previous conditions")
+                print("\t" + str(self.var_to_z3[var]))
                 s.add(self.var_to_z3[var].__z3__)
                 if s.check() == sat:
                     m = s.model()
+                
                 self.var_to_z3[var].test = m
-            if isinstance(self.var_to_z3[var], Exact):
-                self.__z3__.append(self.var_to_z3[var].__z3__)
-                self.var_to_z3[var].test = solve(self.var_to_z3[var].__z3__)
+                print("\teval: " + str(m))
+
             if isinstance(self.var_to_z3[var], Different):
-                print("here")
+                DEBUG("variable " + str(var) + " depends on " + str(self.var_to_z3[var].condition))
                 # left off here: need to get the evaluated model
                 # and make sure that the values do not reflect this 
-                print(self.var_to_z3[var].condition.var_to_z3[var], self.var_to_z3[var].condition.var_to_z3[var].test)
-                self.__z3__.append((self.var_to_z3[var].condition.var_to_z3[var].__z3__))
+                s.add(self.var_to_z3[var].condition.var_to_z3[var].__z3__)
+                m = self.var_to_z3[var].condition.var_to_z3[var].test
+                print("\tnot: ", m)
+                for v in m:
+                    # variable does not equal it's current value
+                    s.add((v() != True))
+
+                if s.check() == sat:
+                    m = s.model()
+                    print("\teval: " + str(m))
+
+                self.var_to_z3[var].test = m
+
+
             if isinstance(self.var_to_z3[var], Match):
-    
-                print("here", self.var_to_z3[var].condition.var_to_z3[var].test)
-                self.__z3__.append((self.var_to_z3[var].condition.var_to_z3[var].__z3__))
+                DEBUG("variable " + str(var) + " depends on " + str(self.var_to_z3[var].condition))
+                m = self.var_to_z3[var].condition.var_to_z3[var].test
+                print("\tmatch: ", m)
+                self.var_to_z3[var].test = m
+                print("\teval: " + str(m))
+
+
+
+            s.pop()
+
+   
+
+        DEBUG("")
                 
-
-        
-       
-
-        return self.__z3__
 
   
     def __str__(self):
-        return " ".join(str(key) + ": " + str(self.var_to_z3[key]) for key in self.var_to_z3)
+        return str(self.name)
     
 
 # NOTE: this should be a superclass of Match, Any, and Different 
@@ -129,7 +156,7 @@ class Any:
         self.__z3__ = Or([option.__z3__ for option in var.conditions])
 
     def __str__(self): 
-        return "any " + str(self.__z3__)
+        return "any of: " + str([option.__z3__ for option in self.var.conditions])
 
 
 # This is a variable class that stores experimental
@@ -172,31 +199,17 @@ class ExperimentVariable:
         return self.conditions[random.randint(0, self.n-1)]
     
     # in use: returns an instance of an Any object 
-    def any_test(self):
+    def any(self):
         return Any(self)
-    
-    # not in use...
-    def match(self, condition):
-        return condition.get_option(self)
 
     # in use: returns instance of match object
     # note to self: do we want to return these 
     # z3 variable wrappers (ie. match) from variable?
-    def match_test(self, condition):
+    def match(self, condition):
         return Match(self, condition)
-    
-    # not in use. returns all conditions minus the one 
-    # used by the specified condition
-    def different(self, condition):
-        options = []
-        for option in self.conditions:
-            if option != condition.var_to_option[self]:
-                options.append(option)
-      
-        return options[random.randint(0, len(options)-1)]
 
     # in use: returns different wrapper since we don't know the eval yet
-    def different_test(self, condition):
+    def different(self, condition):
         return Different(self, condition)
 
     # not in use
@@ -204,7 +217,7 @@ class ExperimentVariable:
         return self.name_to_condition[option]
     
     # returns z3 wrapper 
-    def get_test(self, option):
+    def get(self, option):
         return Exact(self, option)
 
     def __str__(self):
@@ -257,7 +270,7 @@ class Assignment:
             variable_conditions = [Any(var) for var in variables]
             self.order_conditions = ExperimentCondition(*variable_conditions)
         else:
-            self.order_conditions = order_conditions
+            self.order_conditions = order_conditions.order
 
         self.conditions_per_unit = conditions_per_unit
         self.units = units
@@ -266,11 +279,24 @@ class Assignment:
     def assign_unit(self, n):
         unit = self.units[n]
         for condition in self.order_conditions:
+            DEBUG("evaluating: " + condition.name, color = "33")
             condition.eval()
 
             
+class Block:
+    def __init__(self, n):
+        self.n = n
+        self.order = [None for i in range(n)]
+        self.curr = 0
+    
+    def add(self, condition):
+        condition.add_name("condition" + str(self.curr+1))
+        self.order[self.curr] = condition
+        self.curr += 1
 
-        
+
+
+# prototype for assignment    
 
 # should these be user-created subclasses?
 treatment = ExperimentVariable(
@@ -285,37 +311,45 @@ task = ExperimentVariable(
 )
 
 # should we instead pass the variables
-# and then place the constraints
+# and then place the constraints ?
 c1 = ExperimentCondition(
-    treatment.any_test(),
-    task.get_test("creation")
+    treatment.any(),
+    task.get("creation")
 )
 c2 = ExperimentCondition(
-    treatment.different_test(c1), # alt = condition1.different(treatment)
-    task.get_test("creation") 
+    treatment.different(c1), # alt = condition1.different(treatment)
+    task.get("creation") 
 )
 c3 = ExperimentCondition(
-    treatment.match_test(c1), # alt = condition1.match(treatment)
-    task.get_test("editing")
+    treatment.match(c1), # alt = condition1.match(treatment)
+    task.get("editing")
 )
 c4 = ExperimentCondition(
-    treatment.match_test(c2), # alt = condition2.match(treatment)
-    task.get_test("editing")
+    treatment.match(c2), # alt = condition2.match(treatment)
+    task.get("editing")
 )
 
-# something with total conditions here? treatment x task 
-order = [c1, c2, c3, c4]
-units = []
-for i in range(20):
-    units.append(Unit(i))
+# this is a constraint in itself 
+# block for defining sequence, and then we can nest or join blocks
+block = Block(4)
+conditions = [c1, c2, c3, c4]
+for c in conditions:
+    block.add(c)
+    
+
+units = [Unit(i) for i in range(20)]
 
 assignment = Assignment(variables = [treatment, task],
                         units = units,
                         conditions_per_unit = 4,
-                        order_conditions = order,
+                        order_conditions = block,
             )
 
-assignment.assign_unit(1)
+prev = assignment.assign_unit(1)
+
+# NOTE: possible idea. This allows for no-repeat 
+# assignment.not(prev) # this adds to z3 solver? 
+# assignment.assign_unit(2)
 
 
 

@@ -8,9 +8,7 @@ import itertools
 def create_group(tasks):
     return Or([task for task in tasks])
 
-seg = Int("seg")
 class Experiment:
-
     def __init__(self):
         self.variables = []
         self.conditions = []
@@ -48,16 +46,16 @@ class Experiment:
 
 # named tuple
 class Variable:
-    def __init__(self, name, n, conditions):
+    def __init__(self, name, num_options, options):
         self.name = name
-        self.n = n
+        self.n = num_options
 
-        assert n == len(conditions) or len(conditions) == 0
+        assert num_options == len(options) or len(options) == 0
 
-        if len(conditions) == 0:
-            self.conditions = [str(i) for i in range(1, n+1)]
+        if len(options) == 0:
+            self.conditions = [str(i) for i in range(1, num_options+1)]
         else:
-            self.conditions = conditions
+            self.conditions = options
 
     def __str__(self):
         return self.name
@@ -75,25 +73,106 @@ class Condition():
 class ConditionOrder():
     def __init__(self, n):
         # how many conditions the unit sees during the experiment
-        self.n == n
+        self.n = n
+        self.order = [None for i in range(n)]
+        self.solver = Solver()
+        
+
+
+    def all(self, variable, option, range=None):
+        # this is equivilant to choosing the first task 
+        # since there are a total of 2 creation tasks 
+        if range is None:
+            range = (0, self.n)
+
+        index = Int("index")
+
+        # self.solver.add(
+        #     Implies(
+        #         And(
+        #             index > range[0],
+        #             index < range[1]
+        #         ), 
+        #         Or(option.group)
+        #     )
+        # )
+
+        # self.solver.add(
+        #     Implies(
+        #         And(
+        #             index < range[0], 
+        #             index > range[1]
+        #         ), 
+        #         Not(
+        #             Or(option.group)
+        #         )
+        #     )
+        # ) 
+
+        # assert self.solver.check() == sat
+
+    def conditions_match(self):
+        print("conditions match constraint")
+        # assert (range1[1] - range1[0]) == (range2[1] - range2[0])
+        # # if range2 i - range2 0 == range11: pull from condition group
 
 
 
-# SETTING THE CONSTRAINTS
-segment_conditions(e.num_segments)
-constraint_all_share_condition(1, creation)
-# constraint_all_share_condition(1, editing)
-match_order_from_segment(1, task_in_group)
-match_order_from_segment(1, treatment_in_group)
-segment_sees_each_condition(1, "treatment")
-segment_sees_each_condition(1, "task-index")
+        # implications = []
+        # for condition in variable: 
+        #     if self.order(range1[i]) in condition.group:
+        #         implications.append(Or(condition.group))
 
-e = Experiment()
-e.create_var("task-type", 2, conditions=["e", "c"])
-e.create_var("treatment", 2, conditions = ["f", "l"])
-e.create_var("task-index", 2)
-e.num_conditions_per_unit(4)
-e.segment(2)
+        # range_var = []
+        # for i in range1:
+        #     range_var.append(index[i])
+
+        
+
+        # Implies(
+        #     index in range2,
+        #     implications
+            
+        # )
+
+    def see_each_condition(self):
+        print("see each condition constraint")
+
+
+
+treatment = Variable(
+    name = "treatment",
+    num_options = 2,
+    options = ["f", "l"]
+)
+
+task_type = Variable(
+    name = "task-type",
+    num_options = 2,
+    options = ["e", "c"]
+)
+
+task_index = Variable(
+    name = "task-index",
+    num_options = 2,
+    options = ["f", "l"]
+)
+
+
+
+
+# in the specified range, all conditions are
+# conditioned on the treatment oprion ffl
+
+
+
+
+# e = Experiment(
+#         condition_order = order,
+#         units = 20
+#     )
+
+# e.assign()
 
 
 # testing
@@ -119,23 +198,20 @@ e.segment(2)
 
 
 
-# internal use
-e.construct_conditions()
-e.construct_groups()
 
-ffl = [condition.__z3__ for condition in e.groups["f"]]
-latex = [condition.__z3__ for condition in e.groups["l"]]
-group1 = [condition.__z3__ for condition in e.groups["1"]]
-group2 = [condition.__z3__ for condition in e.groups["2"]]
-creation = [condition.__z3__ for condition in e.groups["c"]]
-editing = [condition.__z3__ for condition in e.groups["e"]]
-creation = create_group(creation)
-editing = create_group(editing)
-g1 = create_group(group1)
-g2 = create_group(group2)
-l = create_group(latex)
-f = create_group(ffl)
-tasks = [c.__z3__ for c in e.conditions]
+# ffl = [condition.__z3__ for condition in e.groups["f"]]
+# latex = [condition.__z3__ for condition in e.groups["l"]]
+# group1 = [condition.__z3__ for condition in e.groups["1"]]
+# group2 = [condition.__z3__ for condition in e.groups["2"]]
+# creation = [condition.__z3__ for condition in e.groups["c"]]
+# editing = [condition.__z3__ for condition in e.groups["e"]]
+# creation = create_group(creation)
+# editing = create_group(editing)
+# g1 = create_group(group1)
+# g2 = create_group(group2)
+# l = create_group(latex)
+# f = create_group(ffl)
+# tasks = [c.__z3__ for c in e.conditions]
 
 
 
@@ -171,13 +247,15 @@ def vars_to_z3(vars):
 
     return map_vars_to_z3
 
+
+index = Int("index")
 # choose a single creation task if 
 # there is a creation task available 
 def constraint_all_share_condition(seg_index, condition_group):
     # this is equivilant to choosing the first task 
     # since there are a total of 2 creation tasks 
-    solver.add(Implies(seg == seg_index, condition_group))
-    solver.add(Implies(seg != seg_index, Not(condition_group))) 
+    solver.add(Implies(And(index >= 0, index < 2), condition_group))
+    solver.add(Implies(And(index < 0, index > 2), Not(condition_group))) 
 
     assert solver.check() == sat
     # print(solver.model())
@@ -295,6 +373,7 @@ def create_solver(num_conditions_per_unit):
         
         # assert which segment we are in
         solver.add(seg == seg_val)
+        solver.add(index == i)
         
         # note: below is pass 2 of solver
         #  (we can't know these constraints statically)
@@ -331,7 +410,7 @@ def create_solver(num_conditions_per_unit):
         # while the constraints are satisfiable 
         while (solver.check() == sat):
             model = solver.model()
-
+            print(model)
             block = [] # constraints to add
             for var in model:
                 # variable does not equal it's current value
@@ -359,7 +438,7 @@ def create_solver(num_conditions_per_unit):
 
     print(unit_order)
     
-create_solver(e.conditions_per_unit)
+# create_solver(e.conditions_per_unit)
 
 
 # Is this faster than just pruning ???
