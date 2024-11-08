@@ -1,8 +1,10 @@
 from z3 import *
-from lib.orders import PossibleOrders
+from lib.orders import Sequence
 from lib.assignment import Assignment
 from lib.unit import Unit
+from lib.participant import Participants
 from lib.variable import ExperimentVariable
+import lib.candl as candl
 
 # user creates two variables: task and treatment 
 # the user provides the variable name, and an array 
@@ -16,32 +18,39 @@ task = ExperimentVariable(
     options = ["creation", "edit"]
 )
 
+conditions = candl.conditions_from_vars(treatment, task)
 # there are 20 units participating in the experiment
 # this array holds all 20 Unit objects, and each unit
 # is associated with an id (i)
-units = [Unit(i) for i in range(20)] 
+# subjects = [Subject(i+1) for i in range(2)] 
+
+subjects = Participants(20)
+
 # given the number of conditions in an order, and all of the 
 # experimental variables, create an object representing all 
 # possible orders of the experimental conditions
-possible_orders = PossibleOrders(4, treatment, task) 
+seq = Sequence(4, treatment, task) 
 
 # DIFFERENT CONSTRAINT: first and second conditions in the 
 # order never have the same assignment to the treatment variable
-possible_orders.different(0, 1, variable = treatment) 
+seq.different(0, 1, variable = treatment) 
 # MATCH CONSTRAINT: first and third conditions in the 
 # order always have the same assignment to the treatment variable
-possible_orders.match(0, 2, variable = treatment)
-possible_orders.match(1, 3, variable = treatment)
+seq.match(0, 2, variable = treatment)
+seq.match(1, 3, variable = treatment)
 # FORCE CONSTRAINT: assignmnet to the task variable for 
 # the first and second conditions in the order is always creation
-possible_orders.force(0, variable = task, condition = "creation")
-possible_orders.force(1, variable = task, condition = "creation")
+seq.force(0, variable = task, condition = "creation")
+seq.force(1, variable = task, condition = "creation")
 
 # should the user have to create groups before passing to assignment?
 
 # now the user creates an assignment object, which matches units to 
 # groups, where the groups are all possible orders
-assignment = Assignment(units = units, groups = possible_orders) # identify as within-subjects design
+assignment = Assignment() # identify as within-subjects design
+assignment.assign_to_sequence(subjects, seq)
+final = assignment.eval()
+print(final)
 
 # assignment.unit_sees_each_condition_equal_num()
 # assignment.set_num_groups(4)

@@ -44,7 +44,6 @@ class Experiment:
                             self.groups[subc] = []
                             self.groups[subc].append(condition)
 
-# named tuple
 class Variable:
     def __init__(self, name, num_options, options):
         self.name = name

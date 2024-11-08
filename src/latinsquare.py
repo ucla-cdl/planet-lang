@@ -1,8 +1,9 @@
 from z3 import *
-from test.participants import Participants
-from test.sequence import Sequence
-from test.assignment import Assignment
+from lib.participant import Participants
+from lib.orders import Sequence
+from lib.assignment import Assignment
 from lib.variable import ExperimentVariable
+from test.block_factor import BlockFactor
 
 
 # user creates two variables: task and treatment 
@@ -14,23 +15,30 @@ treatment = ExperimentVariable(
 )
 
 participants = Participants(4)
-sequence = Sequence(4) 
+
+# conclusion: works with block factors... what do we want to store in each place?
+# we should store constraint metadata in these classes and evaluate the constraint 
+# in assignment, since they will build on each other 
+# sequence = BlockFactor(levels=["a", "b", "c", "d"]) 
+sequence = Sequence(4, treatment) 
 
 assignment = Assignment()
 
 # new Unit class
-assignment.compose_units(participants, sequence)
+assignment.assign_to_sequence(participants, sequence)
+
 # NOTE: here we can actually construct constraints
 # we knwo the dims of the unit
 
-# new Condiitons class
+# # new Condiitons class
 assignment.compose_conditions(treatment)
 
-# function name not capturing program
+sequence.different(0, 1, treatment)
+
 assignment.recieve_different_conditions(participants) # by default?
 assignment.recieve_different_conditions(sequence) 
 
-# NOTE: should allow user to set this constraint accross all units
+# # NOTE: should allow user to set this constraint accross all units
 
 
 print(assignment.generate())
