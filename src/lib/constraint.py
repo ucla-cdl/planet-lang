@@ -7,16 +7,18 @@ class Constraint:
 
     def get_variable(self):
         return self.variable
+    
 
 
 # NOTE: this should be a superclass of Match, Any, and Different 
 # this class only adds one Z3 var to the solver
 # because it must be exactly this subcondition
 class TwoElemConstraint(Constraint):
-    def __init__(self, i1, i2, variable):
-        Constraint.__init__(self, variable)
-
-        self.variable = variable
+    def __init__(self, i1, i2, variables):
+        Constraint.__init__(self, variables)
+        if not isinstance(variables, list):
+            variables = [variables]
+        self.variables = variables
         self.index_to_match = i1
         self.index = i2
     
@@ -45,8 +47,19 @@ class Different(TwoElemConstraint):
 
         key information: which variable, which index in order
     """
-    def __init__(self, i1, i2, variable):
-        TwoElemConstraint.__init__(self, i1, i2, variable)
+    def __init__(self, i1, i2, variables = []):
+        TwoElemConstraint.__init__(self, i1, i2, variables)
+
+    def eval_constraint(self, z3_variable_map):
+        return [z3_variable_map[variable][self.index_to_match] != z3_variable_map[variable][self.index] for variable in self.variables]
+
+
+class AllDifferent(Constraint):
+    def __init__(self, variable):
+        self.reference_variable = variable
+
+    def get_reference_block(self):
+        return self.reference_variable
 
     
 
@@ -55,8 +68,11 @@ class Different(TwoElemConstraint):
 # the exact same constraints from condition 
 # to add to the new condition's solver
 class Match(TwoElemConstraint):
-    def __init__(self, i1, i2, variable):
-        TwoElemConstraint.__init__(self, i1, i2, variable)
+    def __init__(self, i1, i2, variables):
+        TwoElemConstraint.__init__(self, i1, i2, variables)
+
+    def eval_constraint(self, z3_variable_map):
+        return [z3_variable_map[variable][self.index_to_match] == z3_variable_map[variable][self.index] for variable in self.variables]
 
 # given a variable, create an z3 instance that allows
 # us to choose any of the subcondiiton options
@@ -72,5 +88,8 @@ class Force(Constraint):
     
     def get_index(self):
         return self.i
+    
+    def eval_constraint(self, z3_variable_map):
+        return [z3_variable_map[self.variable][self.i] == self.condition]
 
  

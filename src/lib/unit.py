@@ -13,7 +13,6 @@ class Unit:
     """
     def __init__(self, n):
         self.n = n
-        self.vars = {}
 
 
 class Units:

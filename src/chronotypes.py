@@ -39,7 +39,7 @@ seq.different(0, 1, question)
 subjects = Participants(16)
 
 assignment = Assignment() # identify as within-subjects design
-assignment.assign_to_sequence(subjects, seq)
+assignment.assign_to_sequence(subjects, seq, variables = [daytime, comp, chron, question])
 final = assignment.eval()
 
 

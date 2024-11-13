@@ -18,7 +18,6 @@ task = ExperimentVariable(
     options = ["creation", "edit"]
 )
 
-conditions = candl.conditions_from_vars(treatment, task)
 # there are 20 units participating in the experiment
 # this array holds all 20 Unit objects, and each unit
 # is associated with an id (i)
@@ -29,7 +28,7 @@ subjects = Participants(20)
 # given the number of conditions in an order, and all of the 
 # experimental variables, create an object representing all 
 # possible orders of the experimental conditions
-seq = Sequence(4, treatment, task) 
+seq = Sequence(4) 
 
 # DIFFERENT CONSTRAINT: first and second conditions in the 
 # order never have the same assignment to the treatment variable
@@ -48,7 +47,7 @@ seq.force(1, variable = task, condition = "creation")
 # now the user creates an assignment object, which matches units to 
 # groups, where the groups are all possible orders
 assignment = Assignment() # identify as within-subjects design
-assignment.assign_to_sequence(subjects, seq)
+assignment.assign_to_sequence(subjects, seq, variables = [treatment, task])
 final = assignment.eval()
 print(final)
 

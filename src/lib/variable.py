@@ -41,6 +41,9 @@ class ExperimentVariable:
             self.conditions.append(VariableCondition(attr, self))
 
 
+    def get_conditions(self):
+        return self.conditions
+
     def __str__(self):
         return str(self.name)
     
@@ -59,6 +62,9 @@ class VariableCondition:
     def __init__(self, name, var):
         self.var = var # refer back to var object that constructed this option
         self.name = name
+
+    def set_z3_value(self, value):
+        self.__z3_value = value
 
     def __str__(self):
         return self.name 

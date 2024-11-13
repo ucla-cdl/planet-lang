@@ -11,37 +11,41 @@ from test.block_factor import BlockFactor
 # of the possible conditions for the variable
 treatment = ExperimentVariable(
     name = "treatment",
-    options = ["A", "B", "C", "D"]
+    options = ["A", "B"]
+)
+task = ExperimentVariable(
+    name = "task",
+    options = ["A", "B"]
 )
 
-participants = Participants(4)
+
+
+participants = Participants(2)
+# groups = BlockFactor(levels=["a", "b", "c", "d"]) 
 
 # conclusion: works with block factors... what do we want to store in each place?
 # we should store constraint metadata in these classes and evaluate the constraint 
 # in assignment, since they will build on each other 
-# sequence = BlockFactor(levels=["a", "b", "c", "d"]) 
-sequence = Sequence(4, treatment) 
+
+sequence = Sequence(2) 
 
 assignment = Assignment()
 
+# so, this isn't working... need to fix
+# sequence.match(0,1, variable = task)
 # new Unit class
-assignment.assign_to_sequence(participants, sequence)
+assignment.assign_to_sequence(participants, sequence, variables = [treatment, task])
 
 # NOTE: here we can actually construct constraints
 # we knwo the dims of the unit
 
-# # new Condiitons class
-assignment.compose_conditions(treatment)
-
-sequence.different(0, 1, treatment)
-
-assignment.recieve_different_conditions(participants) # by default?
-assignment.recieve_different_conditions(sequence) 
+assignment.recieve_different_conditions(sequence)
+assignment.recieve_different_conditions(participants)
 
 # # NOTE: should allow user to set this constraint accross all units
+print(assignment.eval())
 
-
-print(assignment.generate())
+# groups.get_assignment()
 
 
 
