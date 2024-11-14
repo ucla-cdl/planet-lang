@@ -1,9 +1,4 @@
 from z3 import *
-from itertools import product
-from collections import namedtuple
-import random
-import itertools
-# from .constraint import Match, Different
 
 
 class ExperimentVariable:
@@ -62,9 +57,6 @@ class VariableCondition:
     def __init__(self, name, var):
         self.var = var # refer back to var object that constructed this option
         self.name = name
-
-    def set_z3_value(self, value):
-        self.__z3_value = value
 
     def __str__(self):
         return self.name 

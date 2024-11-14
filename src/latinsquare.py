@@ -36,7 +36,7 @@ assignment = Assignment()
 # participants.match(0,1, variable = task)
 # sequence.match(0,1, variable = task)
 # new Unit class
-assignment.assign_to_blocks(blocks = [participants, sequence, school], variables = [treatment, task])
+assignment.assign_to_blocks(blocks = [participants, sequence, school, age], variables = [treatment, task])
 
 # NOTE: here we can actually construct constraints
 # we knwo the dims of the unit
