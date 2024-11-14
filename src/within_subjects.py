@@ -33,8 +33,13 @@ seq = Sequence(4)
 
 
 # THIS WORKS, YAYYYY!!!
-subjects.match(0, 1, variable = treatment)
+subjects.different(0, 1, variable = treatment)
+subjects.different(2,3, variable=treatment)
 
+seq.different(0,1, variable = task)
+
+subjects.all_different()
+seq.all_different()
 
 # should the user have to create groups before passing to assignment?
 

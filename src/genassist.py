@@ -49,6 +49,8 @@ seq.different(2, 3, variable = interface)
 seq.match(0,2, variable = image)
 seq.match(0,2, variable = interface)
 
+seq.all_different()
+
 # should the user have to create groups before passing to assignment?
 
 # now the user creates an assignment object, which matches units to 

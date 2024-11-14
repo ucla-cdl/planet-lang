@@ -8,6 +8,7 @@ from .constraint import Different, Match, Constraint, Force, AllDifferent
 from .participant import Participants
 from .blocks import BlockFactor
 from .candl import *
+from .translate import Translate
 
 class Assignment:
     """The assignment class matches every unit to an order of conditions
@@ -24,6 +25,7 @@ class Assignment:
         self.block_constraints = []
         self.dims = []
         self.z3_conditions = []
+        self.translate = Translate()
 
 
     # I think I want these to create a solver class
@@ -179,32 +181,66 @@ class Assignment:
     def eval_constraint(self, constraint, dim = 0):
 
         assert isinstance(constraint, Constraint)
-        
         # this is perhaps a little wonky...
         # not sure if the loop unrolling should happen in 
         # the constraint class...
-        test = {}
-     
-        
         dim_indexings = create_indexing(dim, self.shape)
+        
         # how can we utilize transpose?
-        for var in self.z3_vectors:
-            for indexing in dim_indexings:
-                if var not in test:
-                    test[var] = []
-                test[var].append(np.array(self.z3_vectors[var]).reshape(self.shape)[*indexing].tolist())
+        if isinstance(constraint, Different):
+            var = constraint.get_variable()
+            i1 = constraint.get_index_to_match()
+            i2 = constraint.get_index()
 
+            dim_variables = []
+            for indexing in dim_indexings:
+                dim_variables.append(np.array(self.z3_vectors[var]).reshape(self.shape)[*indexing].tolist())
     
-        if isinstance(constraint, Different) or isinstance(constraint, Match) or isinstance(constraint, Force):
-            self.solver.add(constraint.eval_constraint(test))
+            for row in dim_variables:
+                left = row[i1]
+                right = row[i2]
+                __z3__ = self.translate.different(left, right)
+                self.solver.add(__z3__)
+
+        if isinstance(constraint, Match):
+            var = constraint.get_variable()
+            i1 = constraint.get_index_to_match()
+            i2 = constraint.get_index()
+
+            dim_variables = []
+            for indexing in dim_indexings:
+                dim_variables.append(np.array(self.z3_vectors[var]).reshape(self.shape)[*indexing].tolist())
+    
+            for row in dim_variables:
+                left = row[i1]
+                right = row[i2]
+                __z3__ = self.translate.match(left, right)
+                self.solver.add(__z3__)
+
+        if isinstance(constraint, Force):
+            var = constraint.get_variable()
+            i = constraint.get_index()
+            condition = constraint.get_condition()
+
+            dim_variables = []
+            for indexing in dim_indexings:
+                dim_variables.append(np.array(self.z3_vectors[var]).reshape(self.shape)[*indexing].tolist())
+    
+            for row in dim_variables:
+                left = row[i]
+                __z3__ = self.translate.match(left, condition)
+                self.solver.add(__z3__)
+
         if isinstance(constraint, AllDifferent):
-            self.constraints.append(constraint)
+            # could you prettify this?
+            for indexing in dim_indexings:
+                arr_to_constrain = np.array(self.z3_conditions_with_shape)[*indexing].tolist()
+                self.solver.add([Distinct(arr_to_constrain)])
 
     # NOTE: won't generalize
     def determine_shape(self):
         # first, we want to get the shape of the array
         dim_0_constraints = self.unit_variables[0].constraints
-        print(dim_0_constraints)
         if len(dim_0_constraints) > 0:
             shape = tuple(dim for dim in self.dims)
         else:
@@ -219,50 +255,28 @@ class Assignment:
 
     # somehow merge eval and generate
     def eval(self):
-
         # perhaps this is where we create a different class?
         # we have so many new instance vars
+
+        # these should maybe be classes or something? 
         self.determine_shape()
         self.construct_z3_variable()
         self.constrain_z3_values()
         self.create_z3_for_conditions()
         self.constrain_z3_conditions()
+        self.z3_conditions_with_shape = shape_array(self.z3_conditions, self.shape)
 
-
-        # FIXME: combine the two loop lines in constraint eval 
-
-        # NOTE: quick fix, come back to this
         dim = len(self.unit_variables) - 1
         for unit_var in self.unit_variables:
-            print(unit_var)
             for constraint in unit_var.constraints:
                 self.eval_constraint(constraint, dim)
-
             dim -= 1
 
-
-        # next steps: check for dim constraints of both type
-        # apply constraints in the same way :) 
-        self.z3_conditions_with_shape = shape_array(self.z3_conditions, self.shape)
-        # for every dimension
-        for dim in range(len(self.shape)):
-            # only apply this if the other dimensions have this constraint
-            if dim == 0 or len(self.unit_variables[0].constraints) > 0:
-                # create the indexings to get all arrays of vals at specific dim
-                dim_indexings = create_indexing(dim, self.shape)
-                # for every way of indexing (ie. all levels of all other dims)
-                # add constraint that the vals in this dim are distinct at 
-                # every level of every other dimension
-                for indexing in dim_indexings:
-                    arr_to_constrain = np.array(self.z3_conditions_with_shape)[*indexing].tolist()
-                    self.solver.add([Distinct(arr_to_constrain)])
-
-        # FIXME
+        # FIXME: kind of ugly
         if len(self.unit_variables[0].constraints) > 0:
             test = self.get_one_model(self.z3_conditions)
         else: 
             test = self.get_all_models(self.z3_conditions)
-
 
         # return a numpy representation of the assignment
         return np.array(self.encoding_to_name(test))

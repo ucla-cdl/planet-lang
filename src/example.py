@@ -41,6 +41,7 @@ seq.match(1, 3, variable = treatment)
 # the first and second conditions in the order is always creation
 seq.force(0, variable = task, condition = "creation")
 seq.force(1, variable = task, condition = "creation")
+seq.all_different()
 
 # should the user have to create groups before passing to assignment?
 

@@ -36,6 +36,8 @@ seq.match(0, 1, comp)
 seq.match(0, 1, chron)
 seq.different(0, 1, question)
 
+seq.all_different()
+
 subjects = Participants(16)
 
 assignment = Assignment() # identify as within-subjects design
