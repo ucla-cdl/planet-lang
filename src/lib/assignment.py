@@ -157,7 +157,7 @@ class Assignment:
            
             orders.append(order)
 
-        return np.array(orders).reshape(self.shape).tolist()
+        return np.array(orders).reshape(np.array(all_orders).shape).tolist()
     
     # NOTE: won't generalize
     def eval_constraint(self, constraint, dim = 0):
@@ -222,20 +222,6 @@ class Assignment:
         combined_conditions_arr = self.shape_array(self.z3_conditions)
 
         dims = np.array(combined_conditions_arr).shape
-
-          # # generalize these pls!!!!
-        # # distinguish rows
-        # for i in range(len(combined_conditions_arr)):
-        #     print("in row constraints")
-        #     print(np.array(combined_conditions_arr)[i, :])
-        #     print(i)
-        #     self.solver.add([Distinct(np.array(combined_conditions_arr)[i, :].tolist())])
-
-        # # distinguish columns
-        # if len(self.block_constraints) > 0:
-        #     for i in range(len(combined_conditions_arr[0])):
-        #         print("in column constraints")
-        #         self.solver.add([Distinct(np.array(combined_conditions_arr)[:, i].tolist())])
         
         # starting to generalize the conditions
         # this generalizes the below code
@@ -260,21 +246,6 @@ class Assignment:
 
                     indexing.reverse()
                     self.solver.add([Distinct(np.array(combined_conditions_arr)[*indexing].tolist())])
-
-            # print(f"{x+1}th dim")
-            # if x == 0 or len(self.block_constraints) > 0:
-            #     for i in range(dims[x]):
-            #         print(i)
-            #         indexing = []
-            #         for index in range(len(self.unit_variables)):
-            #             if index == x:
-            #                 indexing.append(slice(None))
-            #             else:
-            #                 indexing.append(i)
-
-            #         indexing.reverse()
-            #         print(indexing)
-            #         self.solver.add([Distinct(np.array(combined_conditions_arr)[*indexing].tolist())])
 
         
         self.constrain_z3_conditions()
