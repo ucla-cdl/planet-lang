@@ -38,14 +38,16 @@ seq = Sequence(4)
 seq.match(0, 1, variable = task)
 seq.force(0, variable = task, condition = "interpretation")
 
-seq.different(0, 1, variable = [image, interface])
+seq.different(0, 1, variable = image)
+seq.different(0, 1, variable = interface)
 
 seq.different(2, 3, variable = image)
 seq.different(2, 3, variable = interface)
 
 
 # prefer repitition
-seq.match(0,2, variable = [image, interface])
+seq.match(0,2, variable = image)
+seq.match(0,2, variable = interface)
 
 # should the user have to create groups before passing to assignment?
 

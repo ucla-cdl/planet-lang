@@ -51,7 +51,10 @@ class Different(TwoElemConstraint):
         TwoElemConstraint.__init__(self, i1, i2, variables)
 
     def eval_constraint(self, z3_variable_map):
-        return [z3_variable_map[variable][self.index_to_match] != z3_variable_map[variable][self.index] for variable in self.variables]
+        ret = []
+        for row in z3_variable_map[self.variables[0]]:
+            ret.append(row[self.index_to_match] != row[self.index])
+        return ret
 
 
 class AllDifferent(Constraint):
@@ -72,7 +75,10 @@ class Match(TwoElemConstraint):
         TwoElemConstraint.__init__(self, i1, i2, variables)
 
     def eval_constraint(self, z3_variable_map):
-        return [z3_variable_map[variable][self.index_to_match] == z3_variable_map[variable][self.index] for variable in self.variables]
+        ret = []
+        for row in z3_variable_map[self.variables[0]]:
+            ret.append(row[self.index_to_match] == row[self.index])
+        return ret
 
 # given a variable, create an z3 instance that allows
 # us to choose any of the subcondiiton options
@@ -90,6 +96,9 @@ class Force(Constraint):
         return self.i
     
     def eval_constraint(self, z3_variable_map):
-        return [z3_variable_map[self.variable][self.i] == self.condition]
+        ret = []
+        for row in z3_variable_map[self.variable]:
+            ret.append(row[self.i] == self.condition)
+        return ret
 
  

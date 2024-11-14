@@ -3,7 +3,7 @@ from lib.participant import Participants
 from lib.orders import Sequence
 from lib.assignment import Assignment
 from lib.variable import ExperimentVariable
-from test.block_factor import BlockFactor
+from lib.blocks import BlockFactor
 
 
 # user creates two variables: task and treatment 
@@ -21,6 +21,8 @@ task = ExperimentVariable(
 
 
 participants = Participants(2)
+school = BlockFactor(levels = ["kirkwood", "ladue"])
+age = BlockFactor(levels = ["young", "old"])
 # groups = BlockFactor(levels=["a", "b", "c", "d"]) 
 
 # conclusion: works with block factors... what do we want to store in each place?
@@ -31,10 +33,10 @@ sequence = Sequence(2)
 
 assignment = Assignment()
 
-# so, this isn't working... need to fix
+# participants.match(0,1, variable = task)
 # sequence.match(0,1, variable = task)
 # new Unit class
-assignment.assign_to_sequence(participants, sequence, variables = [treatment, task])
+assignment.assign_to_blocks(blocks = [participants, sequence, school], variables = [treatment, task])
 
 # NOTE: here we can actually construct constraints
 # we knwo the dims of the unit
