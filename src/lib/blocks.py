@@ -17,6 +17,7 @@ class BlockFactor:
 
         self.all_orders = [] # stores all possible orders given constraint
 
+    # FIXME: I think I can remove this
     def eval_constraint(self, constraint):
 
         assert isinstance(constraint, Constraint)

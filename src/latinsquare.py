@@ -41,8 +41,9 @@ assignment.assign_to_blocks(blocks = [participants, sequence, school, age], vari
 # NOTE: here we can actually construct constraints
 # we knwo the dims of the unit
 
+participants.all_different()
 assignment.recieve_different_conditions(sequence)
-assignment.recieve_different_conditions(participants)
+# assignment.recieve_different_conditions(participants)
 
 # # NOTE: should allow user to set this constraint accross all units
 print(assignment.eval())

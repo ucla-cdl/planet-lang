@@ -23,7 +23,7 @@ task = ExperimentVariable(
 # is associated with an id (i)
 # subjects = [Subject(i+1) for i in range(2)] 
 
-subjects = Participants(20)
+subjects = Participants(2)
 
 # given the number of conditions in an order, and all of the 
 # experimental variables, create an object representing all 

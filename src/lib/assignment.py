@@ -66,6 +66,8 @@ class Assignment:
                         ) 
                 )
 
+
+    # FIXME: function that merges these
     # z3 variable for the overal condition assigned to a unit. 
     # for example, an n by n lating square has n*n z3 variables 
     # for each cell of the square. represented by the flattened array
@@ -143,6 +145,7 @@ class Assignment:
     # NOTE: should this be it's own class? hmmm
     #   - like some type of encode/decode class?
     # functions like these are nice because the flattening does not effect eval
+    # should this be in variable and condition classes?
     def encoding_to_name(self, all_orders):
   
         # this makes life much easier
@@ -172,6 +175,7 @@ class Assignment:
         return shape_array(orders, np.array(all_orders).shape)
     
     # NOTE: won't generalize
+    # FIXME: following compiler-style, maybe just translate all here
     def eval_constraint(self, constraint, dim = 0):
 
         assert isinstance(constraint, Constraint)
@@ -180,11 +184,16 @@ class Assignment:
         # not sure if the loop unrolling should happen in 
         # the constraint class...
         test = {}
+     
+        
+        dim_indexings = create_indexing(dim, self.shape)
+        # how can we utilize transpose?
         for var in self.z3_vectors:
-            if dim != 1:
-                test[var] = np.array(self.z3_vectors[var]).reshape(self.shape).tolist()
-            else: 
-                test[var] = np.array(self.z3_vectors[var]).reshape(self.shape).transpose().tolist()
+            for indexing in dim_indexings:
+                if var not in test:
+                    test[var] = []
+                test[var].append(np.array(self.z3_vectors[var]).reshape(self.shape)[*indexing].tolist())
+
     
         if isinstance(constraint, Different) or isinstance(constraint, Match) or isinstance(constraint, Force):
             self.solver.add(constraint.eval_constraint(test))
@@ -194,11 +203,15 @@ class Assignment:
     # NOTE: won't generalize
     def determine_shape(self):
         # first, we want to get the shape of the array
-        if len(self.block_constraints) > 0:
+        dim_0_constraints = self.unit_variables[0].constraints
+        print(dim_0_constraints)
+        if len(dim_0_constraints) > 0:
             shape = tuple(dim for dim in self.dims)
         else:
-            # 1 dim array
-            shape = (1, self.dims[1])
+            # the participants don't have any constraints (or row block)
+            # all dims except for the first 
+            other_dims = [self.dims[i] for i in range(len(self.dims)) if i != 0]
+            shape = (1, *other_dims)
 
         # to referent shape later on
         self.shape = shape
@@ -207,53 +220,51 @@ class Assignment:
     # somehow merge eval and generate
     def eval(self):
 
+        # perhaps this is where we create a different class?
+        # we have so many new instance vars
         self.determine_shape()
-        # result is just a flattened array with every variable
-        # that we need. Number of variables is determined based on shape
         self.construct_z3_variable()
+        self.constrain_z3_values()
+        self.create_z3_for_conditions()
+        self.constrain_z3_conditions()
 
-        dim = 0
+
+        # FIXME: combine the two loop lines in constraint eval 
+
+        # NOTE: quick fix, come back to this
+        dim = len(self.unit_variables) - 1
         for unit_var in self.unit_variables:
-            dim += 1
+            print(unit_var)
             for constraint in unit_var.constraints:
                 self.eval_constraint(constraint, dim)
 
+            dim -= 1
 
-        self.constrain_z3_values()
-        self.create_z3_for_conditions()
 
-        combined_conditions_arr = shape_array(self.z3_conditions, self.shape)
+        # next steps: check for dim constraints of both type
+        # apply constraints in the same way :) 
+        self.z3_conditions_with_shape = shape_array(self.z3_conditions, self.shape)
+        # for every dimension
+        for dim in range(len(self.shape)):
+            # only apply this if the other dimensions have this constraint
+            if dim == 0 or len(self.unit_variables[0].constraints) > 0:
+                # create the indexings to get all arrays of vals at specific dim
+                dim_indexings = create_indexing(dim, self.shape)
+                # for every way of indexing (ie. all levels of all other dims)
+                # add constraint that the vals in this dim are distinct at 
+                # every level of every other dimension
+                for indexing in dim_indexings:
+                    arr_to_constrain = np.array(self.z3_conditions_with_shape)[*indexing].tolist()
+                    self.solver.add([Distinct(arr_to_constrain)])
 
-        dims = np.array(combined_conditions_arr).shape
-        
-        # starting to generalize the conditions
-
-        # omg I think this solves this 0_o
-        # super messy so pls fix this later
-        for x in range(len(dims)):
-            if x == 0 or len(self.block_constraints) > 0:
-                keys = list(product(*[set(range(dims[i])) for i in range(len(dims)) if i != len(dims) - 1 - x]))
-                for tup in keys:
-                    indexing = []
-                    count = 0
-                    for index in range(len(self.unit_variables)):
-                        if index == x:
-                            indexing.append(slice(None))
-                        else:
-                            indexing.append(tup[count])
-                            count += 1
-
-                    indexing.reverse()
-                    self.solver.add([Distinct(np.array(combined_conditions_arr)[*indexing].tolist())])
-
-        
-        self.constrain_z3_conditions()
-
-        if len(self.block_constraints) > 0:
+        # FIXME
+        if len(self.unit_variables[0].constraints) > 0:
             test = self.get_one_model(self.z3_conditions)
         else: 
             test = self.get_all_models(self.z3_conditions)
-        
+
+
+        # return a numpy representation of the assignment
         return np.array(self.encoding_to_name(test))
 
         
