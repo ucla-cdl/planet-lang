@@ -63,6 +63,9 @@ class BlockFactor:
         constraint = AllDifferent(self)
         self.constraints.append(constraint)
 
+    def __len__(self):
+        return self.n
+
 
 class Block: 
     def __init__(self, variable, assignment):

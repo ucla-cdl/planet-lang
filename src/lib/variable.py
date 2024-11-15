@@ -42,6 +42,9 @@ class ExperimentVariable:
     def __str__(self):
         return str(self.name)
     
+    def __len__(self):
+        return self.n
+    
 
 class VariableCondition:
     """The Variable represents a value that a user can assign to 

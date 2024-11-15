@@ -47,6 +47,5 @@ seq.all_different()
 # groups, where the groups are all possible orders
 assignment = Assignment() # identify as within-subjects design
 assignment.assign_to_sequence(subjects, seq, variables = [treatment, task])
-assignment.recieve_different_conditions(subjects)
 final = assignment.eval()
 print(final)
