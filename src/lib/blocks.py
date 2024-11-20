@@ -17,37 +17,25 @@ class BlockFactor:
 
         self.all_orders = [] # stores all possible orders given constraint
 
-    # FIXME: I think I can remove this
-    def eval_constraint(self, constraint):
-
-        assert isinstance(constraint, Constraint)
-
-        if isinstance(constraint, Different) or isinstance(constraint, Match):
-            var = constraint.get_variable()
-            i1 = constraint.get_index_to_match()
-            i2 = constraint.get_index()
-
-        if isinstance(constraint, Different):
-            self.solver.add(self.z3_vectors[var][i1] != self.z3_vectors[var][i2])
-        if isinstance(constraint, Match):
-            self.solver.add(self.z3_vectors[var][i1] == self.z3_vectors[var][i2])
-        if isinstance(constraint, Force):
-            variable = constraint.get_variable()
-            val = constraint.get_condition()
-            i = constraint.get_index()
-            self.solver.add(self.z3_vectors[variable][i] == val)
-
     def different(self, i1, i2, variable):
+
+        assert i1 <= self.n and i2 <= self.n
+
         constraint = Different(i1, i2, variable)
         self.constraints.append(constraint)
 
     def match(self, i1, i2, variable):
+
+        assert i1 <= self.n and i2 <= self.n
+
         constraint = Match(i1, i2, variable)
         self.constraints.append(constraint)
 
 
     # not finished (need a mapping of indices to variable assignments)
     def force(self, i, variable, condition):
+        assert i <= self.n 
+
         val = 0
 
         # probably somethign more efficient... do we want to store 

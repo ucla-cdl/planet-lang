@@ -1,15 +1,17 @@
-from z3 import *
 from lib.orders import Sequence
 from lib.assignment import Assignment
+from lib.participant import Participants
 from lib.variable import ExperimentVariable
-from lib.groups import Groups
-from lib.blocks import BlockFactor
 # user creates two variables: task and treatment 
 # the user provides the variable name, and an array 
 # of the possible conditions for the variable
-treatment = ExperimentVariable(
-    name = "treatment",
-    options = ["a", "b", "c", "d"]
+participants = ExperimentVariable(
+    name = "participants",
+    options = ["p1", "p2", "p3", "p4", "p5", "p6"]
+)
+chronotype = ExperimentVariable(
+    name = "chronotype",
+    options = ["morning", "night"]
 )
 
 
@@ -18,20 +20,27 @@ treatment = ExperimentVariable(
 # is associated with an id (i)
 # subjects = [Subject(i+1) for i in range(2)] 
 
-# these constraints give randomized block experiment
-# allow for n participants (unknown number)
-subjects = Groups(4)
+groups = Participants(2)
 # given the number of conditions in an order, and all of the 
 # experimental variables, create an object representing all 
 # possible orders of the experimental conditions
-school = BlockFactor(levels=["kirkwood", "ladue"])
-subjects.all_different()
+grouping = Sequence(3) 
+# seq.match(0, 1, treatment)
+# seq.force(0, treatment, "A")
+
+
+groups.all_different()
+grouping.all_different()
 # should the user have to create groups before passing to assignment?
 
 # now the user creates an assignment object, which matches units to 
 # groups, where the groups are all possible orders
 assignment = Assignment() # identify as within-subjects design
-assignment.assign_to_blocks(blocks = [subjects, school], variables = [treatment])
-final = assignment.eval()
-print(final)
 
+assignment.all_different()
+assignment.force
+
+assignment.assign_to_sequence(groups, grouping, variables = [participants])
+final = assignment.eval()
+
+print(final)

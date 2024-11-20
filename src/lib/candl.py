@@ -3,6 +3,7 @@ from .variable import ExperimentVariable
 from.condition import ExperimentCondition
 import numpy as np
 from itertools import product
+import math
 
 # cartesian product of variable conditions to form experimental conditions
 def conditions_from_vars(*argv):
@@ -50,6 +51,23 @@ def create_indexing(dim, dims):
     return dim_indexings
 
 
+def get_elements_of_dim(arr, shape, indexing):
+    return np.array(arr).reshape(shape)[*indexing].tolist()
+
+def all_elements_of_dim(dim, arr, shape):
+    dim_indexings = create_indexing(dim, shape)
+
+    dim_variables = []
+    for indexing in dim_indexings:
+        dim_variables.append(get_elements_of_dim(arr, shape, indexing))
+
+    return dim_variables
+
+def get_num_bits(n):
+    return int(round(math.log(n, 2)))
+
+def all_ones(n):
+    return (1 << n) - 1
 
 
 

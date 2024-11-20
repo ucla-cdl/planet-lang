@@ -15,6 +15,7 @@ class Constraint:
 # because it must be exactly this subcondition
 class TwoElemConstraint(Constraint):
     def __init__(self, i1, i2, variables):
+
         Constraint.__init__(self, variables)
         if not isinstance(variables, list):
             variables = [variables]
