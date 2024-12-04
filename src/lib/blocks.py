@@ -1,20 +1,16 @@
 from z3 import *
-from .constraint import Different, Match, Constraint, Force, AllDifferent
+from .constraint import Different, Match, Force, AllDifferent
+from .variable import ExperimentVariable
 
-class BlockFactor:
+class BlockFactor(ExperimentVariable):
     def __init__(self, levels):
+        ExperimentVariable.__init__(self, self.__class__, num_options=len(levels), options = levels)
         self.n = len(levels)
-        self.blocks = [Block(self, level) for level in levels]
-
+        self.levels = levels
         self.sequence_length = self.n 
         self.solver = z3.Solver()
-
         self.constraints = []
-
-
         self.z3_vectors = None # rep each var in z3
-
-
         self.all_orders = [] # stores all possible orders given constraint
 
     def different(self, i1, i2, variable):

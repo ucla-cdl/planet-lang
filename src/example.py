@@ -23,7 +23,7 @@ task = ExperimentVariable(
 # is associated with an id (i)
 # subjects = [Subject(i+1) for i in range(2)] 
 
-subjects = Participants(2)
+subjects = Participants(8)
 
 # given the number of conditions in an order, and all of the 
 # experimental variables, create an object representing all 
@@ -51,6 +51,9 @@ assignment = Assignment() # identify as within-subjects design
 assignment.assign_to_sequence(subjects, seq, variables = [treatment, task])
 final = assignment.eval()
 print(final)
+
+# NOTE: because we are indexing block_variables when there are none
+# assignment.assign_participants_to_groups()
 
 # assignment.unit_sees_each_condition_equal_num()
 # assignment.set_num_groups(4)

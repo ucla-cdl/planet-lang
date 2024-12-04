@@ -37,9 +37,6 @@ class Assignment:
     def recieve_different_conditions(self, block):
         r = self.unit_variables[0]
         c = self.unit_variables[1]
-
-        
-
  
         for i in range(block.n):
             if block == r:

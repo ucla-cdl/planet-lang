@@ -9,5 +9,11 @@ class Participants(BlockFactor):
     n: id of the unit
     """
     def __init__(self, n=0):
-        BlockFactor.__init__(self, [i for i in range(n)])
+        BlockFactor.__init__(self, [f"p{i+1}" for i in range(n)])
         self.n = n
+        self.attributes = []
+
+    def add_attribute(self, attr):
+
+        assert isinstance(attr, BlockFactor)
+        self.attributes.append(attr)

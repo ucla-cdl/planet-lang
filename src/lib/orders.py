@@ -1,8 +1,6 @@
-from .condition import ConditionTest
-from .helpers import DEBUG, add
+
 from z3 import *
-import numpy as np
-from .variable import ExperimentVariable
+
 from .blocks import BlockFactor
 
 class Sequence(BlockFactor):

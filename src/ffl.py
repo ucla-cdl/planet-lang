@@ -43,7 +43,7 @@ possible_orders.force(1, variable = task, condition = "creation")
 # groups, where the groups are all possible orders
 assignment = Assignment(units = units, groups = possible_orders)
 
-
+assignment.eval()
 
 # assignment.unit_sees_each_condition_equal_num()
 # assignment.set_num_groups(4)

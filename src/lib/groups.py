@@ -12,3 +12,7 @@ class Groups(BlockFactor):
         BlockFactor.__init__(self, [i for i in range(n)])
         self.n = n
         self.labels = labels
+
+    def expand_groups(self, num_groups):
+        assert num_groups % self.n == 0
+        return Groups(self.n)

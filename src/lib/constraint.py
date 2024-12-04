@@ -60,6 +60,15 @@ class AllDifferent(Constraint):
 
     def get_reference_block(self):
         return self.reference_variable
+    
+
+class OccurNTimes(Constraint):
+    def __init__(self, n, variable):
+        self.n = n
+        self.reference_variable = variable
+
+    def get_reference_block(self):
+        return self.reference_variable
 
     
 
@@ -70,6 +79,8 @@ class AllDifferent(Constraint):
 class Match(TwoElemConstraint):
     def __init__(self, i1, i2, variables):
         TwoElemConstraint.__init__(self, i1, i2, variables)
+
+
 
 
 # given a variable, create an z3 instance that allows

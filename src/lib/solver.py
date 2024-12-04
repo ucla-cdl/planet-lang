@@ -1,5 +1,5 @@
 from z3 import *
-from .constraint import Constraint, Different, Match, Force, AllDifferent
+from .constraint import Constraint, Different, Match, Force, AllDifferent, OccurNTimes
 import numpy as np
 from .candl import *
 from .helpers import *
@@ -81,7 +81,6 @@ class Solver:
         # NOTE: won't generalize
     # FIXME: following compiler-style, maybe just translate all here
     def eval_constraint(self, constraint, dim = 0):
-
         assert isinstance(constraint, Constraint)
         # this is perhaps a little wonky...
         # not sure if the loop unrolling should happen in 
@@ -293,15 +292,18 @@ class BitVecSolver:
                 self.solver.add(__z3__)
 
         if isinstance(constraint, Force):
+        
             var = constraint.get_variable()
             i = constraint.get_index()
             condition = constraint.get_condition()
+            condition -= 1
 
             dim_variables = all_elements_of_dim(dim, self.z3_conditions, self.shape)
 
             lo = self.get_lower_bits(var)
             length = get_num_bits(len(var))
 
+        
             for dim in dim_variables:
                 left = Extract(length+lo, lo, dim[i])
                 __z3__ = self.translate.match(left, condition)
@@ -314,8 +316,117 @@ class BitVecSolver:
                 arr_to_constrain = get_elements_of_dim(self.z3_conditions, self.shape, indexing)
                 self.solver.add([Distinct(arr_to_constrain)])
 
+        if isinstance(constraint, OccurNTimes):
+            self.occur_exactly_n_times(constraint.n)
+
+    # should move these to constraints file and inherit from constraint
+    # for now use this to test :)
     def all_different(self):
         self.solver.add(Distinct(self.z3_conditions))
+
+    # this function checks how many times a value occurs accross all z3 vars in the matrix
+    def count(self, l, x):
+        test = []
+        var = self.variables[0]
+        lo = self.get_lower_bits(var)
+        length = get_num_bits(len(var))
+        for e in l: 
+            val = Extract(length+lo, lo, e)
+            test.append(If(val == x, 1, 0))
+
+        return sum(test)
+
+
+    # given two arrays, assert that no elements are the same between them
+    def no_values_match(self, arr1, arr2):
+        constraints = []
+        for val1 in arr1:
+            for val2 in arr2:
+                constraints.append( val1 != val2)
+        return And(constraints)
+
+    # assert that two values are the same
+    def foo(self, val1, val2):
+        return val1 == val2
+
+    def never_occur_together(self):
+
+        dim_variables = all_elements_of_dim(0, self.z3_conditions, self.shape)
+      
+        # much easier to flatten this
+        for row1 in dim_variables:
+            for val1 in row1:
+                # iterating through every element in the matrix a second time 
+                for row2 in dim_variables:
+                    for val2 in row2:
+
+                        if str(val1) != str(val2) and row1!=row2:
+
+                            # FIXME: the array without the values we check for equality 
+                            arr1 = row1[:]
+                            arr1.pop(arr1.index(val1))
+                            arr2 = row2[:]
+                            arr2.pop(arr2.index(val2))
+
+                            # if two variables are equal, no values in their 
+                            # respective rows can be equal 
+                            self.solver.add(
+                                Implies(
+                                 
+                                    self.foo(
+                                        val1, 
+                                        val2
+                                    ), 
+                                    self.no_values_match(
+                                        arr1, 
+                                        arr2
+                                    )
+                        
+                                    )
+                                )
+                            
+    def nested_assignment(self):
+        var = self.variables[0]
+        attr = self.variables[1]
+
+        lo = self.get_lower_bits(var)
+        length = get_num_bits(len(var))
+
+        lo_attr = self.get_lower_bits(attr)
+        length_attr = get_num_bits(len(attr))
+
+        for c1 in self.z3_conditions:
+            for c2 in self.z3_conditions:
+               left = Extract(lo+length, lo, c1)
+               right = Extract(lo+length, lo, c2)
+
+               l_attr = Extract(lo_attr+length_attr, lo_attr, c1)
+               r_attr = Extract(lo_attr+length_attr, lo_attr, c2)
+               self.solver.add(
+                   Implies(
+                       left == right,
+                        l_attr == r_attr
+                   )
+               )
+
+    def occur_exactly_n_times(self, n):
+        if n == 1:
+            self.all_different()
+
+        else: 
+            # store the counts for each possible level in a variable
+            num_levels = len(self.variables[0])
+            counts = [Int(f"{i}") for i in range(0,num_levels)]
+
+            # NOTE: the stalling problem is with count!
+
+            # check the counts of every level and check that
+            # they occur exactly n times
+            for x in range(0, num_levels):
+                self.count(self.z3_conditions, x)
+                self.solver.add(counts[x] == self.count(self.z3_conditions, x))
+                self.solver.add(Or(counts[x] == n, counts[x] == 0))
+
 
         # works when z3 representation is a matrix 
     def get_one_model(self):
@@ -323,20 +434,20 @@ class BitVecSolver:
 
         if (self.solver.check() == sat):
             model = self.solver.model()
-
             for var in self.z3_conditions:
                 all_assignments.append(model.evaluate(model[var]))
-
+        
         return all_assignments
     
     # works when z3 rep iterates through many arrays
     # NOTE: should I merge these two functions?
     def get_all_models(self):
- 
+        
         all_orders = []
         self.solver.push()
 
         while self.solver.check() == sat:
+            
             model = self.solver.model()
 
             block = []
@@ -353,7 +464,6 @@ class BitVecSolver:
 
 
     def encoding_to_name(self, all_orders, variables):
-  
         # this makes life much easier
         z3_assignments = flatten_array(all_orders)
         num_vars = len(variables)
@@ -366,21 +476,23 @@ class BitVecSolver:
             # this is where we will store the string rep of a condition
             # which is a concatination of it's variable assignments
             decoded_assignment = ""
+ 
             # # there is probably a more efficient way to do this
             for i in range(num_vars):
                 # get the ith variable's assignment
                 variable_assignment = assignment 
                 # shift right variable assignment unitl desired var assignment 
                 # is in the lower bits (+1 to account for two's compliment)
+         
                 for j in range(i):
                     variable_assignment >>= get_num_bits(len(variables[j])) + 1
 
                 # get lower bits (associated with given variable)
-                mask =  all_ones(len(variables[i]))
+                mask =  all_ones(get_num_bits(len(variables[i]))+ 1)
                 variable_assignment &= mask
-
+              
                 # FIXME: this is silly, but need to inverse order to match array indexing
-                variable_assignment = len(variables[i]) - 1 - variable_assignment
+                # variable_assignment = len(variables[i]) - 1 - variable_assignment
                 condition = variables[i].conditions[variable_assignment]
 
                 # conder variable assignment to a string representation 
