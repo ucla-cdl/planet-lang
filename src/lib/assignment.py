@@ -5,10 +5,9 @@ from .narray import *
 import numpy as np
 from .blocks import BlockFactor
 from .candl import *
-from .solver import Solver, BitVecSolver
+from .solver import AssignmentSolver, BitVecSolver
 from .unit import Groups
-from .variable import ExperimentVariable
-from .constraint import Force
+from functools import reduce
 
 class Assignment:
     """The assignment class matches every unit to an order of conditions
@@ -76,6 +75,7 @@ class Assignment:
         # we consider a block factor a unit variable
         dim_0_constraints = self.unit_variables[0].constraints
         dims = [len(var) for var in self.unit_variables]
+
         if len(dim_0_constraints) > 0:
             shape = tuple(dim for dim in dims)
         else:
@@ -99,12 +99,12 @@ class Assignment:
         self.shape = self.determine_shape()
         solver = BitVecSolver(self.shape, self.variables)
 
-        dim = len(self.unit_variables) - 1
+        dim = 0
         for unit_var in self.unit_variables:
             for constraint in unit_var.constraints:
                 # self.eval_constraint(constraint, dim)
                 solver.eval_constraint(constraint, dim)
-            dim -= 1
+            dim += 1
 
         if self.diff:
             solver.all_different()
@@ -131,90 +131,63 @@ class Assignment:
         return self.unit_variables
 
     
-    def assign_participants_to_groups(self, num_groups_participant_in = 1, groups=None, never_occur_together = False):
-        participants = self.unit_variables[0]
+    def assign_participants_to_groups(self, participants, num_groups_participant_in = 1, groups=None, never_occur_together = False, blocks=[]):
         num_participants = len(participants) * num_groups_participant_in
-
-        if groups is None:
-            groups = self.groups
-
         num_groups = len(groups)
-
-        assert num_groups % len(self.groups) == 0
       
         # NOTE: should be available option
         participant_per_group = int(num_participants / num_groups)
 
-        shape = (num_groups, participant_per_group)
+        # better way to cast to tuple? 
+        shape = [len(blocks[i]) for i in range(len(blocks))]
+        block_dims = reduce(lambda x, y: len(x) * len(y), blocks)
+        shape.extend([int(num_groups/block_dims), participant_per_group])
+        shape = tuple(shape)
         # this is important and specific to GroupAssignment
-        assert num_groups_participant_in * len(participants) >= shape[0] * shape[1]
+        assert num_groups_participant_in * len(participants) >= reduce(lambda x, y: x * y, shape)
     
         variables = [participants]
         variables.extend([attr for attr in participants.attributes])
-        solver = BitVecSolver(shape, variables)
+        solver = AssignmentSolver(shape, variables)
 
 
         # this is a specific constraint. Better way to expose?
         participants.occurs_n_times(num_groups_participant_in)
         constraint = participants.constraints[0]
-        solver.eval_constraint(constraint, 0)
+        solver.eval_constraint(constraint, 3)
 
         # this is an axiom, and this is such a wonky way to do this
         participants.all_different()
         constraint = participants.constraints[1]
-        solver.eval_constraint(constraint, 0)
+        solver.eval_constraint(constraint, 3)
         
-        dim = 1
+        dim = len(shape) - 1
         for constraint in groups.constraints:
             solver.eval_constraint(constraint, dim)
 
+        dim = 0
+        for block in blocks:
+            for constraint in block.constraints:
+                solver.eval_constraint(constraint, dim)
+            dim += 1
+    
+        solver.majority(0, 0, 1)
+
+        solver.distinguish(0)
 
         if never_occur_together:
-            solver.never_occur_together()
+            solver.never_occur_together(len(shape) - 1)
         if len(participants.attributes) > 0:
             solver.nested_assignment() # axiom
 
         model = solver.get_one_model()
         assert len(model) > 0
         model = np.array(model).reshape(shape).tolist()
+
+
         print("\n participants mapping to groups")
-        print(np.array(solver.encoding_to_name(model, variables)))
-
-
-    # NOTE: should we be able to directly place constraints on this class?
-
-
-    # somehow merge eval and generate
-    # def eval(self):
-    #     # perhaps this is where we create a different class?
-    #     # we have so many new instance vars
-    #     # these should maybe be classes or something? 
-    #     self.shape = self.determine_shape()
-    #     solver = Solver(self.shape, self.variables)
-
-    #     dim = len(self.unit_variables) - 1
-    #     for unit_var in self.unit_variables:
-    #         for constraint in unit_var.constraints:
-    #             # self.eval_constraint(constraint, dim)
-    #             solver.eval_constraint(constraint, dim)
-    #         dim -= 1
-
-    #     if self.diff:
-    #         solver.all_different()
-
-    #     # FIXME: kind of ugly
-    #     if len(self.unit_variables[0].constraints) > 0:
-    #         model = solver.get_one_model()
-    #         assert len(model) > 0
-
-    #         model = np.array(model).reshape(self.shape).tolist()
-    #     else: 
-    #         model = solver.get_all_models()
-
-    #     assert self.unit_variables[0].n % len(model) == 0
-    #     # return a numpy representation of the assignment
-    #     self.groups = Groups(len(model), model)
-    #     return np.array(self.encoding_to_name(model, self.variables))
+        mapping = np.array(solver.encoding_to_name(model, variables))
+        print(mapping)
 
 
 

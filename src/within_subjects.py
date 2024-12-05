@@ -23,7 +23,7 @@ daytime = ExperimentVariable(
 # is associated with an id (i)
 # subjects = [Subject(i+1) for i in range(2)] 
 #NOTE: something is weird with this for creating groups
-subjects = Participants(24)
+subjects = Participants(12)
 # given the number of conditions in an order, and all of the 
 # experimental variables, create an object representing all 
 # possible orders of the experimental conditions
@@ -42,11 +42,12 @@ assignment = Assignment() # identify as within-subjects design
 assignment.assign_to_sequence(subjects, seq, variables = [chron, daytime])
 
 print(assignment.eval())
-groups = assignment.get_groups().expand_groups(int(16))
+groups = assignment.get_groups().expand_groups(int(8))
 
-indices = []
-for i in range(len(groups)):
-    index = i % 2
-    groups.force(i, variable = chronotype_attr, condition = chronotype_attr.levels[index])
+time = BlockFactor(levels = ["morning", "night"])
+chron = BlockFactor(levels = ["morning", "night"])
+# chron.force(1, variable=chronotype_attr, condition = "morning")
+chron.force(1, variable=chronotype_attr, condition = "night")
 
-assignment.assign_participants_to_groups(2, groups, never_occur_together=True)
+
+assignment.assign_participants_to_groups(subjects, 2, groups, never_occur_together=True, blocks = [time, chron])

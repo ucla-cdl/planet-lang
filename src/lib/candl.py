@@ -28,12 +28,13 @@ def shape_array(arr, shape):
 def flatten_array(arr):
     return np.array(arr).flatten().tolist()
 
+# FIXME
 def create_indexing(dim, dims):
     dim_indexings = []
     # combination of all levels of each dimension, except for the one 
     # we want to put a constraint on
-    keys = list(product(*[set(range(dims[i])) for i in range(len(dims)) if i != len(dims) - 1 - dim]))
-    
+    keys = list(product(*[set(range(dims[i])) for i in range(len(dims)) if i != dim]))
+
     # this whole thing is a paradigm that I should be able
     # to use for various tasks
     for tup in keys:
@@ -45,13 +46,35 @@ def create_indexing(dim, dims):
             else:
                 indexing.append(tup[count])
                 count += 1
-        indexing.reverse()
+     
         dim_indexings.append(indexing)
 
     return dim_indexings
 
 
+def create_indexing_2(dim, dims):
+    dim_indexings = []
+    # combination of all levels of each dimension, except for the one 
+    # we want to put a constraint on
+
+    # this whole thing is a paradigm that I should be able
+    # to use for various tasks
+    for val in range(dims[dim]):
+        indexing = []
+        for index in range(len(dims)):
+            if index == dim:
+                indexing.append(val)
+            else:
+                indexing.append(slice(None))
+     
+        dim_indexings.append(indexing)
+
+    return dim_indexings
+
+
+
 def get_elements_of_dim(arr, shape, indexing):
+
     return np.array(arr).reshape(shape)[*indexing].tolist()
 
 def all_elements_of_dim(dim, arr, shape):

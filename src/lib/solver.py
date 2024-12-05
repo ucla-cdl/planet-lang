@@ -4,6 +4,7 @@ import numpy as np
 from .candl import *
 from .helpers import *
 from .translate import Translate
+from functools import reduce
 
 class Solver:
     def __init__(self, shape, variables):
@@ -257,7 +258,7 @@ class BitVecSolver:
     def eval_constraint(self, constraint, dim = 0):
 
         assert isinstance(constraint, Constraint)
-        
+
         # how can we utilize transpose?
         if isinstance(constraint, Different):
             var = constraint.get_variable()
@@ -265,11 +266,14 @@ class BitVecSolver:
             i2 = constraint.get_index()
 
             dim_variables = all_elements_of_dim(dim, self.z3_conditions, self.shape)
+            
            
             lo = self.get_lower_bits(var)
             length = get_num_bits(len(var))
 
+            
             for dim in dim_variables:
+
                 left = Extract(lo+length, lo, dim[i1])
                 right = Extract(lo+length, lo, dim[i2])
                 __z3__ = self.translate.different(left, right)
@@ -300,6 +304,7 @@ class BitVecSolver:
 
             dim_variables = all_elements_of_dim(dim, self.z3_conditions, self.shape)
 
+
             lo = self.get_lower_bits(var)
             length = get_num_bits(len(var))
 
@@ -307,125 +312,21 @@ class BitVecSolver:
             for dim in dim_variables:
                 left = Extract(length+lo, lo, dim[i])
                 __z3__ = self.translate.match(left, condition)
+            
                 self.solver.add(__z3__)
 
         if isinstance(constraint, AllDifferent):
             # could you prettify this?
             dim_indexings = create_indexing(dim, self.shape)
+    
+    
             for indexing in dim_indexings:
                 arr_to_constrain = get_elements_of_dim(self.z3_conditions, self.shape, indexing)
+       
                 self.solver.add([Distinct(arr_to_constrain)])
 
         if isinstance(constraint, OccurNTimes):
             self.occur_exactly_n_times(constraint.n)
-
-    # should move these to constraints file and inherit from constraint
-    # for now use this to test :)
-    def all_different(self):
-        self.solver.add(Distinct(self.z3_conditions))
-
-    # this function checks how many times a value occurs accross all z3 vars in the matrix
-    def count(self, l, x):
-        test = []
-        var = self.variables[0]
-        lo = self.get_lower_bits(var)
-        length = get_num_bits(len(var))
-        for e in l: 
-            val = Extract(length+lo, lo, e)
-            test.append(If(val == x, 1, 0))
-
-        return sum(test)
-
-
-    # given two arrays, assert that no elements are the same between them
-    def no_values_match(self, arr1, arr2):
-        constraints = []
-        for val1 in arr1:
-            for val2 in arr2:
-                constraints.append( val1 != val2)
-        return And(constraints)
-
-    # assert that two values are the same
-    def foo(self, val1, val2):
-        return val1 == val2
-
-    def never_occur_together(self):
-
-        dim_variables = all_elements_of_dim(0, self.z3_conditions, self.shape)
-      
-        # much easier to flatten this
-        for row1 in dim_variables:
-            for val1 in row1:
-                # iterating through every element in the matrix a second time 
-                for row2 in dim_variables:
-                    for val2 in row2:
-
-                        if str(val1) != str(val2) and row1!=row2:
-
-                            # FIXME: the array without the values we check for equality 
-                            arr1 = row1[:]
-                            arr1.pop(arr1.index(val1))
-                            arr2 = row2[:]
-                            arr2.pop(arr2.index(val2))
-
-                            # if two variables are equal, no values in their 
-                            # respective rows can be equal 
-                            self.solver.add(
-                                Implies(
-                                 
-                                    self.foo(
-                                        val1, 
-                                        val2
-                                    ), 
-                                    self.no_values_match(
-                                        arr1, 
-                                        arr2
-                                    )
-                        
-                                    )
-                                )
-                            
-    def nested_assignment(self):
-        var = self.variables[0]
-        attr = self.variables[1]
-
-        lo = self.get_lower_bits(var)
-        length = get_num_bits(len(var))
-
-        lo_attr = self.get_lower_bits(attr)
-        length_attr = get_num_bits(len(attr))
-
-        for c1 in self.z3_conditions:
-            for c2 in self.z3_conditions:
-               left = Extract(lo+length, lo, c1)
-               right = Extract(lo+length, lo, c2)
-
-               l_attr = Extract(lo_attr+length_attr, lo_attr, c1)
-               r_attr = Extract(lo_attr+length_attr, lo_attr, c2)
-               self.solver.add(
-                   Implies(
-                       left == right,
-                        l_attr == r_attr
-                   )
-               )
-
-    def occur_exactly_n_times(self, n):
-        if n == 1:
-            self.all_different()
-
-        else: 
-            # store the counts for each possible level in a variable
-            num_levels = len(self.variables[0])
-            counts = [Int(f"{i}") for i in range(0,num_levels)]
-
-            # NOTE: the stalling problem is with count!
-
-            # check the counts of every level and check that
-            # they occur exactly n times
-            for x in range(0, num_levels):
-                self.count(self.z3_conditions, x)
-                self.solver.add(counts[x] == self.count(self.z3_conditions, x))
-                self.solver.add(Or(counts[x] == n, counts[x] == 0))
 
 
         # works when z3 representation is a matrix 
@@ -442,7 +343,6 @@ class BitVecSolver:
     # works when z3 rep iterates through many arrays
     # NOTE: should I merge these two functions?
     def get_all_models(self):
-        
         all_orders = []
         self.solver.push()
 
@@ -506,3 +406,151 @@ class BitVecSolver:
 
         # return back in original form
         return shape_array(orders, np.array(all_orders).shape)
+    
+
+class AssignmentSolver(BitVecSolver):
+    def __init__(self, shape, variables):
+        BitVecSolver.__init__(self, shape, variables=variables)
+
+    # should move these to constraints file and inherit from constraint
+    # for now use this to test :)
+    def all_different(self):
+        self.solver.add(Distinct(self.z3_conditions))
+
+    def distinguish(self, dim):
+        # could you prettify this?
+        dim_indexings = create_indexing_2(dim, self.shape)
+
+        for indexing in dim_indexings:
+            arr_to_constrain = get_elements_of_dim(self.z3_conditions, self.shape, indexing)
+            arr_to_constrain = flatten_array(arr_to_constrain)
+ 
+            self.solver.add([Distinct(arr_to_constrain)])
+
+    # this function checks how many times a value occurs accross all z3 vars in the matrix
+    def count(self, l, x, var):
+        test = []
+        lo = self.get_lower_bits(var)
+        length = get_num_bits(len(var))
+        for e in l: 
+            val = Extract(length+lo, lo, e)
+            test.append(If(val == x, 1, 0))
+
+        return sum(test)
+
+
+    # given two arrays, assert that no elements are the same between them
+    def no_values_match(self, arr1, arr2):
+        constraints = []
+        for val1 in arr1:
+            for val2 in arr2:
+                constraints.append( val1 != val2)
+        return And(constraints)
+
+    # assert that two values are the same
+    def foo(self, val1, val2):
+        return val1 == val2
+
+    def never_occur_together(self, dim):
+        dim_variables = all_elements_of_dim(dim, self.z3_conditions, self.shape)
+        # much easier to flatten this
+        for row1 in dim_variables:
+            for val1 in row1:
+                # iterating through every element in the matrix a second time 
+                for row2 in dim_variables:
+                    for val2 in row2:
+
+                        if str(val1) != str(val2) and row1!=row2:
+
+                            # FIXME: the array without the values we check for equality 
+                            arr1 = row1[:]
+                            arr1.pop(arr1.index(val1))
+                            arr2 = row2[:]
+                            arr2.pop(arr2.index(val2))
+
+                            # if two variables are equal, no values in their 
+                            # respective rows can be equal 
+                            self.solver.add(
+                                Implies(
+                                 
+                                    self.foo(
+                                        val1, 
+                                        val2
+                                    ), 
+                                    self.no_values_match(
+                                        arr1, 
+                                        arr2
+                                    )
+                        
+                                    )
+                                )
+                            
+
+
+    def majority(self, i, val, dim):
+
+        arr = np.array(shape_array(self.z3_conditions, self.shape))
+        indexing = create_indexing_2(dim, self.shape)[i]
+        block = arr[*indexing]
+        d1 = int(reduce(lambda x, y: x * y, block.shape) / block.shape[len(block.shape) - 1])
+        shape = (d1, block.shape[len(block.shape) - 1])
+  
+        block = block.flatten()
+        block = list(np.array(block).reshape(shape))
+
+         # store the counts for each possible level in a variable
+        num_levels = len(self.variables[1])
+        g = Function("g", IntSort(), IntSort(), IntSort())
+
+        # NOTE: the stalling problem is with count!
+        # check the counts of every level and check that
+        # they occur exactly n times
+        for row in block:
+            for x in range(num_levels):
+                for j in range(len(block)):
+                    self.solver.add(g(j, x) == self.count(block[j], x, self.variables[1]))
+
+                    if x == val:
+                        self.solver.add(g(j, val) > int(len(row)/2))
+                            
+    def nested_assignment(self):
+        var = self.variables[0]
+        attr = self.variables[1]
+
+        lo = self.get_lower_bits(var)
+        length = get_num_bits(len(var))
+
+        lo_attr = self.get_lower_bits(attr)
+        length_attr = get_num_bits(len(attr))
+
+        for c1 in self.z3_conditions:
+            for c2 in self.z3_conditions:
+               left = Extract(lo+length, lo, c1)
+               right = Extract(lo+length, lo, c2)
+
+               l_attr = Extract(lo_attr+length_attr, lo_attr, c1)
+               r_attr = Extract(lo_attr+length_attr, lo_attr, c2)
+               self.solver.add(
+                   Implies(
+                       left == right,
+                        l_attr == r_attr
+                   )
+               )
+
+    def occur_exactly_n_times(self, n):
+        if n == 1:
+            self.all_different()
+
+        else: 
+            # store the counts for each possible level in a variable
+            num_levels = len(self.variables[0])
+            f = Function("f", IntSort(), IntSort())
+
+            # NOTE: the stalling problem is with count!
+
+            # check the counts of every level and check that
+            # they occur exactly n times
+            for x in range(0, num_levels):
+                self.count(self.z3_conditions, x, self.variables[0])
+                self.solver.add(f(x) == self.count(self.z3_conditions, x, self.variables[0]))
+                self.solver.add(Or(f(x) == n, f(x) == 0))
