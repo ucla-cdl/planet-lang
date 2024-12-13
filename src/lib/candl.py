@@ -78,11 +78,15 @@ def get_elements_of_dim(arr, shape, indexing):
     return np.array(arr).reshape(shape)[*indexing].tolist()
 
 def all_elements_of_dim(dim, arr, shape):
+
     dim_indexings = create_indexing(dim, shape)
+
 
     dim_variables = []
     for indexing in dim_indexings:
+
         dim_variables.append(get_elements_of_dim(arr, shape, indexing))
+
 
     return dim_variables
 

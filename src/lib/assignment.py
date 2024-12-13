@@ -117,10 +117,16 @@ class Assignment:
         else: 
             model = solver.get_all_models()
 
+        
+
         if len(self.unit_variables[0].constraints) > 0:
             assert self.unit_variables[0].n % len(model) == 0
 
         self.groups = Groups(len(model), model)
+        for variable in self. variables:
+            block = BlockFactor(name = str(variable), levels=[str(cond) for cond in variable.conditions])
+            self.groups.add_attribute(block)
+       
         return np.array(solver.encoding_to_name(model, self.variables))
 
     def get_groups(self):
@@ -131,16 +137,21 @@ class Assignment:
         return self.unit_variables
 
     
-    def assign_participants_to_groups(self, participants, num_groups_participant_in = 1, groups=None, never_occur_together = False, blocks=[]):
+    def assign_participants_to_groups(self, participants, num_groups_participant_in = 1, groups=None):
         num_participants = len(participants) * num_groups_participant_in
         num_groups = len(groups)
+        blocks = groups.get_attributes()
       
         # NOTE: should be available option
         participant_per_group = int(num_participants / num_groups)
 
         # better way to cast to tuple? 
         shape = [len(blocks[i]) for i in range(len(blocks))]
-        block_dims = reduce(lambda x, y: len(x) * len(y), blocks)
+
+        block_dims = 1
+        for block in blocks:
+            block_dims *= len(block)
+
         shape.extend([int(num_groups/block_dims), participant_per_group])
         shape = tuple(shape)
         # this is important and specific to GroupAssignment
@@ -148,37 +159,23 @@ class Assignment:
     
         variables = [participants]
         variables.extend([attr for attr in participants.attributes])
-        solver = AssignmentSolver(shape, variables)
+        solver = AssignmentSolver(shape, variables, blocks)
 
-
-        # this is a specific constraint. Better way to expose?
+        """
+        observe: these are all constraints on group members (when dim is len(shape) - 1)
+            the constraints involving other dims are wrt. that dim, but place constraints
+            on the participants
+        """
         participants.occurs_n_times(num_groups_participant_in)
-        constraint = participants.constraints[0]
-        solver.eval_constraint(constraint, 3)
 
-        # this is an axiom, and this is such a wonky way to do this
-        participants.all_different()
-        constraint = participants.constraints[1]
-        solver.eval_constraint(constraint, 3)
-        
-        dim = len(shape) - 1
-        for constraint in groups.constraints:
-            solver.eval_constraint(constraint, dim)
+        for constraint in participants.constraints:
+            solver.eval_constraint(constraint, len(shape) - 1)
 
-        dim = 0
-        for block in blocks:
-            for constraint in block.constraints:
-                solver.eval_constraint(constraint, dim)
-            dim += 1
-    
-        solver.majority(0, 0, 1)
-
-        solver.distinguish(0)
-
-        if never_occur_together:
-            solver.never_occur_together(len(shape) - 1)
         if len(participants.attributes) > 0:
             solver.nested_assignment() # axiom
+
+
+
 
         model = solver.get_one_model()
         assert len(model) > 0

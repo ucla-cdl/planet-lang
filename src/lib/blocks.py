@@ -3,8 +3,10 @@ from .constraint import Different, Match, Force, AllDifferent
 from .variable import ExperimentVariable
 
 class BlockFactor(ExperimentVariable):
-    def __init__(self, levels):
-        ExperimentVariable.__init__(self, self.__class__, num_options=len(levels), options = levels)
+    def __init__(self, levels, name = ""):
+        if name == "":
+            name = self.__class__
+        ExperimentVariable.__init__(self, name, num_options=len(levels), options = levels)
         self.n = len(levels)
         self.levels = levels
         self.sequence_length = self.n 

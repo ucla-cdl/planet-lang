@@ -8,6 +8,25 @@ class Constraint:
     def get_variable(self):
         return self.variable
     
+class ParticipantConstraint(Constraint):
+    def __init__(self, variable, wrt=None):
+        self.wrt=wrt
+        Constraint.__init__(self, variable)
+
+        
+class Majority(ParticipantConstraint):
+    def __init__(self, variable, condition, wrt, v):
+        ParticipantConstraint.__init__(self, variable, wrt)
+        self.condition = condition
+        self.v = v
+
+class Distinguish(ParticipantConstraint):
+    def __init__(self, dim):
+        ParticipantConstraint.__init__(self, variable=dim)
+
+class NeverOccurTogether(ParticipantConstraint):
+    def __init__(self, dim):
+        ParticipantConstraint.__init__(self, variable=dim)
 
 
 # NOTE: this should be a superclass of Match, Any, and Different 
@@ -60,6 +79,13 @@ class AllDifferent(Constraint):
 
     def get_reference_block(self):
         return self.reference_variable
+    
+class AllMatch(ParticipantConstraint):
+    def __init__(self, variable, wrt = None, level = None):
+        ParticipantConstraint.__init__(self, variable)
+        self.wrt = wrt
+        self.level = level
+
     
 
 class OccurNTimes(Constraint):
