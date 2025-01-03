@@ -1,4 +1,4 @@
-from lib.orders import PossibleOrders
+from lib.orders import Sequence
 from lib.assignment import Assignment
 from lib.unit import Unit
 from lib.variable import ExperimentVariable
@@ -23,7 +23,7 @@ units = [Unit(i) for i in range(20)]
 # given the number of conditions in an order, and all of the 
 # experimental variables, create an object representing all 
 # possible orders of the experimental conditions
-possible_orders = PossibleOrders(4, treatment, task) 
+possible_orders = Sequence(4, treatment, task) 
 
 # DIFFERENT CONSTRAINT: first and second conditions in the 
 # order never have the same assignment to the treatment variable

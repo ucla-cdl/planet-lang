@@ -8,6 +8,7 @@ from .candl import *
 from .solver import AssignmentSolver, BitVecSolver
 from .unit import Groups
 from functools import reduce
+from .members import Members
 
 class Assignment:
     """The assignment class matches every unit to an order of conditions
@@ -133,19 +134,30 @@ class Assignment:
         assert self.groups != None
         return self.groups
     
+    
     def get_unit_vars(self):
         return self.unit_variables
 
-    
-    def assign_participants_to_groups(self, participants, num_groups_participant_in = 1, groups=None):
+
+
+class GroupAssignment(Assignment):
+    """The assignment class matches every unit to an order of conditions
+        based on constraints set on unit variables, such as block factors
+        of participants, pid, and the state of observation of a subject. 
+
+    """
+    def __init__(self, participants, num_groups_participant_in = 1, groups=None):
+        Assignment.__init__(self)
+
+        self.participants = participants
+        self.num_groups_participants_in = num_groups_participant_in
+        self.groups = groups
+
         num_participants = len(participants) * num_groups_participant_in
         num_groups = len(groups)
         blocks = groups.get_attributes()
-      
-        # NOTE: should be available option
-        participant_per_group = int(num_participants / num_groups)
 
-        # better way to cast to tuple? 
+        participant_per_group = int(num_participants / num_groups)
         shape = [len(blocks[i]) for i in range(len(blocks))]
 
         block_dims = 1
@@ -154,12 +166,17 @@ class Assignment:
 
         shape.extend([int(num_groups/block_dims), participant_per_group])
         shape = tuple(shape)
-        # this is important and specific to GroupAssignment
+
+        self.shape = shape
+
         assert num_groups_participant_in * len(participants) >= reduce(lambda x, y: x * y, shape)
-    
-        variables = [participants]
-        variables.extend([attr for attr in participants.attributes])
-        solver = AssignmentSolver(shape, variables, blocks)
+
+        num_units_per_group = shape[len(shape)-1]
+        self.members = Members(num_units_per_group)
+
+        self.variables = [participants]
+        self.variables.extend([attr for attr in participants.attributes])
+        self.solver = AssignmentSolver(shape, self.variables, blocks)
 
         """
         observe: these are all constraints on group members (when dim is len(shape) - 1)
@@ -168,23 +185,51 @@ class Assignment:
         """
         participants.occurs_n_times(num_groups_participant_in)
 
-        for constraint in participants.constraints:
-            solver.eval_constraint(constraint, len(shape) - 1)
-
         if len(participants.attributes) > 0:
-            solver.nested_assignment() # axiom
+            self.solver.nested_assignment() # axiom
 
 
+    def eval(self):
+        # num_participants = len(participants) * num_groups_participant_in
+        # num_groups = len(groups)
+        # blocks = groups.get_attributes()
+      
+        # # NOTE: should be available option
+        # participant_per_group = int(num_participants / num_groups)
+
+        # # better way to cast to tuple? 
+        # shape = [len(blocks[i]) for i in range(len(blocks))]
+
+        # block_dims = 1
+        # for block in blocks:
+        #     block_dims *= len(block)
+
+        # shape.extend([int(num_groups/block_dims), participant_per_group])
+        # shape = tuple(shape)
+        # # this is important and specific to GroupAssignment
+        # assert num_groups_participant_in * len(participants) >= reduce(lambda x, y: x * y, shape)
+    
+        # variables = [participants]
+        # variables.extend([attr for attr in participants.attributes])
+        # solver = AssignmentSolver(shape, variables, blocks)
+
+        # """
+        # observe: these are all constraints on group members (when dim is len(shape) - 1)
+        #     the constraints involving other dims are wrt. that dim, but place constraints
+        #     on the participants
+        # """
+        # participants.occurs_n_times(num_groups_participant_in)
+
+        for constraint in self.participants.constraints:
+            self.solver.eval_constraint(constraint, len(self.shape) - 1)
 
 
-        model = solver.get_one_model()
+        model = self.solver.get_one_model()
         assert len(model) > 0
-        model = np.array(model).reshape(shape).tolist()
-
-
-        print("\n participants mapping to groups")
-        mapping = np.array(solver.encoding_to_name(model, variables))
-        print(mapping)
+        model = np.array(model).reshape(self.shape).tolist()
+        
+        mapping = np.array(self.solver.encoding_to_name(model, self.variables))
+        return mapping
 
 
 

@@ -96,6 +96,23 @@ def get_num_bits(n):
 def all_ones(n):
     return (1 << n) - 1
 
+def get_dim_variables(arr, shape, dim, factor = None, level = None):
+    if factor != None:
+        dim_indexings = create_indexing_2(factor, shape)
+        indexing = dim_indexings[level]
+
+        arr_to_constrain = get_elements_of_dim(arr, shape, indexing)
+        arr_to_constrain = flatten_array(arr_to_constrain)
+
+        shape = tuple([shape[i] for i in range(len(shape)) if i != factor])
+     
+        dim_variables = all_elements_of_dim(dim - 1, arr_to_constrain, shape)
+
+    else:
+        dim_variables = all_elements_of_dim(dim, arr, shape)
+
+    return dim_variables
+
 
 
     

@@ -5,6 +5,7 @@ from .candl import *
 from .helpers import *
 from .translate import Translate
 from functools import reduce
+from .members import Members
 
 class Solver:
     def __init__(self, shape, variables):
@@ -284,7 +285,7 @@ class BitVecSolver:
             i1 = constraint.get_index_to_match()
             i2 = constraint.get_index()
 
-            dim_variables = all_elements_of_dim(dim, self.z3_conditions, self.shape)
+            dim_variables = get_dim_variables(self.z3_conditions, self.shape, dim)
            
             lo = self.get_lower_bits(var)
             length = get_num_bits(len(var))
@@ -411,6 +412,7 @@ class AssignmentSolver(BitVecSolver):
     def __init__(self, shape, variables, blocks):
         BitVecSolver.__init__(self, shape, variables=variables)
         self.blocks = blocks
+        
 
     
      # NOTE: won't generalize
@@ -420,13 +422,14 @@ class AssignmentSolver(BitVecSolver):
         assert isinstance(constraint, Constraint)
 
         if isinstance(constraint, AllMatch):
+        
             num_members = self.shape[len(self.shape)-1]
             v = constraint.variable
 
             block_factor = constraint.wrt
             for i in range(num_members-1):
                 factor_index = self.blocks.index(block_factor)
-                self.match(i, i+1, v, factor = factor_index, level = constraint.level)
+                self.match(i, i+1, v, dim, factor = factor_index, level = constraint.level)
 
         elif isinstance(constraint, Majority):
             dim = self.blocks.index(constraint.wrt)
@@ -588,38 +591,17 @@ class AssignmentSolver(BitVecSolver):
                 self.solver.add(f(x) == self.count(self.z3_conditions, x, self.variables[0]))
                 self.solver.add(Or(f(x) == n, f(x) == 0))
 
-    def match(self, i1, i2, var, factor = None, level = None):
 
-        if factor != None:
-            dim_indexings = create_indexing_2(factor, self.shape)
-            indexing = dim_indexings[level]
 
-            arr_to_constrain = get_elements_of_dim(self.z3_conditions, self.shape, indexing)
-            arr_to_constrain = flatten_array(arr_to_constrain)
 
-            shape = tuple([self.shape[i] for i in range(len(self.shape)) if i != factor])
-            participant_dim = len(shape) - 1
-          
-            dim_variables = all_elements_of_dim(participant_dim, arr_to_constrain, shape)
-            
+    def match(self, i1, i2, var, dim, factor = None, level = None):
+        dim_variables = get_dim_variables(self.z3_conditions, self.shape, dim, factor = factor, level = level)
+      
+        lo = self.get_lower_bits(var)
+        length = get_num_bits(len(var))
 
-        else:
-            dim_variables = shape_array(self.z3_conditions, self.shape)
-    
-        if var == None:
-            # at this point, equivilant to z3_with_shape
-            for row in dim_variables:
-                left = row[i1]
-                right = row[i2]
-                __z3__ = self.translate.match(left, right)
-                self.solver.add(__z3__)
-
-        else:
-            lo = self.get_lower_bits(var)
-            length = get_num_bits(len(var))
-
-            for row in dim_variables:
-                left = Extract(lo+length, lo, row[i1])
-                right = Extract(lo+length, lo, row[i2])
-                __z3__ = self.translate.match(left, right)
-                self.solver.add(__z3__)
+        for row in dim_variables:
+            left = Extract(lo+length, lo, row[i1])
+            right = Extract(lo+length, lo, row[i2])
+            __z3__ = self.translate.match(left, right)
+            self.solver.add(__z3__)
