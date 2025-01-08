@@ -2,11 +2,16 @@ from z3 import *
 
 
 class Constraint:
-    def __init__(self, variable):
+    def __init__(self, variable, factor=None, level=None):
         self.variable = variable
+        self.factor = factor
+        self.level = level
 
     def get_variable(self):
         return self.variable
+    
+    def get_level(self):
+        return self.factor, self.level
     
 class ParticipantConstraint(Constraint):
     def __init__(self, variable, wrt=None):
@@ -28,14 +33,18 @@ class NeverOccurTogether(ParticipantConstraint):
     def __init__(self, dim):
         ParticipantConstraint.__init__(self, variable=dim)
 
+class AlwaysOccurTogether(ParticipantConstraint):
+    def __init__(self, dim):
+        ParticipantConstraint.__init__(self, variable=dim)
+
 
 # NOTE: this should be a superclass of Match, Any, and Different 
 # this class only adds one Z3 var to the solver
 # because it must be exactly this subcondition
 class TwoElemConstraint(Constraint):
-    def __init__(self, i1, i2, variables):
+    def __init__(self, i1, i2, variables, factor=None, level=None):
 
-        Constraint.__init__(self, variables)
+        Constraint.__init__(self, variables, factor, level)
         if not isinstance(variables, list):
             variables = [variables]
         self.variables = variables
@@ -68,8 +77,8 @@ class Different(TwoElemConstraint):
 
         key information: which variable, which index in order
     """
-    def __init__(self, i1, i2, variables = []):
-        TwoElemConstraint.__init__(self, i1, i2, variables)
+    def __init__(self, i1, i2, variables = [], factor = None, level = None):
+        TwoElemConstraint.__init__(self, i1, i2, variables, factor, level)
 
 
 
@@ -103,8 +112,8 @@ class OccurNTimes(Constraint):
 # the exact same constraints from condition 
 # to add to the new condition's solver
 class Match(TwoElemConstraint):
-    def __init__(self, i1, i2, variables):
-        TwoElemConstraint.__init__(self, i1, i2, variables)
+    def __init__(self, i1, i2, variables, factor = None, level = None):
+        TwoElemConstraint.__init__(self, i1, i2, variables, factor, level)
 
 
 

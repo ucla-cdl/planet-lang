@@ -19,7 +19,6 @@ class Assignment:
     def __init__(self):
         self.unit_variables = []
         self.variables = []
-        self.diff = False
 
     # I think I want these to create a solver class
     def assign_to_sequence(self, subjects, sequence, variables = []):
@@ -90,6 +89,10 @@ class Assignment:
     def all_different(self):
         self.diff = True
 
+    def is_a_sequence(self, unit_variables):
+        sequence = unit_variables[len(unit_variables)-1]
+        return isinstance(sequence, Sequence) and len(sequence) > 1
+
 
     # NOTE: this is with a bitvec representation...
     # ensure that this works
@@ -102,13 +105,12 @@ class Assignment:
 
         dim = 0
         for unit_var in self.unit_variables:
+            print(unit_var)
             for constraint in unit_var.constraints:
                 # self.eval_constraint(constraint, dim)
                 solver.eval_constraint(constraint, dim)
             dim += 1
 
-        if self.diff:
-            solver.all_different()
 
         # FIXME: kind of ugly
         if len(self.unit_variables[0].constraints) > 0:
@@ -124,9 +126,18 @@ class Assignment:
             assert self.unit_variables[0].n % len(model) == 0
 
         self.groups = Groups(len(model), model)
-        for variable in self. variables:
-            block = BlockFactor(name = str(variable), levels=[str(cond) for cond in variable.conditions])
+
+
+        # FIXME: prettify/solidify this please 
+        if self.is_a_sequence(self.unit_variables):
+            print("here")
+            block = BlockFactor(name = "sequence", levels=[f"{i}" for i in range(len(model))])
             self.groups.add_attribute(block)
+
+        else:
+            for variable in self.variables:
+                block = BlockFactor(name = str(variable), levels=[str(cond) for cond in variable.conditions])
+                self.groups.add_attribute(block)
        
         return np.array(solver.encoding_to_name(model, self.variables))
 
@@ -157,6 +168,9 @@ class GroupAssignment(Assignment):
         num_groups = len(groups)
         blocks = groups.get_attributes()
 
+        self.blocks = blocks
+
+
         participant_per_group = int(num_participants / num_groups)
         shape = [len(blocks[i]) for i in range(len(blocks))]
 
@@ -168,6 +182,7 @@ class GroupAssignment(Assignment):
         shape = tuple(shape)
 
         self.shape = shape
+        print(shape)
 
         assert num_groups_participant_in * len(participants) >= reduce(lambda x, y: x * y, shape)
 
@@ -188,40 +203,19 @@ class GroupAssignment(Assignment):
         if len(participants.attributes) > 0:
             self.solver.nested_assignment() # axiom
 
+        self.members.all_different() # this is actually group_members.all_different()
+
 
     def eval(self):
-        # num_participants = len(participants) * num_groups_participant_in
-        # num_groups = len(groups)
-        # blocks = groups.get_attributes()
-      
-        # # NOTE: should be available option
-        # participant_per_group = int(num_participants / num_groups)
-
-        # # better way to cast to tuple? 
-        # shape = [len(blocks[i]) for i in range(len(blocks))]
-
-        # block_dims = 1
-        # for block in blocks:
-        #     block_dims *= len(block)
-
-        # shape.extend([int(num_groups/block_dims), participant_per_group])
-        # shape = tuple(shape)
-        # # this is important and specific to GroupAssignment
-        # assert num_groups_participant_in * len(participants) >= reduce(lambda x, y: x * y, shape)
-    
-        # variables = [participants]
-        # variables.extend([attr for attr in participants.attributes])
-        # solver = AssignmentSolver(shape, variables, blocks)
-
-        # """
-        # observe: these are all constraints on group members (when dim is len(shape) - 1)
-        #     the constraints involving other dims are wrt. that dim, but place constraints
-        #     on the participants
-        # """
-        # participants.occurs_n_times(num_groups_participant_in)
 
         for constraint in self.participants.constraints:
             self.solver.eval_constraint(constraint, len(self.shape) - 1)
+
+        for constraint in self.members.constraints:
+            self.solver.eval_constraint(constraint, len(self.shape) - 1)
+
+        for constraint in self.blocks[0].constraints:
+            self.solver.eval_constraint(constraint, 0)
 
 
         model = self.solver.get_one_model()

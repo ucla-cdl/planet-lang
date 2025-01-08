@@ -15,24 +15,27 @@ class BlockFactor(ExperimentVariable):
         self.z3_vectors = None # rep each var in z3
         self.all_orders = [] # stores all possible orders given constraint
 
-    def different(self, i1, i2, variable):
+    def different(self, i1, i2, variable, factor = None, level = None):
 
         assert i1 <= self.n and i2 <= self.n
 
-        constraint = Different(i1, i2, variable)
+        constraint = Different(i1, i2, variable, factor = factor, level = level)
         self.constraints.append(constraint)
 
-    def match(self, i1, i2, variable):
+    def match(self, i1, i2, variable, factor = None, level = None):
 
         assert i1 <= self.n and i2 <= self.n
 
-        constraint = Match(i1, i2, variable)
+        constraint = Match(i1, i2, variable, factor = factor, level = level)
         self.constraints.append(constraint)
 
 
     # not finished (need a mapping of indices to variable assignments)
-    def force(self, i, variable, condition):
+    def force(self, i, variable_condition):
         assert i <= self.n 
+
+        variable = variable_condition.var
+        condition = variable_condition.name
 
         val = 0
 

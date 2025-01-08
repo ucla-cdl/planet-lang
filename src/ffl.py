@@ -41,7 +41,7 @@ possible_orders.force(1, variable = task, condition = "creation")
 
 # now the user creates an assignment object, which matches units to 
 # groups, where the groups are all possible orders
-assignment = Assignment(units = units, groups = possible_orders)
+assignment = Assignment(units, possible_orders)
 
 assignment.eval()
 

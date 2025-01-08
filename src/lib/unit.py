@@ -1,7 +1,7 @@
 from z3 import *
 from .blocks import BlockFactor
 from .constraint import OccurNTimes
-from .constraint import AllMatch, Majority, Distinguish, NeverOccurTogether
+from .constraint import AllMatch, Majority, Distinguish, NeverOccurTogether, AlwaysOccurTogether
 
 
 class Unit:
@@ -43,25 +43,16 @@ class Participants(Units):
     def __init__(self, n=0):
         Units.__init__(self, n)
 
-    def all_match(self, variable, wrt = None, level=None):
-        constraint = AllMatch(variable, wrt = wrt, level = level)
-        self.constraints.append(constraint)
-
-    def majority(self, i, val, dim, variable):
-        """
-        i: level of block factor
-        val: which attr
-        dim: which block factor 
-        """
-        constraint = Majority(i, val, dim, variable)
-        self.constraints.append(constraint)
-
     def distinguish(self, dim):
         constraint = Distinguish(dim)
         self.constraints.append(constraint)
 
     def never_occur_together(self):
         constraint = NeverOccurTogether(self)
+        self.constraints.append(constraint)
+
+    def always_occur_together(self):
+        constraint = AlwaysOccurTogether(self)
         self.constraints.append(constraint)
 
 # inherit from variable? 

@@ -26,7 +26,7 @@ class ExperimentVariable:
         # experiment variables holds metadata, and information about 
         # possible assignments (ie. the conditions)
         self.conditions = []
-
+        self.condition_map = dict()
         for i in range(num_options):
             # create a name for the condition if not defined
             attr = options[i] if len(options) > 0 else "condition" + str(i)
@@ -34,6 +34,10 @@ class ExperimentVariable:
             # of this variable. Pass the current variable so the condition 
             # can refer back 
             self.conditions.append(VariableCondition(attr, self))
+            self.condition_map[attr] = i
+
+    def get_condition(self, s):
+        return self.conditions[self.condition_map[s]]
 
 
     def get_conditions(self):

@@ -41,6 +41,7 @@ seq = Sequence(1)
 # represent same datatype
 chronotype_attr = BlockFactor(levels = ["morning", "night"])
 subjects.add_attribute(chronotype_attr)
+
 # should the user have to create groups before passing to assignment?
 
 # now the user creates an assignment object, which matches units to 
@@ -53,8 +54,9 @@ assignment.assign_to_sequence(subjects, seq, variables = [daytime, chron, comp])
 print(assignment.eval())
 
 groups = assignment.get_groups().expand_groups(int(16))
+participant_assignment = GroupAssignment(subjects, 2, groups)
 
-# members = groups.get_members()
+members = participant_assignment.members
 
 attrs = groups.get_attributes()
 time = attrs[0]
@@ -65,22 +67,21 @@ comp = attrs[2]
 # for subject assignment, I think we can infer that we place constraints 
 # on the participant? Some of these are constraints on the actual variable,
 # while others are on the specific groups and their members. Rethink this. 
-subjects.all_match(chronotype_attr, wrt = comp, level = 0) # group_members.all_match(wrt: dim)
+members.all_match(chronotype_attr, wrt = comp, level = 0) # group_members.all_match(wrt: dim)
 # add same optional dim param to all_different. 
 
-subjects.all_different() # this is actually group_members.all_different()
-subjects.majority(0, 0, chron, chronotype_attr) # group_members.majority()
-subjects.majority(1, 1, chron, chronotype_attr) # group_members.majority()
 
+members.majority(0, 0, chron, chronotype_attr) # group_members.majority()
+members.majority(1, 1, chron, chronotype_attr) # group_members.majority()
 
 
 subjects.distinguish(time) #  variable-type constraint... all_different?
+
+# if there exists a match
 subjects.never_occur_together() # this is a variable constraint, so we can leave this
 # THis constraint is expensive
 
 
-
-participant_assignment = GroupAssignment(subjects, 2, groups)
 t = foo.time()
 # this stalls when set to 4
 # for example set this to 3 and num participants to 16
@@ -90,3 +91,8 @@ print(foo.time() - t)
 
 print("\n participants mapping to groups")
 print(assignment)
+
+
+# IDEA: user specifies the "experimental unit", such as participant. That is how we derive what a group is 
+
+# for example, a unit is a (row, col) pair. it can have more attributes that are not important 

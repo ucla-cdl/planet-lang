@@ -1,8 +1,8 @@
 from z3 import *
 from lib.orders import Sequence
-from lib.assignment import Assignment
-from lib.unit import Unit
-from lib.participant import Participants
+from lib.assignment import Assignment, GroupAssignment
+
+from lib.unit import Participants
 from lib.variable import ExperimentVariable
 import lib.candl as candl
 
@@ -23,7 +23,7 @@ task = ExperimentVariable(
 # is associated with an id (i)
 # subjects = [Subject(i+1) for i in range(2)] 
 
-subjects = Participants(8)
+subjects = Participants(24)
 
 # given the number of conditions in an order, and all of the 
 # experimental variables, create an object representing all 
@@ -39,8 +39,8 @@ seq.match(0, 2, variable = treatment)
 seq.match(1, 3, variable = treatment)
 # FORCE CONSTRAINT: assignmnet to the task variable for 
 # the first and second conditions in the order is always creation
-seq.force(0, variable = task, condition = "creation")
-seq.force(1, variable = task, condition = "creation")
+seq.force(0, task.get_condition("creation")) 
+seq.force(1, task.get_condition("creation"))
 seq.all_different()
 
 # should the user have to create groups before passing to assignment?
@@ -51,6 +51,14 @@ assignment = Assignment() # identify as within-subjects design
 assignment.assign_to_sequence(subjects, seq, variables = [treatment, task])
 final = assignment.eval()
 print(final)
+
+groups = assignment.get_groups().expand_groups(4)
+
+# NOTE: change the one so this is a constraint on participants
+# do we want to make the participants as experiment variable an explicit conversion? 
+participant_assignment = GroupAssignment(subjects, 1, groups)
+
+print(participant_assignment.eval())
 
 # NOTE: because we are indexing block_variables when there are none
 # assignment.assign_participants_to_groups()

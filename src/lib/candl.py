@@ -54,8 +54,6 @@ def create_indexing(dim, dims):
 
 def create_indexing_2(dim, dims):
     dim_indexings = []
-    # combination of all levels of each dimension, except for the one 
-    # we want to put a constraint on
 
     # this whole thing is a paradigm that I should be able
     # to use for various tasks
@@ -96,13 +94,17 @@ def get_num_bits(n):
 def all_ones(n):
     return (1 << n) - 1
 
+
+# FIXME: incorrect processing if there is a factor. See how majority does this. We probably want to decouple 
 def get_dim_variables(arr, shape, dim, factor = None, level = None):
     if factor != None:
         dim_indexings = create_indexing_2(factor, shape)
         indexing = dim_indexings[level]
 
         arr_to_constrain = get_elements_of_dim(arr, shape, indexing)
+        print(arr_to_constrain)
         arr_to_constrain = flatten_array(arr_to_constrain)
+        print(arr_to_constrain)
 
         shape = tuple([shape[i] for i in range(len(shape)) if i != factor])
      
@@ -112,6 +114,7 @@ def get_dim_variables(arr, shape, dim, factor = None, level = None):
         dim_variables = all_elements_of_dim(dim, arr, shape)
 
     return dim_variables
+
 
 
 

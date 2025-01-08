@@ -29,7 +29,7 @@ age = BlockFactor(levels = ["young", "old"])
 # we should store constraint metadata in these classes and evaluate the constraint 
 # in assignment, since they will build on each other 
 
-sequence = Sequence(3) 
+sequence = Sequence(2) 
 
 assignment = Assignment()
 
@@ -42,12 +42,10 @@ assignment.assign_to_blocks(blocks = [school, participants, sequence], variables
 # school.match(0, 1, variable=task)
 # school.match(0, 1, variable=treatment)
 
-sequence.match(0, 1, variable=task)
-sequence.match(0, 1, variable=treatment)
 
 
 participants.all_different()
-# sequence.all_different()
+sequence.all_different()
 school.all_different()
 # age.all_different()
 # assignment.recieve_different_conditions(participants)
