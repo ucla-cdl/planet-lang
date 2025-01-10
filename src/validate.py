@@ -7,6 +7,7 @@ from lib.variable import ExperimentVariable
 import lib.candl as candl
 from lib.blocks import BlockFactor
 import time as foo
+from lib.model import AssignmentModel
 
 # user creates two variables: task and treatment 
 # the user provides the variable name, and an array 
@@ -28,7 +29,7 @@ comp = ExperimentVariable(
 # is associated with an id (i)
 # subjects = [Subject(i+1) for i in range(2)] 
 #NOTE: something is weird with this for creating groups
-subjects = Participants(24)
+subjects = Participants(12)
 # given the number of conditions in an order, and all of the 
 # experimental variables, create an object representing all 
 # possible orders of the experimental conditions
@@ -53,7 +54,7 @@ assignment.assign_to_sequence(subjects, seq, variables = [daytime, chron, comp])
 
 print(assignment.eval())
 
-groups = assignment.get_groups().expand_groups(int(16))
+groups = assignment.get_groups()
 participant_assignment = GroupAssignment(subjects, 2, groups)
 
 members = participant_assignment.members
@@ -88,11 +89,6 @@ t = foo.time()
 participant_assignment.eval()
 print(foo.time() - t)
 
-
+model = AssignmentModel().model
 print("\n participants mapping to groups")
-print(participant_assignment.generate_model())
-print(participant_assignment.name_to_encoding())
-
-# IDEA: user specifies the "experimental unit", such as participant. That is how we derive what a group is 
-
-# for example, a unit is a (row, col) pair. it can have more attributes that are not important 
+print(participant_assignment.check_model(model))

@@ -6,6 +6,7 @@ from .helpers import *
 from .translate import Translate
 from functools import reduce
 from .bitvector import BitVectors
+import time
 
 
 # NOTE: to decouple, should we have an ndarray class that 
@@ -27,8 +28,6 @@ class BitVecSolver:
         self.create_z3_variables()
         self.constrain_z3_values()
 
-   
-
     # you can come up with a better name
     def constrain_z3_values(self):
         """ for all of the z3 variables relating to a specific variable, 
@@ -43,19 +42,34 @@ class BitVecSolver:
                 lo = 0
                 hi = len(variable) - 1
                 # required number of bits to encode a given value
-                required_bits = int(round(math.log(variable.n, 2)))
+                required_bits = int(math.ceil(math.log(variable.n, 2)))
        
                 self.solver.add(
-                        And(
-                            lo <= Extract(
+                        Or(
+                            And(
+                                lo <= Extract(
+                                        lower_bit+required_bits, 
+                                        lower_bit, 
+                                        self.z3_conditions[index]
+                                    ), 
+                                hi >= Extract(
                                     lower_bit+required_bits, 
                                     lower_bit, 
                                     self.z3_conditions[index]
-                                ), 
-                            hi >= Extract(
-                                lower_bit+required_bits, 
-                                lower_bit, 
-                                self.z3_conditions[index]
+                                )
+                            ),
+                            # FIXME
+                            And(
+                                0 < Extract(
+                                        lower_bit+required_bits, 
+                                        lower_bit, 
+                                        self.z3_conditions[index]
+                                    ), 
+                                -hi >= Extract(
+                                    lower_bit+required_bits, 
+                                    lower_bit, 
+                                    self.z3_conditions[index]
+                                )
                             )
                         )
                 )
@@ -140,8 +154,10 @@ class BitVecSolver:
 
         # works when z3 representation is a matrix 
     def get_one_model(self):
+        
 
         all_assignments = []
+        t = time.time()
         if (self.solver.check() == sat):
             all_assignments = []
             model = self.solver.model()
@@ -149,7 +165,7 @@ class BitVecSolver:
       
             for var in self.z3_conditions:
                 all_assignments.append(model.evaluate(model[var]))
-                
+        print(time.time() - t)
 
         
         return all_assignments
@@ -159,7 +175,7 @@ class BitVecSolver:
     def get_all_models(self):
         all_orders = []
         self.solver.push()
-
+        count = 0
         while self.solver.check() == sat:
             
             model = self.solver.model()
@@ -171,8 +187,11 @@ class BitVecSolver:
                 order.append(model.evaluate(model[var]))
 
             all_orders.append(order)
+            print(count)
             self.solver.add(Or(block))
+            count+=1
 
+        print(all_orders)
         self.solver.pop()
         return all_orders
 
@@ -221,11 +240,42 @@ class BitVecSolver:
         # return back in original form
         return shape_array(orders, np.array(all_orders).shape)
     
+    def name_to_encoding(self, model, variables):
+
+        # this makes life much easier
+        model_assignments = flatten_array(model)
+        num_vars = len(self.variables)
+        
+        for i in range(len(model_assignments)):
+            assignment = model_assignments[i].split("-")
+
+            # there is probably a more efficient way to do this
+            for j in range(num_vars):
+                # get the ith variable's assignment
+                variable_assignment = assignment[j]
+                condition = self.variables[j].condition_map[variable_assignment]
+                __z3__ = self.bitvectors.get_variable_assignment(self.variables[j], self.z3_conditions[i])
+                self.solver.add(__z3__ == condition)
+
+    def check_model(self, model):
+  
+        self.solver.push()
+
+        self.name_to_encoding(model, self.variables)
+        result = self.solver.check()
+
+        self.solver.pop()
+
+        return result
+
+
 
 class AssignmentSolver(BitVecSolver):
     def __init__(self, shape, variables, blocks):
         BitVecSolver.__init__(self, shape, variables=variables)
+        # shouldn't need separate assignment solver: get these from Assignment.unit_variables
         self.blocks = blocks
+    
     
      # NOTE: won't generalize
     # FIXME: following compiler-style, maybe just translate all here
@@ -261,13 +311,6 @@ class AssignmentSolver(BitVecSolver):
         else:
             super().eval_constraint(constraint, dim)
 
-        
-    # should move these to constraints file and inherit from constraint
-    # for now use this to test :)
-    def all_different(self):
-        self.solver.add(Distinct(self.z3_conditions))
-
-
     # FIXME: look like majority 
     def distinguish(self, dim):
         # could you prettify this?
@@ -275,7 +318,6 @@ class AssignmentSolver(BitVecSolver):
         for i in range(levels):
             arr_to_constrain = list(self.get_block(dim, i)[0])
             self.solver.add([Distinct(arr_to_constrain)])
-
 
     # this function checks how many times a value occurs accross all z3 vars in the matrix
     # move this to translate? 
@@ -342,19 +384,16 @@ class AssignmentSolver(BitVecSolver):
 
          # store the counts for each possible level in a variable 
         variable = self.variables.index(variable)
-        num_levels = len(self.variables[variable])
-        g = Function("g", IntSort(), IntSort(), IntSort())
+        var = self.variables[variable]
+        
 
         # NOTE: the stalling problem is with count!
         # check the counts of every level and check that
         # they occur exactly n times
         for row in block:
-            x = val
-            for j in range(len(block)):
-                # FIXME: do I need to move this? 
-           
-                # self.solver.add(g(j, val) == self.counts(block[j], x, self.variables[variable]))
-                self.solver.add(self.counts(block[j], x, self.variables[variable]) > int(len(row)/2))
+            assignments = self.bitvectors.get_variable_assignments(var, row)
+            __z3__ = self.translate.majority(row, val, assignments)
+            self.solver.add(__z3__)
 
     # NOTE: this is kind of an axiom             
     def nested_assignment(self):
@@ -394,21 +433,16 @@ class AssignmentSolver(BitVecSolver):
     # move this to translate (figure out what is important)
     def occur_exactly_n_times(self, n, variable):
         if n == 1:
-            self.all_different()
+            self.solver.add(
+                self.translate.all_different(self.z3_conditions)
+            )
 
         else: 
-            # store the counts for each possible level in a variable
             num_levels = len(variable)
-            f = Function("f", IntSort(), IntSort())
+            assignments = self.bitvectors.get_variable_assignments(variable, self.z3_conditions)
+            __z3s__ = self.translate.occur_exactly_n_times(n, num_levels, assignments)
 
-            # NOTE: the stalling problem is with count!
-
-            # check the counts of every level and check that
-            # they occur exactly n times
-            for level in range(0, num_levels):
-                self.counts(self.z3_conditions, level, variable)
-                self.solver.add(f(level) == self.counts(self.z3_conditions, level, variable))
-                self.solver.add(Or(f(level) == n, f(level) == 0))
+            self.solver.add(And(__z3s__))
 
 
 # NOTE: want to add wrt option for all constraints ?

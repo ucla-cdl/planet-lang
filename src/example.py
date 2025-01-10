@@ -58,7 +58,9 @@ groups = assignment.get_groups().expand_groups(4)
 # do we want to make the participants as experiment variable an explicit conversion? 
 participant_assignment = GroupAssignment(subjects, 1, groups)
 
-print(participant_assignment.eval())
+participant_assignment.eval()
+
+print(participant_assignment.generate_model())
 
 # NOTE: because we are indexing block_variables when there are none
 # assignment.assign_participants_to_groups()

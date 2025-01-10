@@ -15,7 +15,7 @@ class Translate:
         return Implies(left, right)
     
     def all_different(self, variables):
-        self.solver.add(Distinct(variables))
+        return Distinct(variables)
 
     def check_match(self, val, x):
         return If(val == x, 1, 0)
@@ -65,40 +65,22 @@ class Translate:
     
         return And(constraints)
     
-    def majority(self, block, num_levels, val, var):
-        g = Function("g", IntSort(), IntSort(), IntSort(), IntSort())
+    def majority(self, row, val, assignments):
+        return self.counts(assignments, val) > int(len(row)/2)
 
+    def occur_exactly_n_times(self, n, num_levels, assignments):
+        # store the counts for each possible level in a variable
+    
         # NOTE: the stalling problem is with count!
+
         # check the counts of every level and check that
         # they occur exactly n times
-        counts = []
-        
+        __z3s__ = []
+        for level in range(num_levels):
+            counts = self.counts(assignments, level)
+            __z3s__.append((Or(counts == n, counts == 0)))
 
-        for row in block:
-            for x in range(num_levels):
-                for j in range(len(block)):
-                    self.solver.add(g(j, x, val) == self.counts(block[j], x, var))
-
-                    if x == val:
-                        self.solver.add(g(j, val, val) > int(len(row)/2))
-    
-    def occur_exactly_n_times(self, n, variable, variables):
-        if n == 1:
-            self.all_different()
-
-        else: 
-            # store the counts for each possible level in a variable
-            num_levels = len(variable)
-            f = Function("f", IntSort(), IntSort())
-
-            # NOTE: the stalling problem is with count!
-
-            # check the counts of every level and check that
-            # they occur exactly n times
-            for level in range(0, num_levels):
-                count(variables, level, variable)
-                self.solver.add(f(level) == self.count(variables, level, variable))
-                self.solver.add(Or(f(level) == n, f(level) == 0))
+        return __z3s__
     
     # works when z3 representation is a matrix 
     def get_one_model(self, combined_conditions, solver):

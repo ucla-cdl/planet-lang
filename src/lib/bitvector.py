@@ -12,7 +12,7 @@ class BitVectors:
     def determine_num_bits(self):
         bitvec_length = 0
         for variable in self.variables:
-            bits = int(round(math.log(variable.n, 2)))
+            bits = int(math.ceil(math.log(variable.n, 2)))
             bitvec_length += bits
 
         # necessary for two's compliment bit

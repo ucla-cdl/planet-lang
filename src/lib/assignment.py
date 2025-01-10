@@ -70,6 +70,10 @@ class Assignment:
         return shape_array(orders, np.array(all_orders).shape)
     
 
+        # return back in original form
+    
+    
+
     def determine_shape(self):
         # first, we want to get the shape of the array
         # we consider a block factor a unit variable
@@ -216,14 +220,20 @@ class GroupAssignment(Assignment):
 
         for constraint in self.blocks[0].constraints:
             self.solver.eval_constraint(constraint, 0)
-
-
+    
+    def generate_model(self):
         model = self.solver.get_one_model()
         assert len(model) > 0
         model = np.array(model).reshape(self.shape).tolist()
         
         mapping = np.array(self.solver.encoding_to_name(model, self.variables))
         return mapping
+
+    def check_model(self, model):
+        return self.solver.check_model(model)
+        
+
+  
 
 
 

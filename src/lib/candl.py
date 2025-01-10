@@ -89,7 +89,7 @@ def all_elements_of_dim(dim, arr, shape):
     return dim_variables
 
 def get_num_bits(n):
-    return int(round(math.log(n, 2)))
+    return int(math.ceil(math.log(n, 2)))
 
 def all_ones(n):
     return (1 << n) - 1
