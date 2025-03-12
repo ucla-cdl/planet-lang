@@ -1,177 +1,117 @@
 from z3 import *
+from lib.groups import Groups
 from lib.orders import Sequence
-from lib.assignment import Assignment, GroupAssignment
-
-from lib.unit import Participants
+from lib.assignment import Assignment
 from lib.variable import ExperimentVariable
-import lib.candl as candl
+from lib.blocks import BlockFactor
+import math
+
+
+class Design:
+    def __init__(self):
+        self.seq = None
+        self.var = v
+        self.groups = None
+
+    
+    def between_subjects(self, v):
+        self.seq = Sequence(1)
+        self.var = v
+        return self
+
+    def within_subjects(self, v):
+        n = len(v)
+        if isinstance(v, list):
+            n = math.prod(list(map(len, v)))
+
+        self.seq = Sequence(n)
+        self.var = v
+        return self
+    
+    def limit_groups(self, n):
+        self.groups = Groups(n)
+        return self
+    
+    def eval(self):
+        assignment = Assignment()
+
+        # participants.match(0,1, variable = task)
+        # sequence.match(0,1, variable = task)
+        # new Unit class
+
+        if len(self.seq) > 3:
+            assignment.test()
+
+        if isinstance(self.var, list):
+            assignment.assign(self.groups, self.seq, variables = self.var)
+        else:
+            assignment.assign(self.groups, self.seq, variables = [self.var])
+
+        ret = assignment.eval()
+        if len(self.seq) > 3:
+            print(ret[[0, 3], :][:, [0, 3]])
+        return ret
+    
+    def counterbalance(self):
+        self.seq.all_different()
+        return self
+    
+    def match_n(self, n):
+        v = self.var[0]
+        return self
+    
+
+    def __str__(self):
+        return str(self.eval())
+
+def nest(d1, d2):
+    n = len(d1.var) * len(d2.var)
+    des = Design().within_subjects([d1.var, d2.var]).counterbalance().limit_groups(n).match_n(3)
+    return des
+
+
+
+# save for later
+# [[[0, 3], slice()], [slice(), [0, 3]]]
+
+
+
+
+
+
+
 
 # user creates two variables: task and treatment 
 # the user provides the variable name, and an array 
 # of the possible conditions for the variable
 treatment = ExperimentVariable(
     name = "treatment",
-    options = ["ffl", "latex"]
+    options = ["A", "B", "c"]
 )
 task = ExperimentVariable(
     name = "task",
-    options = ["creation", "edit"]
+    options = ["A", "B"]
 )
 
-# there are 20 units participating in the experiment
-# this array holds all 20 Unit objects, and each unit
-# is associated with an id (i)
-# subjects = [Subject(i+1) for i in range(2)] 
+des1 = (
+    Design()
+        .within_subjects(treatment)
+        .counterbalance()
+        .limit_groups(3)
+)
 
-subjects = Participants(24)
-
-# given the number of conditions in an order, and all of the 
-# experimental variables, create an object representing all 
-# possible orders of the experimental conditions
-seq = Sequence(4) 
-
-# DIFFERENT CONSTRAINT: first and second conditions in the 
-# order never have the same assignment to the treatment variable
-seq.different(0, 1, variable = treatment) 
-# MATCH CONSTRAINT: first and third conditions in the 
-# order always have the same assignment to the treatment variable
-seq.match(0, 2, variable = treatment)
-seq.match(1, 3, variable = treatment)
-# FORCE CONSTRAINT: assignmnet to the task variable for 
-# the first and second conditions in the order is always creation
-seq.force(0, task.get_condition("creation")) 
-seq.force(1, task.get_condition("creation"))
-seq.all_different()
-
-# should the user have to create groups before passing to assignment?
-
-# now the user creates an assignment object, which matches units to 
-# groups, where the groups are all possible orders
-assignment = Assignment() # identify as within-subjects design
-assignment.assign_to_sequence(subjects, seq, variables = [treatment, task])
-final = assignment.eval()
-print(final)
-
-groups = assignment.get_groups().expand_groups(4)
-
-# NOTE: change the one so this is a constraint on participants
-# do we want to make the participants as experiment variable an explicit conversion? 
-participant_assignment = GroupAssignment(subjects, 1, groups)
-
-participant_assignment.eval()
-
-print(participant_assignment.generate_model())
-
-# NOTE: because we are indexing block_variables when there are none
-# assignment.assign_participants_to_groups()
-
-# assignment.unit_sees_each_condition_equal_num()
-# assignment.set_num_groups(4)
-
-# assignment.assign(units)
-
-# assignment.assign_unit(1)
+des2 = (
+    Design()
+        .within_subjects(task)
+        .counterbalance()
+        .limit_groups(2)
+)
 
 
+print(des1)
+print(des2)
 
-# test = ConditionTest(variable=treatment)
-# print(test.variable)
+des = nest(des1, des2)
 
-# alternative to specifiying conditions
-
-
-
-# I think it is more natural to specify dependencies like this 
-
-# special var all
-# orders.occurs_n_times(n = 1, condition=("creation", "ffl"))
-# orders.num_orders = 2
-
-# orders.occurs_once_per_index()
-
-# example:
-
-# # alternative to above: 
-# # block = RandomBlock(4)
-# order = Order(4)
-
-# # maybe the order doesn't matter here?
-# # so if we evaluate one first, add to the solver of the other
-# order.different_condition(
-#     0, 
-#     1, 
-#     variable = treatment
-# )
-# order.match_condition(
-#     0, 
-#     3, 
-#     variable = treatment
-# )
-
-# order.assign_condition(
-#     [0,1], 
-#     condition = treatment.creation
-# )
-
-# order.assign_condition(
-#     [2,3], 
-#     condition = treatment.creation
-# )
-
-
-
-# assignment = Assignment( units = units,
-#                          conditions_per_unit = 4,
-#                          order_conditions = order,
-#                 )
-
-# # for each index in order: 
-# #     apply condition to order once
-
-
-# orders.order(1).isfirst(count=1)
-
-# latin square:
-
-
-
-# constraint on the order: 
-
-# 1 2 3
-# 2 3 1
-# 3 1 2 
-
-# 1 2 3
-# 2 3 1
-# 3 1 2
-
-# 1 2 3 4
-# 2 3 4 1
-# 3 4 1 2
-# 4 1 2 3
-
-
-# 1 2 3 4
-# 2 1 4 3
-# 4 3 1 2
-# 3 4 2 1
-
-
-
-# # eval order 1 
-# # for next unit
-# #     condition 1 in order is not condition1 from order 1 
-# #     condition 2 in order is not condiiton 2 in order 1 
-
-
-# # order.no_condition_matches() -> no push and pop of z3 solver 
-# latin square with respect to the task (e, f, c)
-# c1 c2 e1 e2 f1 f2
-# e1 e2 c1 c2 f1 f2
-# f1 f2 e1 e2 c1 c2
-
-# for i in range(order.n):
-#     order.appears_once(index = i)
-
-
+print(des)
 

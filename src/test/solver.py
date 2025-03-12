@@ -19,6 +19,8 @@ class Solver:
         self.create_z3_for_conditions()
         self.constrain_z3_conditions()
 
+        self.solver.add(self.z3_condti)
+
     # you can come up with a better name
     def constrain_z3_values(self):
         # for all of the z3 variables relating to a specific variable, 

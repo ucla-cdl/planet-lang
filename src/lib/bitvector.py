@@ -6,8 +6,32 @@ class BitVectors:
         self.variables = variables
         self.len = self.determine_num_bits()
         self.z3_representation =  [BitVec(f"C_{index + 1}", self.len) for index in range(n)]
-        
-        
+
+    def get_possible_values(self):
+        values = []
+        k = 0
+        for i in range(len(self.variables)):
+            variable = self.variables[i]
+            n = variable.n
+
+            if not i:
+                values.extend([x for x in range(n)])
+            else:
+                k += int(math.ceil(math.log(self.variables[i-1].n, 2))) + 1
+
+                new_values = []
+                for v in values:
+                    for y in range(n):
+                        x = y << k 
+             
+                        new_values.append(x + v)
+                
+                values.extend(new_values)
+
+            if not len(values):
+                values.extend([x for x in range(n)])
+
+        return set(values)
 
     def determine_num_bits(self):
         bitvec_length = 0

@@ -48,7 +48,7 @@ subjects = Participants(30)
 # NOTE: 9! orders, so this takes a very long time to terminate 
 seq = Sequence(9) 
 
-
+seq.all_different()
 assignment = Assignment() # identify as within-subjects design
 assignment.assign_to_sequence(subjects, seq, variables = [Vd, Nfp])
 final = assignment.eval()
