@@ -3,6 +3,9 @@ from lib.unit import Groups
 from lib.orders import Sequence
 from lib.assignment import Assignment
 import math
+import sys
+
+from lib.candl import generate_conditions
 
 class VariableType:
     def __init__(self, variable):
@@ -26,13 +29,24 @@ class WithinSubjects(VariableType):
         self.n = math.prod([len(v) for v in variable])
 
 
-class Block:
+class InnerBlock:
     """Represents a block structure in the experimental design."""
-    def __init__(self, variable, width, height, v2):
+    def __init__(self, variable, width, height, stride):
         self.variable = variable
         self.width = width
         self.height = height
-        self.v2 = v2
+        self.stride = stride
+
+class OuterBlock:
+    """Represents a block structure in the experimental design."""
+    def __init__(self, variable, width, height, stride):
+        self.variable = variable
+        self.width = width
+        self.height = height
+        self.stride = stride
+
+    def __str__(self):
+        return f"{self.variable}: \n\t{self.width}\n\t{self.height}\n"
 
 class NoRepeat:
     def __init__(self, variable=None, width = None):
@@ -67,32 +81,13 @@ class Design:
         self.variables = []
         self.groups = None
         self.constraints = []
-        self.match_constraints = []
         self.trials = 0
 
-        self.ws_count = 0
+        self.counterbalanced = False
   
 
     def num_trials(self, n):
         self.trials = n
-        return self
-
-    def match_block(self, variable, block_width, block_height, v2):
-
-        self.block_width = block_width
-        self.block_height = block_height
-        self.match_var = variable
-        self.match2 = v2
-
-        # Create a new Block object with the provided parameters
-        block = Block(variable, block_width, block_height, v2)
-        
-        # Add the block to the list of match constraints
-        self.match_constraints.append(block)
-        
-        # Debug print of current constraints (consider removing in production)
-        
-        # Return self for method chaining
         return self
     
     def between_subjects(self, *variables):
@@ -179,18 +174,20 @@ class Design:
             elif isinstance(constraint, StartWith):
                 assignment.start_with(constraint.variable, constraint.condition)
     
-        # Process match constraints
-        for match_constraint in self.match_constraints:
-            assignment.match_inner(
-                match_constraint.variable,
-                match_constraint.width,
-                match_constraint.height,
-            )
-            assignment.match_outer(
-                match_constraint.v2,
-                match_constraint.width,
-                match_constraint.height,
-            )
+     
+            elif isinstance(constraint, InnerBlock):
+                assignment.match_inner(
+                    constraint.variable,
+                    constraint.width,
+                    constraint.height,
+                )
+
+            else:
+                assignment.match_outer(
+                    constraint.variable,
+                    constraint.width,
+                    constraint.height,
+                )
         
         # Add match blocks for between-subjects variables when there are multiple variables
         for variable in self.variables:
@@ -200,19 +197,17 @@ class Design:
         # Evaluate the assignment and return the result
         result = assignment.eval()
 
-        print(self.groups.n)
+        print(result)
 
         return result
         
     def counterbalance(self, *variable, w = 0, h = 0, stride = [1, 1]):
-
-
-        print(list(variable))
-
-        if len(variable) == 1:
-            self.constraints.append(NoRepeat(variable[0]))
+        self.counterbalanced = True
         self.constraints.append(Counterbalance(variable, width = w, height = h, stride = stride))
         return self
+    
+    def random(self, units):
+        return generate_conditions(units.n, self.variables[0].conditions)
 
 
     def __str__(self):
@@ -251,7 +246,9 @@ def nest(design1, design2):
     if design2.groups is None:
         design2.eval()
 
-    print(design2.groups.n)
+    if design1.groups is None:
+        design2.eval()
+
     # Calculate the total number of groups in the combined design
     total_groups = len(design1.groups) * len(design2.groups)
     
@@ -259,57 +256,70 @@ def nest(design1, design2):
     combined_variables = design1.variables.copy()
     combined_variables.extend(design2.variables)
     
-    # Calculate the total number of conditions
-    total_conditions = 1
-    for variable in combined_variables:
-        total_conditions *= len(variable)
-    
-    # Get the first constraint from design1
-    constraint1 = design1.constraints[0]
-    
     # Calculate width_test (the product of all variable lengths in design1)
     width_test = 1
-
     if design1.trials == 0:
         for variable in design1.variables:
             width_test *= len(variable)
     else: 
         width_test = design1.trials
 
-    print(width_test)
+    width2 = 1
+    if design2.trials == 0:
+        for variable in design2.variables:
+            width2 *= len(variable)
+    else: 
+        width2 = design2.trials
+
+
+    total_conditions = width2 * width_test
     
     # Create a new design with the combined variables
-    combined_design = Design().within_subjects(*combined_variables).limit_groups(total_groups).num_trials(width_test * 2)
+    combined_design = Design().within_subjects(*combined_variables).limit_groups(total_groups).num_trials(total_conditions)
+   
     # Add the first match block
-
-    combined_design.match_block(
-        design2.variables[0],
-        width_test,
-        len(design1.groups),
-        design1.variables[0]
-    )
-    
-    # Add the second match block if design1 has more than one variable
-    if len(design1.variables) > 1:
-        combined_design.match_block(
-            design2.variables[0],
+    for i in range(len(design2.variables)):
+        combined_design.constraints.append(InnerBlock(
+            design2.variables[i],
             width_test,
             len(design1.groups),
-            design1.variables[1]
-        )
-    
+            stride = [1, 1]
+        ))
+
+     # Add the first match block
+    for i in range(len(design1.variables)):
+        combined_design.constraints.append(OuterBlock(
+            design1.variables[i],
+            width_test,
+            len(design1.groups),
+            stride = [1, 1]
+        ))
+  
     # Add counterbalance constraints from design1
     for constraint in design1.constraints:
         if isinstance(constraint, Counterbalance):
+            combined_design.counterbalanced = True
 
-            combined_design.constraints.append(
-                Counterbalance(
-                    constraint.variable,
-                    width=constraint.width,
-                    height=constraint.height,
-                    stride=[1, 1]
+
+            if constraint.width and constraint.height:
+                combined_design.constraints.append(
+                    Counterbalance(
+                        constraint.variable,
+                        width=constraint.width,
+                        height=constraint.height,
+                        stride=constraint.stride
+                    )
                 )
-            )
+            else: 
+                combined_design.constraints.append(
+                    Counterbalance(
+                        constraint.variable,
+                        width=width_test,
+                        height=len(design1.groups),
+                        stride=constraint.stride
+                    )
+                )
+
         
         if isinstance(constraint, NoRepeat):
             combined_design.constraints.append(
@@ -322,13 +332,14 @@ def nest(design1, design2):
     
     for constraint in design2.constraints:
         if isinstance(constraint, Counterbalance):
+            combined_design.counterbalanced = True
             # Add counterbalance constraint for design2 variables
             combined_design.constraints.append(
                 Counterbalance(
-                    design2.variables,
+                    constraint.variable,
                     width=total_conditions,
                     height=total_groups,
-                    stride=[width_test, len(design1.groups)]
+                    stride=[width_test*constraint.stride[0], len(design1.groups)*constraint.stride[1]]
                 )
             )
 
@@ -336,12 +347,40 @@ def nest(design1, design2):
                 combined_design.constraints.append(
                     StartWith(constraint.variable, constraint.condition)
                 )
+        
+        elif isinstance(constraint, NoRepeat):
+            print(constraint)
+            combined_design.constraints.append(
+                NoRepeat(
+                    constraint.variable,
+                    constraint.width
+                )
+            )
     
-    # Copy match constraints from design1 if they exist
-    if design1.match_constraints:
-        block = design1.match_constraints[0]
-        combined_design.match_constraints.append(
-            Block(block.variable, block.width, block.height, block.v2)
-        )
+    # # Copy match constraints from design1 if they exist
+    for block in design1.constraints:
+        if isinstance(block, InnerBlock):
+            combined_design.constraints.append(
+                InnerBlock(block.variable, block.width, block.height, stride = [1, 1])
+            )
+
+        # # here I need to multiply stride by the number of conditions of the block variable
+        elif isinstance(block, OuterBlock):
+            combined_design.constraints.append(
+                OuterBlock(block.variable, block.width, block.height, stride = [1, 1])
+            )
+
+      
+    for block in design2.constraints:
+        if isinstance(block, InnerBlock):
+            combined_design.constraints.append(
+                InnerBlock(block.variable, block.width*width_test, block.height*len(design1.groups), stride = [1, 1])
+            )
+
+        # # here I need to multiply stride by the number of conditions of the block variable
+        elif isinstance(block, OuterBlock):
+            combined_design.constraints.append(
+                OuterBlock(block.variable, block.width*width_test, block.height*len(design1.groups), stride = [1, 1])
+            )
     
     return combined_design

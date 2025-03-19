@@ -21,11 +21,11 @@ interface = ExperimentVariable(
 
 des = (
     Design()
-        .within_subjects(task, number)
-        .between_subjects(interface)
+        .within_subjects(task)
+        .between_subjects(interface, number)
         .counterbalance(task)
-        .counterbalance(number)
-        .num_trials(2)
+        .start_with(task, "creation")
+        # .num_trials(2)
 )
 
 print(des)

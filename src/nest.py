@@ -25,14 +25,14 @@ des1 = (
     Design()
         .within_subjects(treatment)
         .counterbalance(treatment)
-        .limit_groups(2)
+        # .limit_groups(2)
 )
 
 des2 = (
     Design()
         .within_subjects(task)
         .counterbalance(task)
-        .limit_groups(2)
+        # .limit_groups(2)
 )
 
 des3 = (Design()
@@ -47,7 +47,7 @@ print(des2)
 
 des = nest(des2, des1)
 
-test = nest(des, des3)
+test = nest(des3, des)
 
 print(des)
 print(test)

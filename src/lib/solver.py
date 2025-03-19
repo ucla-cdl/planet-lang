@@ -8,7 +8,9 @@ from functools import reduce
 from .bitvector import BitVectors
 import time
 import itertools
+import warnings
 
+warnings.simplefilter('default')
 
 # NOTE: to decouple, should we have an ndarray class that 
 # has z3 vars as special type? not sure if this infrastructure is necessary?
@@ -29,7 +31,6 @@ class BitVecSolver:
         self.create_z3_variables()
         self.constrain_z3_values()
         self.distinguish_rows()
-        print("here")
 
     # you can come up with a better name
     def constrain_z3_values(self):
@@ -119,7 +120,6 @@ class BitVecSolver:
         return sum(test)
     
 
-
     def block_array(self, arr, block = []):
         return np.array(arr)[block[0][0]:block[0][1]:block[0][2], block[1][0]:block[1][1]:block[1][2]]
 
@@ -133,7 +133,7 @@ class BitVecSolver:
 
 
 
-    def counterbalance(self, block=None, variables=None):
+    def counterbalance(self, block=[], variables=None):
         """
         Apply counterbalancing to ensure equal occurrence of variable combinations.
         
@@ -144,10 +144,7 @@ class BitVecSolver:
         Returns:
             None: Modifies the solver in-place
         """
-        # Initialize block as empty list if None
-        if block is None:
-            block = []
-            
+      
         # Get dimensional variables from z3 conditions
         plans = get_dim_variables(self.z3_conditions, self.shape, 1)
         
@@ -203,8 +200,6 @@ class BitVecSolver:
         block = self.block_array(plans, block)
         flat_block = np.array(block).flatten()
 
-        print(flat_block)
-
         for i in range(len(flat_block)):
             for j in range(i, len(flat_block)):
                 a1 = self.bitvectors.get_variable_assignment(variable, flat_block[i])
@@ -234,7 +229,7 @@ class BitVecSolver:
         all_orders = []
         self.solver.push()
         count = 0
-        while self.solver.check() == sat:
+        while self.solver.check() == sat and count < 720:
             
             model = self.solver.model()
 
@@ -247,6 +242,9 @@ class BitVecSolver:
             all_orders.append(order)
             self.solver.add(Or(block))
             count+=1
+
+        if self.solver.check() == sat:
+            warnings.warn(f"There are more orders not captured in the model due order capacity (currently set to {720})")
 
         self.solver.pop()
         return all_orders

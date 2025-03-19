@@ -12,8 +12,13 @@ import duckdb
 def assign_counterbalance(units, plans):
     units.eval()
 
+    
+    if plans.counterbalanced:
+        plans = plans.eval()
 
-
+    else:
+        plans = plans.random(units)
+    
     num_plans = len(plans)
     num_participants = units.n
     duckdb.sql("CREATE TABLE members (plan int)")
@@ -45,15 +50,7 @@ def assign_counterbalance(units, plans):
            """).show()
     
 def assign(units, plans):
-    units.eval()
-    num_plans = len(plans)
-    
-    duckdb.sql(f"update participants set plan = floor(random() * {num_plans}) + 1")
-    # duckdb.sql("select * from participants order by random() limit 3").show()
-    duckdb.sql(f"select * from {units.table}").show()
-    # duckdb.sql("SELECT test.pid, plan FROM (SELECT row_number() OVER (ORDER BY random()) as id, pid FROM participants ORDER BY RANDOM()) test join participants secondary on secondary.pid = test.pid").show()
-
-    duckdb.sql(f"select count(*) from {units.table} group by plan").show()
+    return assign_counterbalance(units, plans)
 
 
 class Assignment:
@@ -63,40 +60,23 @@ class Assignment:
 
     """
     def __init__(self, subjects, sequence, variables = []):
-        self.variables = []
-        self.seq = None
-        self.units = None
-        self.num_trials = 0
-        self.solver = None
-        self.solver_test = None
-        self.assign(subjects, sequence, variables)
-
-    def assign(self, subjects, sequence, variables = []):
         assert isinstance(sequence, Sequence)
-        assert isinstance(subjects, Units) or subjects is None
-
+        assert isinstance(subjects, Units)
+        assert len(variables) > 0
 
         self.units = subjects
         self.seq = sequence
         self.num_trials = len(sequence)
         self.variables = variables
-        
+        self.shape = self.determine_shape()
+        self.solver = BitVecSolver(self.shape, self.variables)
 
-
-        if len(subjects):
-            self.shape = self.determine_shape()
-            self.solver = BitVecSolver(self.shape, self.variables)
-        else:
-            self.solver = BitVecSolver(tuple([1, self.num_trials]), self.variables)
-
-  
-        # return back in original form
     
-    def determine_shape(self, limit = False):
-        if limit: 
-            n = 1
-        else: 
+    def determine_shape(self):
+        if len(self.units): 
             n = len(self.units)
+        else: 
+            n = 1
 
         return tuple([n, self.num_trials])
     
@@ -104,25 +84,29 @@ class Assignment:
     # Note: use for creating blocks
 
     # NEED TO DECOUPLE THIS
-    def match_inner(self, v, w, h):
+    def match_inner(self, variable, width, height):
 
-        if len(self.units):
-            
-            n = int(self.shape[0] / h)
-            m = int(self.shape[1] / w)
+        # get number of block matrices per column
+        n = int(self.shape[0] / height)
+        # get number of block matrices per row
+        m = int(self.shape[1] / width)
 
-
-            for i in range(n):
-                for j in range(m):
-                    
-                    self.solver.match_block(v, [(i*h + 0, i * h  + h, 1), (j*w + 0, j * w + w, 1)])
+        for i in range(n):
+            for j in range(m):
+                self.solver.match_block(
+                    variable, 
+                    [
+                        (i*height + 0, i * height  + height, 1)
+                        , (j*width + 0, j * width + width, 1)
+                    ]
+                )
 
     def match_outer(self, v, w, h):
-
+    
         # NEEDS TO BE it's own func / constraint option. Don't treat these together 
         for i in range(h):
             for j in range(w):
-            
+                
                 self.solver.match_block(v, [(i, self.shape[0], h), (j, self.shape[1], w)])
 
 
@@ -132,7 +116,6 @@ class Assignment:
         self.solver.counterbalance(block, v)
 
     def start_with(self, variable, condition):
-        print("start")
         self.solver.start_with(variable, variable.conditions.index(condition))
     
     
@@ -142,9 +125,6 @@ class Assignment:
         # perhaps this is where we create a different class?
         # we have so many new instance vars
         # these should maybe be classes or something? 
-
-        
-
         if len(self.units):
             model = self.solver.get_one_model()
             assert len(model) > 0

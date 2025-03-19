@@ -5,6 +5,29 @@ import numpy as np
 from itertools import product
 import math
 
+
+
+import random
+
+def generate_conditions(participants, conditions, trials_per_condition=1):
+    """
+    Generates a randomized sequence of conditions for each participant.
+    
+    :param participants: Number of participants
+    :param conditions: List of conditions
+    :param trials_per_condition: Number of times each condition should appear
+    :return: Dictionary mapping participant IDs to their condition sequences
+    """
+    experiment_data = []
+
+    for _ in range(participants):
+        condition_list = conditions * trials_per_condition  # Repeat conditions
+        random.shuffle(condition_list)  # Shuffle for randomization
+        experiment_data.append(condition_list)
+    
+    return experiment_data
+
+
 # cartesian product of variable conditions to form experimental conditions
 def conditions_from_vars(*argv):
 

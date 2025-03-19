@@ -46,7 +46,7 @@ des = nest(interface_des, task_des)
 print(des)
 
 
-assign_counterbalance(units, des.eval())
+assign_counterbalance(units, des)
 
 print(task_des)
 

@@ -18,12 +18,4 @@ def generate_conditions(participants, conditions, trials_per_condition=1):
     
     return experiment_data
 
-# Define conditions (example: different task difficulty levels)
-conditions = ["Easy", "Medium", "Hard"]
 
-# Generate sequences for 5 participants, each experiencing 2 trials per condition
-experiment_results = generate_conditions(participants=5, conditions=conditions, trials_per_condition=1)
-
-# Display generated sequences
-for participant, sequence in experiment_results.items():
-    print(f"{participant}: {sequence}")
