@@ -15,7 +15,7 @@ class Constraint:
     
 class ParticipantConstraint(Constraint):
     def __init__(self, variable, wrt=None):
-        self.wrt=wrt
+        self.widthrt=wrt
         Constraint.__init__(self, variable)
 
         
@@ -92,7 +92,7 @@ class AllDifferent(Constraint):
 class AllMatch(ParticipantConstraint):
     def __init__(self, variable, wrt = None, level = None):
         ParticipantConstraint.__init__(self, variable)
-        self.wrt = wrt
+        self.widthrt = wrt
         self.level = level
 
     

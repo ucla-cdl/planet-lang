@@ -2,7 +2,7 @@ from z3 import *
 from .blocks import BlockFactor
 from .constraint import OccurNTimes
 from .constraint import AllMatch, Majority, Distinguish, NeverOccurTogether, AlwaysOccurTogether
-
+import duckdb
 
 class Unit:
     """ a Unit represents a singular unit that participates in a study. Units
@@ -13,24 +13,31 @@ class Unit:
     def __init__(self, n):
         self.n = n
 
-class Units(BlockFactor):
+class Units:
     def __init__(self, n):
-        BlockFactor.__init__(self, [str(i) for i in range(n)])
         self.n = n
         self.attributes = []
+        self.table = "participants"
 
     def add_attribute(self, attr):
 
         assert isinstance(attr, BlockFactor)
         self.attributes.append(attr)
 
+    
+
+    def eval(self):
+        duckdb.sql("create table participants ( pid int, plan int )")
+        for i in range(self.n):
+            duckdb.sql(f"insert into participants values ({i+1}, 0)")
+
     def get_attributes(self):
         return self.attributes
+    
+    def __len__(self):
+        return self.n 
 
 
-    def occurs_n_times(self, n):
-        constraint = OccurNTimes(n, self)
-        self.constraints.append(constraint)
        
 
 # inherit from variable? 

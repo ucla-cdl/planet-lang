@@ -7,6 +7,7 @@ from .translate import Translate
 from functools import reduce
 from .bitvector import BitVectors
 import time
+import itertools
 
 
 # NOTE: to decouple, should we have an ndarray class that 
@@ -28,6 +29,7 @@ class BitVecSolver:
         self.create_z3_variables()
         self.constrain_z3_values()
         self.distinguish_rows()
+        print("here")
 
     # you can come up with a better name
     def constrain_z3_values(self):
@@ -77,82 +79,22 @@ class BitVecSolver:
         self.z3_conditions = self.bitvectors.get_variables()
     
 
-    # NOTE: won't generalize
-    # FIXME: following compiler-style, maybe just translate all here
-    def eval_constraint(self, constraint, dim = 0):
+    def all_different(self, v=None, width = None):
+        # could you prettify this?
+        dim_variables = get_dim_variables(self.z3_conditions, self.shape, 1)
 
-        assert isinstance(constraint, Constraint)
-
-        # how can we utilize transpose?
-        if isinstance(constraint, Different):
-            var = constraint.get_variable()
-            i1 = constraint.get_index_to_match()
-            i2 = constraint.get_index()
-
-
-            factor, level = constraint.get_level()
-            dim_variables = get_dim_variables(self.z3_conditions, self.shape, dim, factor, level)
-           
-            for dim in dim_variables:
-
-                left = self.bitvectors.get_variable_assignment(var, dim[i1])
-                right = self.bitvectors.get_variable_assignment(var, dim[i2])
-
-                __z3__ = self.translate.different(left, right)
-                self.solver.add(__z3__)
-
-        if isinstance(constraint, Match):
-     
-            var = constraint.get_variable()
-            i1 = constraint.get_index_to_match()
-            i2 = constraint.get_index()
-
-            factor, level = constraint.get_level()
-
-            dim_variables = get_dim_variables(self.z3_conditions, self.shape, dim, factor, level)
-
- 
-            for row in dim_variables:
-                left = self.bitvectors.get_variable_assignment(var, row[i1])
-                right = self.bitvectors.get_variable_assignment(var, row[i2])
-                __z3__ = self.translate.match(left, right)
-                self.solver.add(__z3__)
-
-        if isinstance(constraint, Force):
+        if width is not None:
+            dim_variables = list(np.array(dim_variables)[:, :width])
         
-            var = constraint.get_variable()
-            i = constraint.get_index()
-            condition = constraint.get_condition() - 1
+      
+        test = lambda x: self.bitvectors.get_variable_assignment(v, x)
 
-            dim_variables = all_elements_of_dim(dim, self.z3_conditions, self.shape)
-
-            for dim in dim_variables:
-                left = self.bitvectors.get_variable_assignment(var, dim[i])
-                __z3__ = self.translate.match(left, condition)
-            
-                self.solver.add(__z3__)
-
-        if isinstance(constraint, AllDifferent):
-            # could you prettify this?
-            dim_variables = get_dim_variables(self.z3_conditions, self.shape, dim)
-            print(dim_variables[0][1])
-
-            print(self.bitvectors.get_variable_assignment(self.variables[0], dim_variables[0][0]))
-            
-            self.solver.add(Distinct(self.bitvectors.get_variable_assignment(self.variables[0], dim_variables[0][0]), self.bitvectors.get_variable_assignment(self.variables[0], dim_variables[0][1])))
-
-            test = lambda x: self.bitvectors.get_variable_assignment(self.variables[0], x)
-            for arr in dim_variables:
-                # self.solver.add([Distinct(list(map(test, arr)))])
+        for arr in dim_variables:
+            # FIXME
+            if v is not None:
+                self.solver.add([Distinct(list(map(test, arr)))])
+            else:
                 self.solver.add([Distinct(arr)])
-
-        # if isinstance(constraint, Counterbalance):
-        #     # shape array 
-        #     # apply count to rows 
-        #     print("fix me")
-
-        if isinstance(constraint, OccurNTimes):
-            self.occur_exactly_n_times(constraint.n, constraint.reference_variable)
 
 
     # NOTE: no rows can repeat in a given matrix 
@@ -169,34 +111,104 @@ class BitVecSolver:
           
                     self.solver.add(Or(assignment))
 
-    def count(self, l, x):
+
+    def count(self, l, x, f):
         test = []
         for e in l:
-            test.append(If(e == x, 1, 0))
+            test.append(If(f(e, x), 1, 0))
         return sum(test)
+    
 
-    def counterbalance(self):
-        plans = get_dim_variables(self.z3_conditions, self.shape, 0)
+
+    def block_array(self, arr, block = []):
+        return np.array(arr)[block[0][0]:block[0][1]:block[0][2], block[1][0]:block[1][1]:block[1][2]]
+
+    def start_with(self, variable, condition):
+        plans = np.array(get_dim_variables(self.z3_conditions, self.shape, 1))
+
+        arr = plans[:, 0]
+
+        for z3 in arr:
+            self.solver.add(self.bitvectors.get_variable_assignment(variable, z3) == condition)
+
+
+
+    def counterbalance(self, block=None, variables=None):
+        """
+        Apply counterbalancing to ensure equal occurrence of variable combinations.
+        
+        Args:
+            block: List of blocks to apply (default empty list)
+            variables: The variables to counterbalance (required)
+            
+        Returns:
+            None: Modifies the solver in-place
+        """
+        # Initialize block as empty list if None
+        if block is None:
+            block = []
+            
+        # Get dimensional variables from z3 conditions
+        plans = get_dim_variables(self.z3_conditions, self.shape, 1)
+        
+        # Apply blocks if provided
+        if len(block):
+            plans = self.block_array(plans, block)
+        
+        # Transpose the plans for processing
+        plans = np.transpose(plans)
+        
+        # Initialize counts for tracking variable combinations
         counts = []
- 
-        possible_values = self.bitvectors.get_possible_values()
- 
-        for i in range(len(plans)):
-            for v in possible_values:
-                counts.append(self.count(plans[i], v))
-
+        
+        # Define helper functions for value processing
+        def get_possible_values(variable):
+            """Return set of possible values for a variable (0 to len-1)"""
+            return set(range(len(variable)))
+        
+        def test_assignment(variable, position):
+            """Get variable assignment at the given position"""
+            return self.bitvectors.get_variable_assignment(variable, position)
+        
+        # Generate all possible combinations of variable values
+        value_combinations = list(itertools.product(
+            *[get_possible_values(variable) for variable in variables]
+        ))
+        
+        # Process each plan
+        for plan_idx in range(len(plans)):
+            # Map variables to their assignments in the current plan
+            assignments = list(zip(*[
+                list(map(lambda p: test_assignment(variable, p), plans[plan_idx])) 
+                for variable in variables
+            ]))
+            
+            # Count occurrences of each value combination
+            for value_combo in value_combinations:
+                # Define equality constraint function
+                def check_equality(x, expected):
+                    """Check if x equals expected for all indices"""
+                    return And([expected[i] == x[i] for i in range(len(x))])
+                
+                # Count occurrences and store
+                counts.append(self.count(assignments, value_combo, check_equality))
+        
+        # Add constraints to ensure equal counts for all combinations
         for i in range(len(counts)):
-            for j in range(len(counts)):
+            for j in range(i+1, len(counts)):
                 self.solver.add(counts[i] == counts[j])
                 
-    def match_block(self, block = []):
+    def match_block(self, variable, block = []):
         plans = get_dim_variables(self.z3_conditions, self.shape, 1)
-        block = np.array(plans)[block[0][0]:block[0][1], block[1][0]:block[1][1]]
+        block = self.block_array(plans, block)
+        flat_block = np.array(block).flatten()
 
-        for z31 in np.array(block).flatten():
-            for z32 in np.array(block).flatten():
-                a1 = self.bitvectors.get_variable_assignment(self.variables[1], z31)
-                a2 = self.bitvectors.get_variable_assignment(self.variables[1], z32)
+        print(flat_block)
+
+        for i in range(len(flat_block)):
+            for j in range(i, len(flat_block)):
+                a1 = self.bitvectors.get_variable_assignment(variable, flat_block[i])
+                a2 = self.bitvectors.get_variable_assignment(variable, flat_block[j])
                 self.solver.add(a1==a2)
 
         # works when z3 representation is a matrix 
@@ -236,7 +248,6 @@ class BitVecSolver:
             self.solver.add(Or(block))
             count+=1
 
-        print(all_orders)
         self.solver.pop()
         return all_orders
 

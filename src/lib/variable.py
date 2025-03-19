@@ -21,6 +21,7 @@ class ExperimentVariable:
         assert num_options > 0
 
         self.name = name
+        self.constraint = None
         self.n = num_options
 
         # experiment variables holds metadata, and information about 
@@ -33,12 +34,14 @@ class ExperimentVariable:
             # instance of variable condition which represents a subcondition 
             # of this variable. Pass the current variable so the condition 
             # can refer back 
-            self.conditions.append(VariableCondition(attr, self))
+            self.conditions.append(attr)
             self.condition_map[attr] = i
 
     def get_condition(self, s):
         return self.conditions[self.condition_map[s]]
 
+    def add_constraint(self, constraint):
+        self.constraint = constraint
 
     def get_conditions(self):
         return self.conditions
