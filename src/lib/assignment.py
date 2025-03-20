@@ -52,7 +52,7 @@ def assign_counterbalance(units, plans):
 def assign(units, plans):
     return assign_counterbalance(units, plans)
 
-
+# NOTE: combine this with des pls
 class Assignment:
     """The assignment class matches every unit to an order of conditions
         based on constraints set on unit variables, such as block factors
@@ -109,10 +109,8 @@ class Assignment:
                 
                 self.solver.match_block(v, [(i, self.shape[0], h), (j, self.shape[1], w)])
 
-
     def counterbalance(self, v, w, h, stride = [1, 1]):
         block = [(0, h, stride[0]), (0, w, stride[1])]
-
         self.solver.counterbalance(block, v)
 
     def start_with(self, variable, condition):
@@ -133,6 +131,5 @@ class Assignment:
         else:
             model = self.solver.get_all_models()
             self.units.n = len(model)
-            print(np.array(self.solver.encoding_to_name(model, self.variables)))
             return np.array(self.solver.encoding_to_name(model, self.variables))
   

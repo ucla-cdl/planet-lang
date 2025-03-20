@@ -4,10 +4,22 @@ from.condition import ExperimentCondition
 import numpy as np
 from itertools import product
 import math
+from z3 import *
 
 
 
 import random
+
+def distinct_or(variables):
+    ret = []
+    for i in range(len(variables)):
+        for j in range(i + 1, len(variables)):
+            temp = []
+            for k in range(len(variables[i])):
+                temp.append(variables[i][k] != variables[j][k])
+            ret.append(Or(temp))
+    return ret
+
 
 def generate_conditions(participants, conditions, trials_per_condition=1):
     """

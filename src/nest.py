@@ -21,6 +21,11 @@ test = ExperimentVariable(
     options = ["x", "y"]
 )
 
+test2 = ExperimentVariable(
+    name = "test2",
+    options = ["X", "Y"]
+)
+
 des1 = (
     Design()
         .within_subjects(treatment)
@@ -41,13 +46,22 @@ des3 = (Design()
         .limit_groups(2)
 )
 
+des4 = (Design()
+        .within_subjects(test2)
+        .counterbalance(test2)
+        .limit_groups(2)
+)
 
-print(des1)
-print(des2)
+
 
 des = nest(des2, des1)
 
-test = nest(des3, des)
+test = nest(des3, des4)
 
 print(des)
 print(test)
+
+
+mega = nest(des, test)
+
+print(mega)

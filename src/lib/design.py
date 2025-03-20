@@ -49,13 +49,15 @@ class OuterBlock:
         return f"{self.variable}: \n\t{self.width}\n\t{self.height}\n"
 
 class NoRepeat:
-    def __init__(self, variable=None, width = None):
+    def __init__(self, variable=None, width = None, stride = 1):
         self.variable = variable
 
         if width is None:
             self.width = len(variable)
         else:
             self.width = width
+
+        self.stride = stride
 
 
 class Counterbalance:
@@ -145,11 +147,10 @@ class Design:
 
         if self.groups is None:
             self.groups = Groups(0)
-        
+       
         # Create assignment with groups, sequence, and flattened variables
         assignment = Assignment(self.groups, sequence, variables=self.variables)
         assignment.solver.all_different()
-
     
         # Process counterbalance constraints
         for constraint in self.constraints:
@@ -170,7 +171,7 @@ class Design:
                         stride=constraint.stride
                     )
             elif isinstance(constraint, NoRepeat):
-                assignment.solver.all_different(constraint.variable, constraint.width)
+                assignment.solver.all_different(constraint.variable, constraint.width, constraint.stride)
             elif isinstance(constraint, StartWith):
                 assignment.start_with(constraint.variable, constraint.condition)
     
@@ -196,13 +197,13 @@ class Design:
 
         # Evaluate the assignment and return the result
         result = assignment.eval()
-
-        print(result)
-
         return result
         
     def counterbalance(self, *variable, w = 0, h = 0, stride = [1, 1]):
         self.counterbalanced = True
+
+        self.constraints.append(NoRepeat([variable], width=len(variable[0])))
+
         self.constraints.append(Counterbalance(variable, width = w, height = h, stride = stride))
         return self
     
@@ -231,6 +232,9 @@ class Design:
 
         return ret
 
+
+
+
 def nest(design1, design2):
     """
     Nest two designs together to create a combined experimental design.
@@ -247,7 +251,7 @@ def nest(design1, design2):
         design2.eval()
 
     if design1.groups is None:
-        design2.eval()
+        design1.eval()
 
     # Calculate the total number of groups in the combined design
     total_groups = len(design1.groups) * len(design2.groups)
@@ -257,21 +261,9 @@ def nest(design1, design2):
     combined_variables.extend(design2.variables)
     
     # Calculate width_test (the product of all variable lengths in design1)
-    width_test = 1
-    if design1.trials == 0:
-        for variable in design1.variables:
-            width_test *= len(variable)
-    else: 
-        width_test = design1.trials
+    width_test = design1.get_width()
 
-    width2 = 1
-    if design2.trials == 0:
-        for variable in design2.variables:
-            width2 *= len(variable)
-    else: 
-        width2 = design2.trials
-
-
+    width2 = design2.get_width()
     total_conditions = width2 * width_test
     
     # Create a new design with the combined variables
@@ -325,7 +317,8 @@ def nest(design1, design2):
             combined_design.constraints.append(
                 NoRepeat(
                     constraint.variable,
-                    constraint.width
+                    constraint.width,
+                    constraint.stride
                 )
             )
       
@@ -349,11 +342,11 @@ def nest(design1, design2):
                 )
         
         elif isinstance(constraint, NoRepeat):
-            print(constraint)
-            combined_design.constraints.append(
+              combined_design.constraints.append(
                 NoRepeat(
                     constraint.variable,
-                    constraint.width
+                    constraint.width*width_test,
+                    width_test*constraint.stride
                 )
             )
     

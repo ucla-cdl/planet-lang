@@ -80,22 +80,26 @@ class BitVecSolver:
         self.z3_conditions = self.bitvectors.get_variables()
     
 
-    def all_different(self, v=None, width = None):
+    def block_columns(self, arr, width, stride=1):
+        return np.array(arr)[:, 0:width:stride]
+
+
+    def all_different(self, v=None, width = None, stride = 1):
         # could you prettify this?
         dim_variables = get_dim_variables(self.z3_conditions, self.shape, 1)
 
         if width is not None:
-            dim_variables = list(np.array(dim_variables)[:, :width])
-        
-      
-        test = lambda x: self.bitvectors.get_variable_assignment(v, x)
+            dim_variables = list(self.block_columns(dim_variables, width, stride))
+
+           
+        test = lambda x: [self.bitvectors.get_variable_assignment(z, x) for z in v[0]]
 
         for arr in dim_variables:
-            # FIXME
+            # FIXME (fixed but I'm not convinced)
             if v is not None:
-                self.solver.add([Distinct(list(map(test, arr)))])
+                self.solver.add(distinct_or(list(map(test, arr))))
             else:
-                self.solver.add([Distinct(arr)])
+                self.solver.add(Distinct(arr))
 
 
     # NOTE: no rows can repeat in a given matrix 
@@ -122,11 +126,13 @@ class BitVecSolver:
 
     def block_array(self, arr, block = []):
         return np.array(arr)[block[0][0]:block[0][1]:block[0][2], block[1][0]:block[1][1]:block[1][2]]
-
+    
     def start_with(self, variable, condition):
         plans = np.array(get_dim_variables(self.z3_conditions, self.shape, 1))
 
         arr = plans[:, 0]
+
+
 
         for z3 in arr:
             self.solver.add(self.bitvectors.get_variable_assignment(variable, z3) == condition)

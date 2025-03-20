@@ -20,10 +20,8 @@ task = ExperimentVariable(
 des = (
     Design()
         .within_subjects(treatment, task)
-        .counterbalance(task)
-        .counterbalance(treatment)
+        .counterbalance(task, treatment)
         .num_trials(2)
-     
 )
 
 print(des)
