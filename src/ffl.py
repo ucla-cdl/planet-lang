@@ -1,6 +1,6 @@
 from z3 import *
 from lib.variable import ExperimentVariable
-from lib.design import Design, nest
+from lib.design import Design, nest, cross
 from lib.assignment import assign, assign_counterbalance
 from lib.unit import Units
 
@@ -24,33 +24,28 @@ interface = ExperimentVariable(
 
 units = Units(16)
 
-
 task_des = (
     Design()
         .within_subjects(task)
         .start_with(task, "creation")
 )
 
-print(task_des)
 
 interface_des = (
     Design()
-        .within_subjects(interface, number)
+        .within_subjects(interface)
         .counterbalance(interface)
-        .counterbalance(number)
-        .num_trials(2)
-        .limit_groups(4)
 )
 
-des = nest(interface_des, task_des)
-print(des)
+number_des = (
+    Design()
+        .within_subjects(number)
+        .counterbalance(number)
+      
+)
 
+cross_des = cross(interface_des, number_des)
 
-assign_counterbalance(units, des)
+des = nest(cross_des, task_des)
+assign(units, des)
 
-print(task_des)
-
-# print(task_des)
-# print(interface_des)
-
-# print(des)

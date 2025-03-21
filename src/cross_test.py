@@ -1,6 +1,6 @@
 from z3 import *
 from lib.variable import ExperimentVariable
-from lib.design import Design
+from lib.design import Design, nest, cross
 
 
 # NOTE: need to make all different wrt. variables. Should this be under the hood though?
@@ -29,12 +29,17 @@ test2 = ExperimentVariable(
 # # note: set / argv because no order
 des = (
     Design()
-        .within_subjects(treatment, task, test, test2)
-        .counterbalance(task, treatment)
-        .counterbalance(test, test2)
-        .num_trials(4)
-        .limit_groups(8)
+        .within_subjects(task)
+        .counterbalance(task)
+     
 )
 
-des.eval()
-# print(des)
+des2 = (Design()
+        .within_subjects(test)
+        .counterbalance(test)
+)
+
+
+final = cross(des, des2)
+
+print(final)

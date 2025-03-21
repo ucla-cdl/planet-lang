@@ -5,50 +5,76 @@ from .narray import *
 import numpy as np
 from .candl import *
 from .solver import  BitVecSolver
-from .unit import Units, Groups
+from .unit import Units, Groups, Clusters
 
 import duckdb
 
-def assign_counterbalance(units, plans):
-    units.eval()
+def assign_counterbalance(units, plans, parent = None):
 
     
-    if plans.counterbalanced:
-        plans = plans.eval()
 
+    if parent is not None:
+        duckdb.sql(f""" update {units.table}
+                        set plan = t3.plan
+                        from 
+                   
+                            (select t1.pid id, t2.plan plan  from {units.table} t1, (select plan, unnest(subunits) test from {parent.table}) as t2 where t1.pid = t2.test) t3
+
+                        where t3.id = {units.table}.pid
+        
+           """)
+    
+        duckdb.sql(f"select * from {units.table}").show()
+
+        duckdb.sql(f""" select count(*) from {units.table} group by plan
+                            
+            """).show()
+        
     else:
-        plans = plans.random(units)
-    
-    num_plans = len(plans)
-    num_participants = units.n
-    duckdb.sql("CREATE TABLE members (plan int)")
 
-    
-    num_per_group = int(num_participants / num_plans)
-    
-    for i in range(1, num_plans+1):
-        for _ in range(1, num_per_group+1):
-            duckdb.sql(f"insert into members values ({i})")
+        units.eval()
 
-    duckdb.sql(""" select participants.pid, members.plan from 
-                                (select      *, 
-                                            row_number() over(order by uuid()) rand
-                                from        members) members, participants
-               where participants.pid = members.rand
-                        
-           """).show()
-    
-    
+        table = units.table
+        print(table)
+        
+        if plans.counterbalanced:
+            plans = plans.eval()
+
+        else:
+            plans = plans.random(units)
+        
+        num_plans = len(plans)
+        num_participants = units.n
+        duckdb.sql("CREATE TABLE members (plan int)")
+
+        
+        num_per_group = int(num_participants / num_plans)
+        
+        for i in range(1, num_plans+1):
+            for _ in range(1, num_per_group+1):
+                duckdb.sql(f"insert into members values ({i})")
+
+        duckdb.sql(f""" 
+
+                update {table}
+                set plan = t2.plan
+                from 
+                (select {table}.pid id, members.plan from 
+                                    (select      *, 
+                                                row_number() over(order by uuid()) rand
+                                    from        members) members, {table}
+                where {table}.pid = members.rand) as t2
+                where t2.id = {table}.pid
+            """)
+        
+        duckdb.sql(f"select * from {table}").show()
     
 
-    duckdb.sql(""" select count(*) from (select participants.pid, members.plan from 
-                                (select      *, 
-                                            row_number() over(order by uuid()) rand
-                                from        members) members, participants
-               where participants.pid = members.rand) group by plan
-                        
-           """).show()
-    
+    # NOTE: thank goodness this worked!!!
+    if isinstance(units, Clusters):
+        assign_counterbalance(units.units, plans, parent = units)
+
+
 def assign(units, plans):
     return assign_counterbalance(units, plans)
 
@@ -117,6 +143,13 @@ class Assignment:
         self.solver.start_with(variable, variable.conditions.index(condition))
     
     
+
+    def get_groups(self, model):
+        if not len(self.units):
+            self.units.n = len(model)
+
+
+
     # NOTE: this is with a bitvec representation...
     # ensure that this works
     def eval(self):
@@ -130,6 +163,6 @@ class Assignment:
             return np.array(self.solver.encoding_to_name(model, self.variables))
         else:
             model = self.solver.get_all_models()
-            self.units.n = len(model)
+            self.get_groups(model)
             return np.array(self.solver.encoding_to_name(model, self.variables))
   

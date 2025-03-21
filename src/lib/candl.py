@@ -14,10 +14,13 @@ def distinct_or(variables):
     ret = []
     for i in range(len(variables)):
         for j in range(i + 1, len(variables)):
+            print(i, j)
             temp = []
             for k in range(len(variables[i])):
                 temp.append(variables[i][k] != variables[j][k])
             ret.append(Or(temp))
+
+            print(temp)
     return ret
 
 
@@ -153,4 +156,8 @@ def get_dim_variables(arr, shape, dim, factor = None, level = None):
 
 
 
-    
+def combine_lists(l1, l2):
+    combined_variables = l1.copy()
+    combined_variables.extend(l2)
+
+    return combined_variables

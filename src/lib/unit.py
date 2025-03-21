@@ -14,10 +14,10 @@ class Unit:
         self.n = n
 
 class Units:
-    def __init__(self, n):
+    def __init__(self, n, table = "participants"):
         self.n = n
         self.attributes = []
-        self.table = "participants"
+        self.table = table
 
     def add_attribute(self, attr):
 
@@ -27,15 +27,54 @@ class Units:
     
 
     def eval(self):
-        duckdb.sql("create table participants ( pid int, plan int )")
+        duckdb.sql(f"create table {self.table} ( pid int, plan int )")
         for i in range(self.n):
-            duckdb.sql(f"insert into participants values ({i+1}, 0)")
+            duckdb.sql(f"insert into {self.table} values ({i+1}, 0)")
+
+        duckdb.sql(f"select * from {self.table}").show()
+
+    def get_plan(self, n):
+        return duckdb.execute(f"select plan from {self.table} where pid = {n}").fetchone()[0]
 
     def get_attributes(self):
         return self.attributes
     
     def __len__(self):
         return self.n 
+    
+
+class Clusters(Units):
+    """A Cluster represents a group of Units that are grouped together for a specific purpose."""
+    def __init__(self, units, n):
+        assert units.n % n == 0
+        super().__init__(n, "clusters")
+
+        assert units is not None
+        self.units = units
+
+    def eval(self):
+        self.units.eval()
+        super().eval()
+
+        duckdb.sql(f"""ALTER TABLE {self.table}
+                        ADD subunits INTEGER[]""")
+        
+        duckdb.sql(f"select * from {self.table}").show()
+     
+     
+        limit = int(self.units.n/self.n)
+        for i in range(1, self.n+1):   
+            
+            duckdb.sql(f"""update {self.table} set subunits = (select array_agg(units.pid) from 
+                                    (select      *, 
+                                                row_number() over(order by uuid()) rand
+                                    from        {self.units.table} where pid not in (select unnest(subunits) from {self.table} ) limit {limit}) units)
+                                    
+                                    where pid = {i}""")
+            
+        
+        duckdb.sql(f"select * from {self.table}").show()
+
 
 
        
@@ -76,6 +115,7 @@ class Groups(Units):
     def expand_groups(self, num_groups):
   
         assert num_groups % self.n == 0
+        
         new_groups = Groups(num_groups)
         for attr in self.attributes:
 

@@ -86,17 +86,22 @@ class BitVecSolver:
 
     def all_different(self, v=None, width = None, stride = 1):
         # could you prettify this?
+
+        print(f"STRIDE {stride}")
         dim_variables = get_dim_variables(self.z3_conditions, self.shape, 1)
 
         if width is not None:
             dim_variables = list(self.block_columns(dim_variables, width, stride))
 
+        print(f"WIDTH {width}")
            
         test = lambda x: [self.bitvectors.get_variable_assignment(z, x) for z in v[0]]
 
         for arr in dim_variables:
+            print(arr)
             # FIXME (fixed but I'm not convinced)
             if v is not None:
+                print(arr)
                 self.solver.add(distinct_or(list(map(test, arr))))
             else:
                 self.solver.add(Distinct(arr))
