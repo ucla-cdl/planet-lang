@@ -47,5 +47,20 @@ number_des = (
 cross_des = cross(interface_des, number_des)
 
 des = nest(cross_des, task_des)
+
 assign(units, des)
+
+
+
+
+
+
+
+
+
+
+
+
+
+print(des)
 

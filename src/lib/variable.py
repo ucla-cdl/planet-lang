@@ -1,4 +1,6 @@
 from z3 import *
+from functools import reduce
+import itertools
 
 
 class ExperimentVariable:
@@ -52,6 +54,23 @@ class ExperimentVariable:
     def __len__(self):
         return self.n
     
+class MultiFactVariable(ExperimentVariable):
+    def __init__(self, variables):
+        self.n = reduce(lambda x, y: x*y, list(map(len, variables)))
+        combinations = list(itertools.product(*[variable.conditions for variable in variables]))
+        combinations = ["-".join(combination) for combination in combinations]
+
+        super().__init__("factorial", self.n, options = combinations)
+        all(isinstance(variable, ExperimentVariable) for variable in variables)
+        self.variables = variables
+        
+
+    def __len__(self):
+        return self.n
+
+def multifact(variables):
+    return MultiFactVariable(variables)
+
 
 class VariableCondition:
     """The Variable represents a value that a user can assign to 

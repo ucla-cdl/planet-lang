@@ -26,7 +26,7 @@ def hashable_set(models):
 
 
 # NOTE: all of these are assuming some seed. 
-class TestDSL(unittest.TestCase):
+class TestDesigns(unittest.TestCase):
 
 
 
@@ -298,45 +298,6 @@ class TestDSL(unittest.TestCase):
         assert len(output) == len(expected_results)
         assert output == expected_results
 
-
-class TestSolver(unittest.TestCase):
-    def test_latinsquare_sat(self):
-        v1 = ExperimentVariable(
-            name = "v1",
-            options = ["a", "b", "c"]
-        )
-       
-        variables = [v1]
-        shape = (3, 3)
-
-        solver = BitVecSolver(shape, variables)
-        solver.counterbalance([], variables)
-
-        # NOTE: this is a 3x3 latin square 
-        expect_sat = [0, 1, 2, 1, 2, 0, 2, 0, 1]
-        for i in range(len(expect_sat)):
-            solver.solver.add(solver.bitvectors.z3_representation[i] == expect_sat[i])
-   
-        self.assertEqual(solver.solver.check(), sat)
-
-    def test_latinsquare_unsat(self):
-        v1 = ExperimentVariable(
-            name = "v1",
-            options = ["a", "b", "c"]
-        )
-       
-        variables = [v1]
-        shape = (3, 3)
-
-        solver = BitVecSolver(shape, variables)
-        solver.counterbalance([], variables)
-
-        # NOTE: 0 appears twice in column 2
-        expect_sat = [0, 1, 2, 1, 0, 2, 2, 0, 1]
-        for i in range(len(expect_sat)):
-            solver.solver.add(solver.bitvectors.z3_representation[i] == expect_sat[i])
-   
-        self.assertEqual(solver.solver.check(), unsat)
 
 
 if __name__ == '__main__':

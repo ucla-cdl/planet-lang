@@ -1,5 +1,5 @@
 from z3 import *
-from lib.variable import ExperimentVariable
+from lib.variable import ExperimentVariable, multifact
 from lib.design import Design, nest
 
 
@@ -29,7 +29,7 @@ test2 = ExperimentVariable(
 # # note: set / argv because no order
 des = (
     Design()
-        .within_subjects(treatment, task)
+        .within_subjects(multifact([treatment, task]))
         .counterbalance(task)
         .counterbalance(treatment)
         .num_trials(2)

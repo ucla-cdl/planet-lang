@@ -1,5 +1,5 @@
 from z3 import *
-from lib.variable import ExperimentVariable
+from lib.variable import ExperimentVariable, multifact
 from lib.design import Design
 
 
@@ -16,8 +16,8 @@ task = ExperimentVariable(
 
 des = (
     Design()
-        .within_subjects(treatment, task)
-        .counterbalance(task, treatment)
+        .within_subjects(multifact([treatment, task]))
+        .counterbalance(multifact([treatment, task]))
 )
 
 

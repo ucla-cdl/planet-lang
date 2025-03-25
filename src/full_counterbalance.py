@@ -7,10 +7,10 @@ from lib.assignment import assign
 
 treatment = ExperimentVariable(
     name = "treatment",
-    options = ["a", "b", "c", "d", "e", "f", "g"]
+    options = ["a", "b", "c", "d"]
 )
 
-units = Units(70)
+units = Units(48)
 
 
 des = (
@@ -20,6 +20,7 @@ des = (
     
 )
 
+assignment = assign(units, des)
 
+print(assignment)
 
-assign(units, des)

@@ -2,137 +2,55 @@ from z3 import *
 
 
 class Constraint:
-    def __init__(self, variable, factor=None, level=None):
-        self.variable = variable
-        self.factor = factor
-        self.level = level
-
-    def get_variable(self):
-        return self.variable
-    
-    def get_level(self):
-        return self.factor, self.level
-    
-class ParticipantConstraint(Constraint):
-    def __init__(self, variable, wrt=None):
-        self.widthrt=wrt
-        Constraint.__init__(self, variable)
-
-        
-class Majority(ParticipantConstraint):
-    def __init__(self, variable, condition, wrt, v):
-        ParticipantConstraint.__init__(self, variable, wrt)
-        self.condition = condition
-        self.v = v
-
-class Distinguish(ParticipantConstraint):
-    def __init__(self, dim):
-        ParticipantConstraint.__init__(self, variable=dim)
-
-class NeverOccurTogether(ParticipantConstraint):
-    def __init__(self, dim):
-        ParticipantConstraint.__init__(self, variable=dim)
-
-class AlwaysOccurTogether(ParticipantConstraint):
-    def __init__(self, dim):
-        ParticipantConstraint.__init__(self, variable=dim)
-
-
-# NOTE: this should be a superclass of Match, Any, and Different 
-# this class only adds one Z3 var to the solver
-# because it must be exactly this subcondition
-class TwoElemConstraint(Constraint):
-    def __init__(self, i1, i2, variables, factor=None, level=None):
-
-        Constraint.__init__(self, variables, factor, level)
-        if not isinstance(variables, list):
-            variables = [variables]
-        self.variables = variables
-        self.index_to_match = i1
-        self.index = i2
-        self.variable = self.variables[0]
-    
-    def get_index_to_match(self):
-        return self.index_to_match
-    
-    def get_index(self):
-        return self.index
-
-
-
-# this is a z3 class wrapper 
-# note: we probably want to store the proper z3
-# eval here... condition is the condition that we 
-# derive a different subcondition from
-# example: condition passed is an ffl condition,
-# so this wrapper indicates that the condition it appplies to 
-# is not an ffl condition (so in this case, it must be latex)
-
-class Different(TwoElemConstraint):
-    """
-    this is what we want in the sequence class: 
-        self.solver.add(
-            self.z3_vectors[variable][i1] != self.z3_vectors[variable][i2]
-        )
-
-        key information: which variable, which index in order
-    """
-    def __init__(self, i1, i2, variables = [], factor = None, level = None):
-        TwoElemConstraint.__init__(self, i1, i2, variables, factor, level)
-
-
-
-class AllDifferent(Constraint):
     def __init__(self, variable):
-        self.reference_variable = variable
+        self.variable = variable
 
-    def get_reference_block(self):
-        return self.reference_variable
+class BlockConstraint(Constraint):
+    def __init__(self, variable, width, height, stride):
+        super().__init__(variable)
+        self.width = width
+        self.height = height
+        self.stride = stride
+
+class PlanConstraint(Constraint):
+    def __init__(self, variable, width, stride):
+        super().__init__(variable)
+        self.stride = stride
+        self.width = width
+
+
+class InnerBlock(BlockConstraint):
+    """Represents a block structure in the experimental design."""
+    def __init__(self, variable, width, height, stride= [1,1]):
+        super().__init__(variable, width, height, stride)
+
+class OuterBlock(BlockConstraint):
+    """Represents a block structure in the experimental design."""
+    def __init__(self, variable, width, height, stride):
+        super().__init__(variable, width, height, stride)
+
+    def __str__(self):
+        return f"{self.variable}: \n\t{self.width}\n\t{self.height}\n"
+
+class NoRepeat(PlanConstraint):
+    def __init__(self, variable, width= None, stride= 1):
+        if width is None:
+            width = len(variable)
+        super().__init__(variable, width, stride)
+
+   
+class Counterbalance(BlockConstraint):
+    """Defines counterbalancing for variables."""
+    def __init__(self, variable, width=0, height=0, stride=(1, 1)):
+        super().__init__(variable, width, height, stride)
+ 
+    def __str__(self):
+        return f"COUNTERBALANCE: {self.width, self.height, self.stride}"
     
-class AllMatch(ParticipantConstraint):
-    def __init__(self, variable, wrt = None, level = None):
-        ParticipantConstraint.__init__(self, variable)
-        self.widthrt = wrt
-        self.level = level
-
-    
-
-class OccurNTimes(Constraint):
-    def __init__(self, n, variable):
-        self.n = n
-        self.reference_variable = variable
-
-    def get_reference_block(self):
-        return self.reference_variable
-
-    
-
-# z3 class wrapper. Same concept as above, but 
-# instead of creating a Not object, we copy 
-# the exact same constraints from condition 
-# to add to the new condition's solver
-class Match(TwoElemConstraint):
-    def __init__(self, i1, i2, variables, factor = None, level = None):
-        TwoElemConstraint.__init__(self, i1, i2, variables, factor, level)
-
-
-
-
-# given a variable, create an z3 instance that allows
-# us to choose any of the subcondiiton options
-# example: given treatment, then we can allow ffl OR latex
-class Force(Constraint):
-    def __init__(self, variable, condition, i):
-        Constraint.__init__(self, variable)
+class StartWith(Constraint):
+    def __init__(self, variable, condition):
+        super().__init__(variable)
         self.condition = condition
-        self.i = i
-
-    def get_condition(self):
-        return self.condition
-    
-    def get_index(self):
-        return self.i
-    
 
 
  

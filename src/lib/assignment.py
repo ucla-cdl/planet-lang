@@ -9,160 +9,118 @@ from .unit import Units, Groups, Clusters
 
 import duckdb
 
-def assign_counterbalance(units, plans, parent = None):
+class Assignment:
+    def __init__(self, units, plans):
+        assign_counterbalance(units, plans)
 
+        self.units = units
+        self.plans = plans
     
+    def format_plans(self):
+        matrix = self.plans.get_plans(self.units.n)
+        ret = "Experiment Plans: \n \n"
 
-    if parent is not None:
-        duckdb.sql(f""" update {units.table}
-                        set plan = t3.plan
+        for i in range(len(matrix)):
+            ret += f"plan {i+1}:\n\t" 
+            for j in range(len(matrix[i])):
+
+                end = "" if j == len(matrix[i]) - 1 else "\t" 
+                conditions = matrix[i][j].split("-")
+
+                test = [f"{self.plans.variables[x].name} = {conditions[x]}" for x in range(len(conditions))]
+                conditions = ", ".join(test)
+
+                ret += f"trial {j+1}: {str(conditions)}\n" + end
+        return ret
+    
+    def format_assignment(self):
+        return duckdb.sql(f"select * from {self.units.table}").to_df()
+        
+    def __str__(self):
+        ret = f"""***EXPERIMENT PLANS***\n\n{str(self.format_plans())} \n\n***ASSIGNMENT***\n\n{str(self.format_assignment())}"""
+        return ret
+
+def assign_subunits(units, parent):
+    duckdb.sql(f""" update {units.table}
+                        set plan = subunit_assignment.plan
                         from 
-                   
-                            (select t1.pid id, t2.plan plan  from {units.table} t1, (select plan, unnest(subunits) test from {parent.table}) as t2 where t1.pid = t2.test) t3
+                            (
+                                select units.pid id, expanded_cluster_assignment.plan plan  
+                                from {units.table} units, 
+                                    ( select plan, unnest(subunits) test 
+                                      from {parent.table} 
+                                    ) as expanded_cluster_assignment
+                                where units.pid = expanded_cluster_assignment.test
+                            ) subunit_assignment
 
-                        where t3.id = {units.table}.pid
+                        where subunit_assignment.id = {units.table}.pid
         
            """)
     
-        duckdb.sql(f"select * from {units.table}").show()
 
-        duckdb.sql(f""" select count(*) from {units.table} group by plan
-                            
-            """).show()
-        
-    else:
 
-        units.eval()
+def assign_units(units, plans):
+    """
+    Assigns participants (units) to different plans in a balanced manner.
+    Ensures that the number of participants is evenly distributed across all plans.
 
-        table = units.table
-        print(table)
-        
-        if plans.counterbalanced:
-            plans = plans.eval()
-
-        else:
-            plans = plans.random(units)
-        
-        num_plans = len(plans)
-        num_participants = units.n
-        duckdb.sql("CREATE TABLE members (plan int)")
-
-        
-        num_per_group = int(num_participants / num_plans)
-        
-        for i in range(1, num_plans+1):
-            for _ in range(1, num_per_group+1):
-                duckdb.sql(f"insert into members values ({i})")
-
-        duckdb.sql(f""" 
-
-                update {table}
-                set plan = t2.plan
-                from 
-                (select {table}.pid id, members.plan from 
-                                    (select      *, 
-                                                row_number() over(order by uuid()) rand
-                                    from        members) members, {table}
-                where {table}.pid = members.rand) as t2
-                where t2.id = {table}.pid
-            """)
-        
-        duckdb.sql(f"select * from {table}").show()
+    Parameters:
+    units : object
+        An object containing participant data and metadata.
+    plans : object
+        An object containing plan assignment logic.
+    """
     
+    # Evaluate the units object to ensure it's up-to-date
+    units.eval()
+    table = units.table  # Reference to the database table containing participant data
+    plans = plans.get_plans(units.n)  # Retrieve plans based on the number of participants
 
-    # NOTE: thank goodness this worked!!!
+    num_plans = len(plans)  # Total number of available plans
+    num_participants = len(units)  # Total number of participants
+    
+    # Create a temporary table to store plan assignments
+    duckdb.sql("CREATE TABLE members (plan INT)")
+    
+    # Ensure that the number of participants can be evenly divided among the plans
+    assert num_participants % num_plans == 0, "Participants must be evenly divisible by the number of plans"
+    
+    num_per_group = num_participants // num_plans  # Number of participants per plan
+    
+    # Insert plan assignments into the temporary table
+    for i in range(1, num_plans + 1):
+        for _ in range(num_per_group):
+            duckdb.sql(f"INSERT INTO members VALUES ({i})")
+    
+    duckdb.sql(f"select * from members").show()
+    # Randomly distribute the plan assignments to the participants
+    duckdb.sql(f"""
+        UPDATE {table}
+        SET plan = assignment.plan
+        FROM (
+            SELECT {table}.pid AS id, members.plan
+            FROM (
+                SELECT *, ROW_NUMBER() OVER (ORDER BY UUID()) AS rand
+                FROM members
+            ) members
+            JOIN {table} ON {table}.pid = members.rand
+        ) AS assignment
+        WHERE assignment.id = {table}.pid
+    """)
+
+def assign_counterbalance(units, plans, parent = None):
+    if parent is not None:
+        assign_subunits(units, parent)
+    else:
+        assign_units(units, plans)
+        
+    # NOTE: assign subunits to the same plan as their parent unit was assigned to 
     if isinstance(units, Clusters):
         assign_counterbalance(units.units, plans, parent = units)
 
 
 def assign(units, plans):
-    return assign_counterbalance(units, plans)
-
-# NOTE: combine this with des pls
-class Assignment:
-    """The assignment class matches every unit to an order of conditions
-        based on constraints set on unit variables, such as block factors
-        of participants, pid, and the state of observation of a subject. 
-
-    """
-    def __init__(self, subjects, sequence, variables = []):
-        assert isinstance(sequence, Sequence)
-        assert isinstance(subjects, Units)
-        assert len(variables) > 0
-
-        self.units = subjects
-        self.seq = sequence
-        self.num_trials = len(sequence)
-        self.variables = variables
-        self.shape = self.determine_shape()
-        self.solver = BitVecSolver(self.shape, self.variables)
-
-    
-    def determine_shape(self):
-        if len(self.units): 
-            n = len(self.units)
-        else: 
-            n = 1
-
-        return tuple([n, self.num_trials])
-    
-    # FIXME: creating block matrix for specific test case 
-    # Note: use for creating blocks
-
-    # NEED TO DECOUPLE THIS
-    def match_inner(self, variable, width, height):
-
-        # get number of block matrices per column
-        n = int(self.shape[0] / height)
-        # get number of block matrices per row
-        m = int(self.shape[1] / width)
-
-        for i in range(n):
-            for j in range(m):
-                self.solver.match_block(
-                    variable, 
-                    [
-                        (i*height + 0, i * height  + height, 1)
-                        , (j*width + 0, j * width + width, 1)
-                    ]
-                )
-
-    def match_outer(self, v, w, h):
-    
-        # NEEDS TO BE it's own func / constraint option. Don't treat these together 
-        for i in range(h):
-            for j in range(w):
-                
-                self.solver.match_block(v, [(i, self.shape[0], h), (j, self.shape[1], w)])
-
-    def counterbalance(self, v, w, h, stride = [1, 1]):
-        block = [(0, h, stride[0]), (0, w, stride[1])]
-        self.solver.counterbalance(block, v)
-
-    def start_with(self, variable, condition):
-        self.solver.start_with(variable, variable.conditions.index(condition))
-    
-    
-
-    def get_groups(self, model):
-        if not len(self.units):
-            self.units.n = len(model)
+    return Assignment(units, plans)
 
 
-
-    # NOTE: this is with a bitvec representation...
-    # ensure that this works
-    def eval(self):
-        # perhaps this is where we create a different class?
-        # we have so many new instance vars
-        # these should maybe be classes or something? 
-        if len(self.units):
-            model = self.solver.get_one_model()
-            assert len(model) > 0
-            model = np.array(model).reshape(self.shape).tolist()
-            return np.array(self.solver.encoding_to_name(model, self.variables))
-        else:
-            model = self.solver.get_all_models()
-            self.get_groups(model)
-            return np.array(self.solver.encoding_to_name(model, self.variables))
-  
+       

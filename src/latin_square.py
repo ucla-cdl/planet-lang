@@ -6,10 +6,12 @@ from lib.assignment import assign
 
 count = ExperimentVariable(
     name = "count",
-    options = ["1", "2", "3", "4", "5"]
+    options = ["1", "2", "3"]
 )
 
-units = Units(25)
+units = Units(27)
+
+
 
 des = (
     Design()
@@ -21,3 +23,4 @@ des = (
 
 
 assign(units, des)
+print(des)

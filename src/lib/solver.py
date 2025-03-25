@@ -1,5 +1,4 @@
 from z3 import *
-from .constraint import Constraint, Different, Match, Force, AllDifferent, OccurNTimes
 import numpy as np
 from .candl import *
 from .helpers import *
@@ -86,22 +85,16 @@ class BitVecSolver:
 
     def all_different(self, v=None, width = None, stride = 1):
         # could you prettify this?
-
-        print(f"STRIDE {stride}")
         dim_variables = get_dim_variables(self.z3_conditions, self.shape, 1)
 
         if width is not None:
             dim_variables = list(self.block_columns(dim_variables, width, stride))
 
-        print(f"WIDTH {width}")
-           
         test = lambda x: [self.bitvectors.get_variable_assignment(z, x) for z in v[0]]
 
         for arr in dim_variables:
-            print(arr)
             # FIXME (fixed but I'm not convinced)
             if v is not None:
-                print(arr)
                 self.solver.add(distinct_or(list(map(test, arr))))
             else:
                 self.solver.add(Distinct(arr))
@@ -136,9 +129,6 @@ class BitVecSolver:
         plans = np.array(get_dim_variables(self.z3_conditions, self.shape, 1))
 
         arr = plans[:, 0]
-
-
-
         for z3 in arr:
             self.solver.add(self.bitvectors.get_variable_assignment(variable, z3) == condition)
 
@@ -209,6 +199,8 @@ class BitVecSolver:
     def match_block(self, variable, block = []):
         plans = get_dim_variables(self.z3_conditions, self.shape, 1)
         block = self.block_array(plans, block)
+
+        
         flat_block = np.array(block).flatten()
 
         for i in range(len(flat_block)):

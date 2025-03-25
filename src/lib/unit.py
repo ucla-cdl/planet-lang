@@ -1,7 +1,5 @@
 from z3 import *
 from .blocks import BlockFactor
-from .constraint import OccurNTimes
-from .constraint import AllMatch, Majority, Distinguish, NeverOccurTogether, AlwaysOccurTogether
 import duckdb
 
 class Unit:
@@ -25,13 +23,11 @@ class Units:
         self.attributes.append(attr)
 
     
-
     def eval(self):
         duckdb.sql(f"create table {self.table} ( pid int, plan int )")
         for i in range(self.n):
             duckdb.sql(f"insert into {self.table} values ({i+1}, 0)")
 
-        duckdb.sql(f"select * from {self.table}").show()
 
     def get_plan(self, n):
         return duckdb.execute(f"select plan from {self.table} where pid = {n}").fetchone()[0]
@@ -59,7 +55,6 @@ class Clusters(Units):
         duckdb.sql(f"""ALTER TABLE {self.table}
                         ADD subunits INTEGER[]""")
         
-        duckdb.sql(f"select * from {self.table}").show()
      
      
         limit = int(self.units.n/self.n)
@@ -72,8 +67,6 @@ class Clusters(Units):
                                     
                                     where pid = {i}""")
             
-        
-        duckdb.sql(f"select * from {self.table}").show()
 
 
 
@@ -89,17 +82,7 @@ class Participants(Units):
     def __init__(self, n=0):
         Units.__init__(self, n)
 
-    def distinguish(self, dim):
-        constraint = Distinguish(dim)
-        self.constraints.append(constraint)
-
-    def never_occur_together(self):
-        constraint = NeverOccurTogether(self)
-        self.constraints.append(constraint)
-
-    def always_occur_together(self):
-        constraint = AlwaysOccurTogether(self)
-        self.constraints.append(constraint)
+   
 
 # inherit from variable? 
 class Groups(Units):
@@ -108,7 +91,7 @@ class Groups(Units):
 
     n: id of the unit
     """
-    def __init__(self, n, labels = None):
+    def __init__(self, n):
         Units.__init__(self, n)
         self.groups = [Group(i) for i in range(n)]
 

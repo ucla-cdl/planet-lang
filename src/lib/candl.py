@@ -14,13 +14,11 @@ def distinct_or(variables):
     ret = []
     for i in range(len(variables)):
         for j in range(i + 1, len(variables)):
-            print(i, j)
             temp = []
             for k in range(len(variables[i])):
                 temp.append(variables[i][k] != variables[j][k])
             ret.append(Or(temp))
 
-            print(temp)
     return ret
 
 
@@ -140,9 +138,8 @@ def get_dim_variables(arr, shape, dim, factor = None, level = None):
         indexing = dim_indexings[level]
 
         arr_to_constrain = get_elements_of_dim(arr, shape, indexing)
-        print(arr_to_constrain)
         arr_to_constrain = flatten_array(arr_to_constrain)
-        print(arr_to_constrain)
+       
 
         shape = tuple([shape[i] for i in range(len(shape)) if i != factor])
      
