@@ -6,6 +6,7 @@ from lib.variable import ExperimentVariable
 from lib.design import Design, nest
 from lib.unit import Units
 from lib.assignment import assign
+from lib.solver import BitVecSolver
 import numpy as np
 import unittest
 
@@ -159,12 +160,68 @@ class TestDesigns(unittest.TestCase):
        ['b-1', 'a-1', 'b-2', 'a-2'],
        ['a-1', 'b-1', 'a-2', 'b-2']]
         ]
-        
-        assert len(output) == len(expected_results)
+
+        temp = []
+        for i in range(len(expected_results)):
+            temp2 = set()
+            for j in range(len(expected_results[i])):
+                tup = tuple(expected_results[i][j])
+                
+                temp2.add(tup)
+            temp.append(temp2)
+
+        expected_results = temp
 
         for i in range(len(output)):
-            np.testing.assert_array_equal(output[i], expected_results[i])
-        
+            temp2 = set()
+            for j in range(len(output[i])):
+                tup = tuple(output[i][j])
+                
+                temp2.add(tup)
+            temp.append(temp2)
+        output = temp
+
+        assert len(output) == len(expected_results)
+
+        assert output == expected_results
+
+class TestSolver(unittest.TestCase):
+    def test_counterbalance_sat(self):
+        v1 = ExperimentVariable(
+            name = "v1",
+            options = ["a", "b", "c"]
+        )
+       
+        variables = [v1]
+        shape = (3, 3)
+
+        solver = BitVecSolver(shape, variables)
+        solver.counterbalance([], variables)
+
+        expect_sat = [0, 1, 2, 1, 2, 0, 2, 0, 1]
+        for i in range(len(expect_sat)):
+            solver.solver.add(solver.bitvectors.z3_representation[i] == expect_sat[i])
+   
+        self.assertEqual(solver.solver.check(), sat)
+
+    def test_counterbalance_unsat(self):
+        v1 = ExperimentVariable(
+            name = "v1",
+            options = ["a", "b", "c"]
+        )
+       
+        variables = [v1]
+        shape = (3, 3)
+
+        solver = BitVecSolver(shape, variables)
+        solver.counterbalance([], variables)
+
+        expect_sat = [0, 1, 2, 1, 0, 2, 2, 0, 1]
+        for i in range(len(expect_sat)):
+            solver.solver.add(solver.bitvectors.z3_representation[i] == expect_sat[i])
+   
+        self.assertEqual(solver.solver.check(), unsat)
+
 
 if __name__ == '__main__':
     unittest.main(argv=['first-arg-is-ignored'], exit=False)
