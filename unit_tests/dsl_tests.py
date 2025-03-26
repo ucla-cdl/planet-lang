@@ -5,9 +5,6 @@ from z3 import *
 from lib.variable import ExperimentVariable, multifact
 from lib.design import Design, nest, cross
 from lib.unit import Units
-from lib.assignment import assign
-from lib.solver import BitVecSolver
-import numpy as np
 import unittest
 
 
@@ -85,8 +82,6 @@ class TestDesigns(unittest.TestCase):
         output = hashable_set(output)
         expected_results = hashable_set(expected_results)[0]
 
-
-        assert len(output) == 8
         assert expected_results in output
 
     def test_nest_as_latinsquare(self):

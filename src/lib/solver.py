@@ -2,7 +2,6 @@ from z3 import *
 import numpy as np
 from .candl import *
 from .helpers import *
-from .translate import Translate
 from functools import reduce
 from .bitvector import BitVectors
 import time
@@ -23,7 +22,6 @@ class BitVecSolver:
         self.variables = variables
         self.num_z3_vars = np.prod(self.shape)
         self.solver = z3.Optimize()
-        self.translate = Translate()
 
         self.bitvectors = []
        

@@ -1,3 +1,6 @@
+import sys
+sys.path.append("../src")
+
 from z3 import *
 from lib.variable import ExperimentVariable
 from lib.design import Design, nest, cross

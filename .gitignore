@@ -1,5 +1,6 @@
 .Rproj.user
 lib/__pycache__/translate.cpython-311.pyc
+outputs
 .Rhistory
 *.pyc
 .Rdata

@@ -1,7 +1,323 @@
-# [WIP] experimental-design-dsl*
-Note: Currently idea is to implement DSL as an R package
+# PLanet
+## Units
 
-`notes/`: folder with notes
-`src/`: folder with code
+```python
+Units(n)
+```
 
-* Newer, more organized repo from Eunice's science-modeling repo
+A sample of n units (often participants) selected to participate in an experiment. 
+
+Parameters:
+
+ - `n: int` -- the number of units in the sample. For example, if we want to sample 25 participants, then n = 25. Each participant represents one unit. If left unspecified, n defaults to the minimum number of units necessary for a valid experimental design. 
+  
+## Experiment Variable
+An Experiment Variable is an independent variable or covariate the experimenter wants to use in an experiment. The experiment variables included in an experiment determine the conditions a unit sees. For example, treatment is an independent variable with two values: drug or placebo. 
+
+```python
+Variable(name, options=[])
+```
+Creates an experimental variable. 
+
+Parameters:
+
+ - `name: str` -- the name of the variable. 
+ - `options: str[]` -- the possible discrete assignment values of the variable. 
+
+Returns: A `Variable` object
+
+## Design
+A design consists of every possible experimental plan a unit can get assigned to, and the method of assigning these experimental plans to units. Experimental designs describe the plan for assignment in an experiment. 
+
+```python
+Design()
+```
+Creates an experimental design object. 
+Returns: A `Design` object
+
+## Methods
+### between_subjects
+Adds a between subjects variable to the design. Adding a between-subjects variable implies the assigment value to the between-subjects variable is the same throughout every trial in each experiment plan. 
+
+```python
+( 
+    Design()
+    .between_subjects(variable)
+)
+```
+
+Parameters:
+
+ - `variable: Variable` -- an experiment variable. 
+
+Returns: A `Design` object
+
+
+### Example
+```python
+treatment = Variable("treatment", options=["drug", "placebo"])
+
+design = (
+    Design()
+    .between_subjects(treatment)
+)
+```
+Creates a design with exactly one between-subjects variable, treatment. 
+
+### within_subjects
+Adds a within subjects variable to the design. Adding a within subjects implies that assigment value to the within-subjects variable is the different for every trial in each experiment plan. 
+
+```python
+( 
+    Design()
+    .within_subjects(variable)
+)
+```
+
+Parameters:
+
+ - `variable: Variable` -- an experiment variable. 
+
+Returns: A `Design` object
+
+
+### Example
+```python
+treatment = Variable("treatment", options=["drug", "placebo"])
+
+design = (
+    Design()
+    .within_subjects(treatment)
+)
+```
+Creates a design with exactly one between-subjects variable, treatment. 
+
+### counterbalance
+Counterbalances the specificed variables, meaning we observe each variable value an equal number of times for each trial number accross all plans. During assignment, an equal number of units get assigned to each variable assignment value at each trial number. Assumes the input variable has already been specified in the design as either within or between subjects.
+
+```python
+( 
+    Design()
+    .within_subjects(variable)
+    .counterbalance(variable)
+)
+```
+Parameters:
+
+ - `variable: Variable` -- an experiment variable. 
+
+Returns: A `Design` object
+
+
+### Example
+```python
+treatment = Variable("treatment", options=["drug", "placebo"])
+
+design = (
+    Design()
+    .within_subjects(treatment)
+    .counterbalance(treatment)
+)
+```
+Creates a design with exactly one within-subjects, counterbalanced variable, treatment. The result of this program is a fully-counterbalanced design with two possible experiment plans: drug -> placebo and placebo -> drug. An equal number of units get assigned to each plan during assignment. 
+
+### limit_plans
+Limits the number of unique plans in the design. This acts as a constraint that prunes the space of all possible plans. 
+
+```python
+( 
+    Design()
+    .limit_plans(n)
+)
+```
+
+Parameters:
+
+ - `n: int` -- the exact number of plans in the design. 
+
+Returns: A `Design` object
+
+
+### Example
+```python
+treatment = Variable("treatment", options=["drug", "drug2", "placebo"])
+
+design = (
+    Design()
+    .within_subjects(treatment)
+    .counterbalance(treatment)
+    .limit_plans(len(treatment))
+)
+```
+
+The result is a counterbalanced, within-subjects design with three plans. Because there are three assignment values of the treatment variable, and we limit the number of plans to the number of assignment values, the result is a latin square. By default, the number of plans is the maximum number of plans given the description of the design. If we do not limit the number of plans, there are six possible orders, resulting in a fully-counterbalanced design. 
+
+### num_trials
+Sets the number of trials for each plan in the design. 
+
+```python
+( 
+    Design()
+    .num_trials(n)
+)
+```
+
+Parameters:
+
+ - `n: int` -- the exact number of trials in each experimental plan. 
+
+Returns: A `Design` object
+
+### Example
+```python
+treatment = Variable("treatment", options=["drug", "drug2", "placebo"])
+
+design = (
+    Design()
+    .within_subjects(treatment)
+    .counterbalance(treatment)
+    .num_trials(2)
+)
+```
+
+The result is a fully-counterbalanced, within-subjects design, where each units gets observed twice. This means that not every unit sees every assignment value of the treatment variable. The number of plans 3!/1! = 6: 
+
+
+## Combining Designs
+
+### nest
+Combines two designs into one with a nesting strategy, meaning that within every trial of the outer design, we observe every trial of the secodn design. The overall condition is now the combination of conditions assigned in each of the sub-designs. 
+
+An experimenter may use a nested design when they need to counterbalance a multifactorial design, and they have assumptions about how the values of some variable may effect a participant when completing a future task.  
+
+
+```python
+nest(outer_design, inner_design)
+```
+
+Parameters:
+
+- `outer_design: Design` -- a design used as the outer design in a new design. The trials of trials in the outer design expand to account for the trials of the plans in the inner design. 
+-  `inner_design: Design` -- a design used as the inner design in a new design. All of the plans in the inner design are replicated by the number of trials in all of the plans in the outer design. 
+
+Returns: A `Design` object
+
+
+### Example
+```python
+# user creates two variables: task and treatment 
+# the user provides the variable name, and an array 
+# of the possible conditions for the variable
+treatment = ExperimentVariable( 
+    name = "treatment",
+    options = ["drug", "placebo"]
+)
+task = ExperimentVariable(
+    name = "task",
+    options = ["run", "walk"]
+)
+
+treatment_des = (
+    Design()
+        .within_subjects(treatment)
+        .counterbalance(treatment)
+)
+
+task_des = (
+    Design()
+        .within_subjects(task)
+        .counterbalance(task)
+)
+
+des = nest(treatment_des, task_des)
+```
+
+### cross
+Combines two designs into one with a crossed strategy, meaning that every plan in the first design superimposes with every plan in the second design. Compared to nest, the number of trials do not increase, so the number of trials must be the same for each sub-design. The number of plans in the new design is n by m, where n is the number of plans in the first design, and m is the number of plans in the second design. 
+
+Cross is useful when the unit does not need to complete every combination of conditions in a multifactorial design, but it is important for them to see every condition of every variable involved in the design. 
+```python
+cross(design1, design2)
+```
+
+Parameters:
+
+- `design1: Design` -- a design used to create a new design 
+-  `design2: Design` -- a design used to create a new design
+
+Returns: A `Design` object
+
+
+### Example
+```python
+# user creates two variables: task and treatment 
+# the user provides the variable name, and an array 
+# of the possible conditions for the variable
+treatment = ExperimentVariable( 
+    name = "treatment",
+    options = ["drug", "placebo"]
+)
+task = ExperimentVariable(
+    name = "task",
+    options = ["run", "walk"]
+)
+
+treatment_des = (
+    Design()
+        .within_subjects(treatment)
+        .counterbalance(treatment)
+)
+
+task_des = (
+    Design()
+        .within_subjects(task)
+        .counterbalance(task)
+)
+
+des = cross(treatment_des, task_des)
+```
+
+### multifact
+Combines every condition of all input-variables to create a multi-factor variable. 
+
+```python
+multifact(variables[])
+```
+
+Parameters:
+
+- `variables: Variable[]` -- a list of experiment variables
+
+Returns: A `MultiFactVariable` object
+
+
+### Example
+```python
+treatment = Variable("treatment", options=["drug", "placebo"])
+task = Variable("task", options=["run", "walk"])
+
+multi_fact_variable = multifact(treatment, task)
+```
+
+### This is similar to manually combining the variables, but using multifact keeps references of the variables it is composed of. 
+
+```python
+multi_fact_variable = Variable("treatment_task", options=["drug-walk", "placebo-walk", "drug-run", "placebo-walk"])
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
