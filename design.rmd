@@ -1,0 +1,26 @@
+```Python
+var1 = variable("treatment", ["drug", "placebo"])
+var2 = variable("var2", ["a", "b"])
+dv = variable("time") # assume to be continuous
+
+# What is the role that a variable is playing?
+ws = within_subjects(var1)
+ws2 = within_subjects(var2)
+bs = between_subjects(var2)
+
+
+d1 = Design(
+    units=..., # sampling
+    conditions = [], # how a variable is playing a role / collection of constraints? # SMT
+    assignment_plan = assign(self.units, self.assignment), # SQL 
+    # measurement=... # may be better served/considered i Variable class, during variable declaration
+)
+
+# assignment = ws.counterbalance()
+d1.conditions = [   counterbalance(ws), 
+                    random(bs), 
+                    limit_plans(3) # similar to SQL limit
+                ]
+
+
+```

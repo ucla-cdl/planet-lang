@@ -1,0 +1,132 @@
+<style>
+    .table {
+        width: 30%;
+        text-align: center;
+    }
+    .table {
+        background: white;
+        color: black;
+        word-wrap: break-word;
+        text-align: center;
+    }
+</style>
+
+# Partial specifications
+Partial specifications are high-level descriptions about assignment requirements at specific sequence indices. The user passes an array of array's, where each array is a specific sequence of one specific variable a unit can see.
+
+For example:
+
+```python
+
+exp = Experiment()
+task = variable("task", ["c", "e"])
+interface = variable("interface", ["ffl", "latex"])
+
+units = units(24)
+
+task_spec = [
+             ["c", "c", "e", "e"],
+             ["e", "e", "c", "c"]
+            ]
+
+interface_spec = [
+             ["1", "2", "1", "2"],
+             ["2", "1", "2", "1"]
+            ]
+
+design = (
+    design()
+    .assign(units)
+    .within_subjects(cross(task, interface))
+    .add_specs({task: task_spec, interface: interface_spec})
+)
+```
+
+Result is the comination of every possible sequence of conditions from each variable:
+
+|1|2|3|4 |
+| ---  | --- | --- | --- |
+| C1 | C2 | E1 | E2 |
+| C2 | C1 | E2 | E1 |
+| E1 | E2 | C1 | C2 |
+| E2 | E1 | C2 | C1 |
+
+User can specify additional operations like counterbalancing and setting the number of groups. Treat this like program synthesis. Idea is to understand whether this design is one particular instance of a more general specification. 
+
+Notice that this is one very particular latin-square. 
+
+
+## specs for the ffl paper
+```python
+task_spec = [
+             ["c", "c", "e", "e"]
+            ]
+
+number_spec = [
+             ["1", "2", "1", "2"],
+             ["2", "1", "2", "1"]
+            ]
+
+interface_spec = [
+             ["f", "l", "f", "l"],
+             ["l", "f", "l", "f"]
+            ]
+```
+
+## Specs using string-like formatting
+```python
+# goal is to get two of the same interfaces next to each other
+interface = variable("interface", ["ffl", "latex"])
+task_spec = Pattern("a b a b").format(interface, a=Any(interface), b=Not(a)) # this is kind of weird
+```
+
+### Similar alternative
+```python
+# goal is to get two of the same interfaces next to each other
+interface = variable("interface", ["ffl", "latex"])
+Pattern("a (not a) a (not a)").format(interface, a=Any(interface))
+```
+
+Both of these result in the two orders:
+```python
+interface_spec = [
+             ["f", "l", "f", "l"],
+             ["l", "f", "l", "f"]
+            ]
+```
+
+## Why is this useful? 
+People may not realize that their designs are "overspecified". We can still detect whether this is a latin square, and provide a program to **randomly** generate a latin square, for example. 
+
+### What if we wanted a specific latin square?
+
+```python
+exp = Experiment()
+task = variable("task", ["a", "b", "c"])
+
+units = units(24)
+
+task_spec = [
+                    ["a", "b", "c"],
+                    ["b", "c", "a"],
+                    ["c", "a", "b"]
+                ]
+
+design = (
+    design()
+    .assign(units)
+    .within_subjects(task)
+)
+
+exp.run()
+```
+
+### Why? 
+
+We don't know the level of randomization based off of one design, especially when the design is not fully counterbalanced. For example, let's say someone uses the above latin square as an example design for their experiment. There were 11 other possible latin squares, but the experimenter could have generated this latin square without randomizing. 
+
+
+
+
+
+

@@ -1,0 +1,29 @@
+from z3 import *
+from lib.variable import ExperimentVariable
+from lib.design import Design, nest
+from lib.assignment import assign, assign_counterbalance
+from lib.unit import Units, Clusters
+
+
+
+treatment = ExperimentVariable(
+    name = "treatment",
+    options = ["a", "b", "c"]
+)
+
+units = Units(24)
+
+clusters = Clusters(units, 6)
+
+
+des = (
+    Design()
+        .within_subjects(treatment)
+        .counterbalance(treatment)
+        .limit_groups(len(treatment))
+)
+
+
+
+print(assign(clusters, des))
+

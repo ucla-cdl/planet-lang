@@ -1,0 +1,332 @@
+# Example Designs for DSL Interface
+## Between Subjects 
+Calling within subjects means that every participant will see exactly one experimental condition. In this case, there are two experimental conditions (drug and placebo), so there are exactly two possible groups of participants after assignment (participants observed with the drug and participants observed with the placebo)
+```c
+exp = Experiment()
+treatment = variable("treatment", ["drug", "placebo"])
+units = units(24)
+
+design = (
+    design(exp)
+    .assign_to(units, method=random())
+    .between_subjects(treatment)
+)
+exp.run()
+```
+
+## Within Subjects
+Calling within subjects means that every participant will see more than one experimental condition. In this case, the only experiment variable is treamtment, which has two conditions. The default number of trials in this case is two because there are exactly two conditions we can observe the participat under. We need to counterbalance treatment, which ensures that each treatment appears an equal amount of times at every time interval, and an equal amount of times for every group of units. By defualt, the number of groups is len(conditions)!, so four in this case. This is the maximum number of groups because there are n! different permutations of n values, where n is the number of conditions.  
+```python
+exp = Experiment()
+treatment = variable("treatment", ["drug", "placebo"])
+
+units = units(24)
+
+design = (
+    design(exp)
+    .assign_to(units, method=random())
+    .within_subjects(treatment)
+    .counterbalance(treatment) 
+)
+exp.run()
+```
+
+## Latin Square
+Latin square is a specific within-subjects, counterbalanced design. Like a fully-counterbalanced design, every experimental conditions appears an equal number of times for every time interval, and an equal number of times for each group of participants. However, a latin square uses the minimum number of participant groups required for a counterbalanced design. This means that every experimental condition appears exactly for every group of participants, meaning that the number of participant groups is exactly the number of experimental conditions. 
+
+The argument n sets the number of participant groups. In this case, the number of participant groups is the number of experimental conditions (2). The number of experimental conditions is always the minimum number of participant groups required for a counterbalanced design. Anything less, and we will not observe at least one condition for each time interval.  
+
+```python
+exp = Experiment()
+treatment = variable("treatment", ["drug", "placebo"])
+units = units(24)
+
+design = (
+    design(exp)
+    .assign_to(units, method=random())
+    .within_subjects(treatment)
+    .counterbalance(n = len(treatment)) 
+)
+exp.run()
+```
+
+### setting groups as a method in the design class
+Similar to the previous approach, but decouple setting the number of groups from counterbalancing a design
+```python
+exp = Experiment()
+treatment = variable("treatment", ["drug", "placebo"])
+
+units = units(24)
+
+design = (
+    design(exp)
+    .assign_to(units, method=random())
+    .within_subjects(treatment)
+    .counterbalance(treatment)
+    .num_groups(n=len(treatment)) 
+)
+exp.run()
+```
+
+### Groups as an existing construct
+Builds on idea from previous section. However, create groups outside of the context of the experiment, similar to how you would create groups for cluster assignment. I don't think this design makes as much sense because the assignment groups shouldn't exist outside the context of the design/after assigning conditions. Benifit is reusing operations used for cluster assignment. 
+```python
+exp = Experiment()
+treatment = variable("treatment", ["drug", "placebo"])
+
+units = units(24)
+groups = (
+        clusters()
+        .assign(units, method=random())
+        .num_clusters(n=4)
+)       
+
+design = (
+    design(exp)
+    .assign_to(groups, method=random())
+    .within_subjects(treatment)
+    .counterbalance(treatment)
+)
+exp.run()
+```
+
+
+## Quasi Experimental
+In a quasi-experimental design, the treatment is something inherent in the experimental unit (like age). In this case, we assign a treatment based on an attribute. 
+
+Note: this is replacing the lambda function 
+
+```python
+exp = Experiment()
+age = variable("age", ["young", "old"])
+
+units = units(24).add_attribute(age)
+
+clusters = (
+        clusters()
+        .group_by(age) # infers num clusters
+        .assign(units)
+)       
+
+
+# hm... in this instance, can we infer that we assign the treatment based on attribute because we treatment is also an attribute? 
+design = (
+   design(exp)
+    .assign_to(clusters, method=random()) 
+    .between_subjects(age)
+)
+
+exp.assign()
+```
+
+```python
+exp = Experiment()
+age = variable("age", ["young", "old"])
+
+units = units(24).add_attribute(age)
+
+clusters = (
+        clusters()
+        .group_by(age) # infers num clusters
+        .assign(units)
+)       
+
+
+# hm... in this instance, can we infer that we assign the treatment based on attribute because we treatment is also an attribute? 
+design = (
+   design(exp)
+    .assign_to(clusters) 
+    .between_subjects(age)
+    .attribute_as_treatment(age) # redundant?
+)
+
+exp.assign()
+```
+
+## Cluster Assignment
+Cluster assignment occurs when we assign conditions to clusters of units but measure the effect on the units. In this case, the cluster becomes the experimental unit, and the unit/participant becomes the observational unit and a subunit of the main unit. Note that in cluster assignment we do not assign units to clusters by random but rather by some shared attribite. 
+
+### Option 1: defining clusters as an object with a fluent interface 
+Pros are similar syntax to designing an experiment. However, this approach may not be as useful because there are fewer configuration options when assigning units to clusters. This program assigns each of the 24 units to one of the four groups by random. In the design class, we specify that we assign conditions to clusters rather than units. 
+```python
+exp = Experiment()
+treatment = variable("treatment", ["drug", "placebo"])
+units = units(24)
+
+clusters = (
+        clusters()
+        .assign(units, method=random())
+        .num_clusters(n=4)
+)       
+
+design = (
+   design(exp)
+    .assign_to(clusters, method=random()) 
+    .between_subjects(treatment)
+)
+
+exp.assign()
+```
+
+### Option 2: defining clusters as an object
+Similar syntax to defining a unit. Note that clusters exist outside the context of a design. There are fewer configuration options when assigning units to clusters, so we may benefit from using paramters/flags instead of adding methods as in the fluent interface. We ALWAYS need to define the number of clusters, and the subunits involved. This is not interchangable. 
+
+This program assigns each of the 24 units to one of the four groups by random. In the design class, we specify that we assign conditions to clusters rather than units. 
+```python
+exp = Experiment()
+treatment = variable("treatment", ["drug", "placebo"])
+units = units(24)
+
+clusters = partition(units, n = 4, method = random())
+
+design = (
+   design(exp)
+    .assign_to(clusters, method=random()) 
+    .between_subjects(treatment)
+)
+
+exp.assign()
+```
+
+### Option 3: defining clusters as an independent object before assigning units
+This may be beneficial when they want to explore designs where the cluster is both the experimental and the observational unit. However, we wont need a separate class in this instance because a cluster is simply a unit. 
+```python
+exp = Experiment()
+treatment = variable("treatment", ["drug", "placebo"])
+clusters = clusters(4)
+units = units(24)
+units.assign_to(clusters, method = random())
+
+design = (
+   design(exp)
+    .assign_to(clusters, method=random()) 
+    .between_subjects(treatment)
+)
+
+exp.assign()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### Throw away?
+```python
+exp = Experiment()
+treatment = variable("treatment", ["drug", "placebo"])
+task = variable("task", ["run", "walk"])
+
+units = units(24)
+
+nested_design = (
+    design(exp, method=random()) # implicit creation of new combined conditions
+    .assign_to(units, method = random())
+    .within_subjects([treatment, task]) # unit sees every possible combination of the two variables
+    .counterbalance(treatment, depth = 2, replications = 2) 
+    .counterbalance(task, depth = 1)
+)
+
+exp.assign()
+```
+
+
+
+
+
+
+## Chronotypes Paper 
+```python
+exp = Experiment()
+composition = variable("composition", ["homogenous", "heterogenous"])
+time = variable("time", ["morning", "night"])
+
+units = units(24)
+
+heterogenous_clusters = (
+        clusters(6)
+        .assign(units)
+        .mixed(age)
+        .add_attribute(composition)
+        .all("heterogenous")
+)    
+
+homogenous_clusters = (
+        clusters(6)
+        .assign(units)
+        .same(age)
+        .add_attribute(composition)
+        .all("homogenous")
+)    
+
+clusters = homogenous_clusters + heterogenous_clusters
+
+# hm... in this instance, can we infer that we assign the treatment based on attribute because we treatment is also an attribute? 
+design = (
+   design(exp)
+    .assign_to(clusters) 
+    .block(composition)
+    .between_subjects(cross(composition, time))
+)
+
+exp.assign()
+```
+
+## Factorial Designs
+Studies the effect of multiple independent variables on the dependent variable. In many cases, we are interested in the interaction effect between the two variables on the outcome. 
+
+### Option 1: implicit factorial design using arrays of variables
+Instead of passing one variable, pass an array of all variables involved in the experiment. In the specific instance, counterbalance every possible combination of the values for the two variables treatment and task. This is a useful representation because the user does not need to create a new variable for every interaction. This may be useful for more complex designs where we counterbalance many variables. Furthermore, we may have a factorial experiment where we counterbalance two variables separately, rather than the combination of values (ie. cross and nest). 
+```python
+exp = Experiment()
+treatment = variable("treatment", ["drug", "placebo"])
+task = variable("task", ["run", "walk"])
+
+units = units(24)
+
+design = (
+    design(exp) # implicit creation of new combined conditions
+    .assign_to(units)
+    .within_subjects([treatment, task]) # unit sees every possible combination of the two variables
+    .counterbalance([treatment, task]) 
+)
+
+exp.assign()
+```
+
+### Option 2: implicit factorial design using arrays of variables
+Explicitly create a new variable based on two existing variable. 
+```python
+exp = Experiment()
+treatment = variable("treatment", levels = ["drug", "placebo"])
+task = variable("task", levels = ["run", "walk"])
+
+# NOTE: this is like saying, create a new variable task-treatment, where the level 
+# is every combination of the individualt variable 
+# for example: 
+#      treatment_task = variable("treatment_task", ["drug-run", "drug-walk", "placebo-run", "placebo-walk"])
+multi_factorial_var = cross([treatment, task]) #cross product of every level of both variables
+participants = units(24)
+
+design = (
+    design(exp) # implicit creation of new combined conditions
+    .assign_to(units)
+    .within_subjects(multi_factorial_var) # unit sees every possible combination of the two variables
+    .counterbalance(multi_factorial_var) 
+)
+
+exp.assign()
+```
