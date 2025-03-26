@@ -39,15 +39,11 @@ class Assignment:
         plans = self.plans.eval()
         trials = [f"trial{i+1}" for i in range(len(plans[0]))]
         df = pd.DataFrame(plans, columns=trials)
-
         units_df = self.format_assignment()
         df = df.reset_index()
         df = df.rename(columns={'index': 'row_number'})
         df = units_df.merge(df, how='inner', left_on='plan', right_on='row_number')
         df = df.drop("row_number", axis=1)
-
-        print(df.to_latex())
-
         df.to_csv('../outputs/assignment.csv', index=False)
     
     def format_assignment(self):
