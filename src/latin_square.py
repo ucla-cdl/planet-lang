@@ -20,7 +20,5 @@ des = (
         .limit_groups(len(count))
 )
 
-
-
 assign(units, des)
 print(des)

@@ -1,6 +1,7 @@
 from z3 import *
 from .blocks import BlockFactor
 import duckdb
+import time
 
 class Unit:
     """ a Unit represents a singular unit that participates in a study. Units
@@ -15,7 +16,10 @@ class Units:
     def __init__(self, n, table = "participants"):
         self.n = n
         self.attributes = []
-        self.table = table
+        self.hash = str(time.time()).replace(".", "")
+        self.table = table + self.hash
+        print(n)
+        print(self.table)
 
     def add_attribute(self, attr):
 
@@ -47,6 +51,10 @@ class Clusters(Units):
 
         assert units is not None
         self.units = units
+
+    def get_units(self, n):
+        ret = duckdb.sql(f"select subunits from {self.table} where pid = {n}").fetchnumpy()["subunits"][0]
+        return list(ret)
 
     def eval(self):
         self.units.eval()

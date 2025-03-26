@@ -25,6 +25,5 @@ des = (
 
 
 
-assign(clusters, des)
+print(assign(clusters, des))
 
-print(units.get_plan(1))

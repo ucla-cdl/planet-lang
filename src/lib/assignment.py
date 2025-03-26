@@ -124,6 +124,9 @@ def assign_units(units, plans):
         WHERE assignment.id = {table}.pid
     """)
 
+    duckdb.sql("DROP TABLE members")
+
+
 def assign_counterbalance(units, plans, parent = None):
     if parent is not None:
         assign_subunits(units, parent)
