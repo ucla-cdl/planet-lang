@@ -38,7 +38,7 @@ def str_from_list(l):
 
 def construct_units(narray, dims):
     keys = list(product(set(range(dims[0])), set(range(dims[1]))))
-    
+  
     for key in keys:
         add = lambda i, arr : arr[i] + str_from_list(key)
         narray = modify_narray_elem(key, narray, add)
@@ -52,3 +52,4 @@ def construct_z3(narray, dims):
         narray = modify_narray_elem(key, narray, z3_fun)
 
     return narray
+
