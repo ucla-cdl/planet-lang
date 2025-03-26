@@ -45,13 +45,10 @@ number_des = (
 )
 
 cross_des = cross(interface_des, number_des)
-
 des = nest(cross_des, task_des)
+des.to_latex()
 
-assign(units, des)
-
-
-
+assign(units, des).to_csv()
 
 
 
@@ -60,7 +57,4 @@ assign(units, des)
 
 
 
-
-
-print(des)
 

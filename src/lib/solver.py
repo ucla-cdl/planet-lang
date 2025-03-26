@@ -60,9 +60,7 @@ class BitVecSolver:
                                 lower_bit, 
                                 self.z3_conditions[index]
                             )
-                        )
-                    
-                        
+                        )  
                 )
 
 
@@ -103,15 +101,12 @@ class BitVecSolver:
     # NOTE: no rows can repeat in a given matrix 
     def distinguish_rows(self):
         plans = get_dim_variables(self.z3_conditions, self.shape, 1)
-
         for i in range(len(plans)):
             for j in range(len(plans)):
-
                 if i != j:
                     assignment = []
                     for n in range(len(plans[j])):
                         assignment.append(plans[i][n] != plans[j][n])
-          
                     self.solver.add(Or(assignment))
 
 

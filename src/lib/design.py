@@ -1,19 +1,18 @@
 from z3 import *
-from lib.unit import Groups, Units
+from lib.unit import Groups
 from lib.orders import Sequence
 from lib.candl import *
 from lib.variable import MultiFactVariable, multifact
 from .helpers import *
 from .narray import *
-import numpy as np
 from .candl import *
-from .solver import  BitVecSolver
-from .unit import Units, Groups
+from .unit import Groups
 import copy
 from lib.constraint import StartWith, Counterbalance, NoRepeat, InnerBlock, OuterBlock, Constraint
 from lib.designer import Designer
 from lib.candl import generate_conditions
 import math
+import pandas as pd
 
 class Design:
     """Main class for creating experimental designs."""
@@ -31,6 +30,17 @@ class Design:
         self.designer = Designer()
         self.counterbalanced = False
   
+    def to_latex(self):
+        matrix = self.eval()
+        trials = [f"trial{i+1}" for i in range(len(matrix[0]))]
+        df = pd.DataFrame(matrix, columns=trials)
+
+        try:
+            with open("../outputs/design.tex", 'w', encoding='utf-8') as tex_file:
+                tex_file.write(df.to_latex())
+            print(f"success")
+        except Exception as e:
+            print(f"An error occurred: {e}")
 
     def num_trials(self, n):
         self.trials = n
@@ -275,13 +285,6 @@ def nest(design1, design2):
 
 
 
-
-
-
-
-
-
-
 # NOTE: this is an absolute mess :(
 # FIXME: come back to this. Won't generalize...
 # need to fix how the match blocks work, but this is not a priority
@@ -297,11 +300,7 @@ def cross(design1, design2):
         Combined design object
     """
 
-    if design2.groups is None:
-        design2.eval()
-
-    if design1.groups is None:
-        design1.eval()
+    eval([design1, design2])
 
     # Calculate the total number of groups in the combined design
     total_groups = len(design1.groups) * len(design2.groups)
@@ -311,7 +310,7 @@ def cross(design1, design2):
     # Calculate width1 (the product of all variable lengths in design1)
     width1 = design1.get_width()
     width2 = design2.get_width()
-
+    
     assert width1 == width2
     total_conditions = width2 
     
@@ -322,29 +321,18 @@ def cross(design1, design2):
                        .num_trials(total_conditions)
                     )
    
-     # Match all variables from the inner design across every block
-    for i in range(len(design1.variables)):
-        combined_design.constraints.append(OuterBlock(
-            design1.variables[i],
-            width1,
-            len(design1.groups),
-            stride = [1, 1]
-        ))
-    
-
+   
     # need to modify the inner constraints region
     # Add counterbalance constraints from design1
     for constraint in design1.constraints:
         if isinstance(constraint, Counterbalance):
             combined_design.counterbalanced = True
-
-
             if constraint.width and constraint.height:
                 combined_design.constraints.append(
                     Counterbalance(
                         constraint.variable,
                         width=constraint.width,
-                        height=constraint.height,
+                        height=total_groups,
                         stride=constraint.stride
                     )
                 )
@@ -353,7 +341,7 @@ def cross(design1, design2):
                     Counterbalance(
                         constraint.variable,
                         width=width1,
-                        height=len(design1.groups),
+                        height=total_groups,
                         stride=constraint.stride
                     )
                 )
@@ -368,16 +356,7 @@ def cross(design1, design2):
                 )
             )
 
-        if isinstance(constraint, InnerBlock):
-            combined_design.constraints.append(
-                InnerBlock(constraint.variable, constraint.width, constraint.height, stride = [1, 1])
-            )
-
-        # # here I need to multiply stride by the number of conditions of the block variable
-        elif isinstance(constraint, OuterBlock):
-            combined_design.constraints.append(
-                OuterBlock(constraint.variable, constraint.width, constraint.height, stride = [1, 1])
-            )
+    
       
     # need to modify out constraint region
     for constraint in design2.constraints:

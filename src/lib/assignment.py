@@ -6,6 +6,7 @@ import numpy as np
 from .candl import *
 from .solver import  BitVecSolver
 from .unit import Units, Groups, Clusters
+import pandas as pd
 
 import duckdb
 
@@ -33,11 +34,30 @@ class Assignment:
                 ret += f"trial {j+1}: {str(conditions)}\n" + end
         return ret
     
+   
+    def to_csv(self):
+        plans = self.plans.eval()
+        trials = [f"trial{i+1}" for i in range(len(plans[0]))]
+        df = pd.DataFrame(plans, columns=trials)
+
+        units_df = self.format_assignment()
+        df = df.reset_index()
+        df = df.rename(columns={'index': 'row_number'})
+        df = units_df.merge(df, how='inner', left_on='plan', right_on='row_number')
+        df = df.drop("row_number", axis=1)
+
+        print(df.to_latex())
+
+        df.to_csv('../outputs/assignment.csv', index=False)
+    
     def format_assignment(self):
         return duckdb.sql(f"select * from {self.units.table}").to_df()
         
     def __str__(self):
         ret = f"""***EXPERIMENT PLANS***\n\n{str(self.format_plans())} \n\n***ASSIGNMENT***\n\n{str(self.format_assignment())}"""
+
+    
+
         return ret
 
 def assign_subunits(units, parent):
@@ -88,7 +108,7 @@ def assign_units(units, plans):
     num_per_group = num_participants // num_plans  # Number of participants per plan
     
     # Insert plan assignments into the temporary table
-    for i in range(1, num_plans + 1):
+    for i in range(num_plans):
         for _ in range(num_per_group):
             duckdb.sql(f"INSERT INTO members VALUES ({i})")
     
