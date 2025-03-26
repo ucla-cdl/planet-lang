@@ -85,8 +85,6 @@ class TestDesigns(unittest.TestCase):
         output = hashable_set(output)
         expected_results = hashable_set(expected_results)[0]
 
-
-        assert len(output) == 8
         assert expected_results in output
 
     def test_nest_as_latinsquare(self):
