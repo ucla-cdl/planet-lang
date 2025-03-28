@@ -98,6 +98,10 @@ def assign_units(units, plans):
     # Create a temporary table to store plan assignments
     duckdb.sql("CREATE TABLE members (plan INT)")
     
+
+    # FIXME: It should be ok if they are not even... create "mock" participants?
+    # round up to closest divisible value, then store -1 in user table. Only select units 
+    # without a -1 at the end 
     # Ensure that the number of participants can be evenly divided among the plans
     assert num_participants % num_plans == 0, "Participants must be evenly divisible by the number of plans"
     

@@ -22,7 +22,7 @@ def distinct_or(variables):
     return ret
 
 
-def generate_conditions(participants, conditions, trials_per_condition=1):
+def generate_conditions(participants, conditions, n):
     """
     Generates a randomized sequence of conditions for each participant.
     
@@ -33,11 +33,11 @@ def generate_conditions(participants, conditions, trials_per_condition=1):
     """
     experiment_data = []
 
+   
+
     for _ in range(participants):
-        condition_list = conditions * trials_per_condition  # Repeat conditions
-        random.shuffle(condition_list)  # Shuffle for randomization
-        experiment_data.append(condition_list)
-    
+        experiment_data.append(random.sample(conditions, n))
+   
     return experiment_data
 
 
