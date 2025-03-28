@@ -136,8 +136,32 @@ class Design:
         return self
     
     def random(self, n):
-        variable = self.variables[0] if len(self.variables) == 1 else multifact(self.variables)
-        return generate_conditions(n, variable.conditions,self.get_width())
+        assert len(self.ws_variables) > 0 or len(self.bs_variables) > 0
+
+        ws_variable = None
+        bs_variable = None
+        bs_conditions = None
+        ws_conditions = None
+        if len(self.ws_variables) > 0:
+            ws_variable = self.ws_variables[0] if len(self.ws_variables) == 1 else multifact(self.ws_variables)
+            ws_conditions = generate_conditions(n, ws_variable.conditions,self.get_width())
+        if len(self.bs_variables) > 0:
+            bs_variable = self.bs_variables[0] if len(self.bs_variables) == 1 else multifact(self.bs_variables)
+            bs_conditions = generate_conditions(n, bs_variable.conditions,1)
+    
+        conditions = []
+        if len(self.bs_variables) > 0 and len(self.ws_variables) > 0:
+            for i in range(len(bs_conditions)):
+                conditions.append([bs_conditions[i][0] + "-" + ws_conditions[i][j] for j in range(len(ws_conditions[0]))])
+        elif len(self.bs_variables) > 0:
+            conditions = self.bs_variables
+        elif len(self.ws_variables) > 0:
+            conditions = self.ws_variables
+        else:
+            print("err")
+            
+    
+        return conditions
 
 def eval(designs):
     for design in designs:
