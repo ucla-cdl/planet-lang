@@ -38,7 +38,9 @@ class Design:
         df = pd.DataFrame(matrix, columns=trials)
 
         try:
-            with open("../outputs/design.tex", 'w', encoding='utf-8') as tex_file:
+            filepath = "../outputs/design.tex"
+            create_directory_for_file(filepath)
+            with open(filepath, 'w', encoding='utf-8') as tex_file:
                 tex_file.write(df.to_latex())
             print(f"success")
         except Exception as e:

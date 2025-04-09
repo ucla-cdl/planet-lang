@@ -1,6 +1,11 @@
 from z3 import *
+
+import sys
+sys.path.append("../")
 from lib.variable import ExperimentVariable, multifact
 from lib.design import Design, nest
+from lib.assignment import assign
+from lib.unit import Units
 
 
 # NOTE: need to make all different wrt. variables. Should this be under the hood though?
@@ -25,8 +30,9 @@ test2 = ExperimentVariable(
     options = ["X", "Y"]
 )
 
+units = Units(16)
 
-# # note: set / argv because no order
+
 des = (
     Design()
         .within_subjects(multifact([treatment, task]))
@@ -49,7 +55,6 @@ des4 = (Design()
 )
 
 d2 = nest(des3, des)
-
 d5 = nest(d2, des4)
 
-print(d5)
+print(assign(units, d5))

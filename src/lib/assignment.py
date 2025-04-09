@@ -7,19 +7,19 @@ from .candl import *
 from .solver import  BitVecSolver
 from .unit import Units, Groups, Clusters
 import pandas as pd
+import time
 
 import duckdb
 
 class Assignment:
     def __init__(self, units, plans):
         assign_counterbalance(units, plans)
-
         self.units = units
         self.plans = plans
     
     def format_plans(self):
         matrix = self.plans.get_plans(self.units.n)
-        ret = "Experiment Plans: \n \n"
+        ret = ""
 
         for i in range(len(matrix)):
             ret += f"plan {i+1}:\n\t" 
@@ -90,6 +90,7 @@ def assign_units(units, plans):
     # Evaluate the units object to ensure it's up-to-date
     units.eval()
     table = units.table  # Reference to the database table containing participant data
+
     plans = plans.get_plans(units.n)  # Retrieve plans based on the number of participants
 
     num_plans = len(plans)  # Total number of available plans
@@ -112,7 +113,6 @@ def assign_units(units, plans):
         for _ in range(num_per_group):
             duckdb.sql(f"INSERT INTO members VALUES ({i})")
     
-    duckdb.sql(f"select * from members").show()
     # Randomly distribute the plan assignments to the participants
     duckdb.sql(f"""
         UPDATE {table}
@@ -120,7 +120,7 @@ def assign_units(units, plans):
         FROM (
             SELECT {table}.pid AS id, members.plan
             FROM (
-                SELECT *, ROW_NUMBER() OVER (ORDER BY uuid()) AS rand
+                SELECT *, ROW_NUMBER() OVER (ORDER BY UUID()) AS rand
                 FROM members
             ) members
             JOIN {table} ON {table}.pid = members.rand
@@ -128,7 +128,6 @@ def assign_units(units, plans):
         WHERE assignment.id = {table}.pid
     """)
 
-    print("here")
     duckdb.sql("DROP TABLE members")
 
 

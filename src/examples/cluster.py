@@ -1,4 +1,7 @@
 from z3 import *
+
+import sys
+sys.path.append("../")
 from lib.variable import ExperimentVariable
 from lib.design import Design, nest
 from lib.assignment import assign, assign_counterbalance
@@ -22,8 +25,6 @@ des = (
         .counterbalance(treatment)
         .limit_groups(len(treatment))
 )
-
-
 
 print(assign(clusters, des))
 

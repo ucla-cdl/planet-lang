@@ -158,3 +158,8 @@ def combine_lists(l1, l2):
     combined_variables.extend(l2)
 
     return combined_variables
+
+def create_directory_for_file(filepath):
+    directory = os.path.dirname(filepath)
+    if directory:
+        os.makedirs(directory, exist_ok=True)
