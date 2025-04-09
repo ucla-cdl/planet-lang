@@ -1,5 +1,5 @@
 import sys
-sys.path.append("../src")
+sys.path.append("../")
 
 from z3 import *
 from lib.variable import ExperimentVariable

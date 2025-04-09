@@ -29,6 +29,8 @@ class Design:
         
         self.designer = Designer()
         self.counterbalanced = False
+
+        self.plans = None
   
     def to_latex(self):
         matrix = self.eval()
@@ -70,6 +72,8 @@ class Design:
         return self
     
     def get_plans(self, n=None):
+        if self.plans is not None:
+            return self.plans
         return self.eval() if self.counterbalanced else self.random(n or len(self.groups))
     
     def get_width(self):
@@ -114,7 +118,12 @@ class Design:
         self.designer.solver.all_different()
         self.designer.eval_constraints(self.constraints, self.groups, width)
 
-        return self.designer.eval_all() if test else self.designer.eval()
+        if test:
+            self.plans = self.designer.eval_all()
+        else:
+            self.plans = self.designer.eval()
+
+        return self.plans
         
     def counterbalance(self, variable, w = 0, h = 0, stride = [1, 1]):
         assert isinstance(variable, ExperimentVariable)

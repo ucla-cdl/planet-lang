@@ -18,8 +18,6 @@ class Units:
         self.attributes = []
         self.hash = str(time.time()).replace(".", "")
         self.table = table + self.hash
-        print(n)
-        print(self.table)
 
     def add_attribute(self, attr):
 

@@ -206,7 +206,7 @@ class BitVecSolver:
     def get_one_model(self):
         
         all_assignments = []
-        t = time.time()
+    
         if (self.solver.check() == sat):
             all_assignments = []
             model = self.solver.model()
@@ -214,7 +214,7 @@ class BitVecSolver:
       
             for var in self.z3_conditions:
                 all_assignments.append(model.evaluate(model[var]))
-        print(time.time() - t)
+ 
 
         
         return all_assignments
@@ -225,8 +225,7 @@ class BitVecSolver:
         all_orders = []
         self.solver.push()
         count = 0
-        while self.solver.check() == sat and count < 720:
-            
+        while self.solver.check() == sat and count < 100000:
             model = self.solver.model()
 
             block = []

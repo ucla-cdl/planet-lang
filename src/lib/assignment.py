@@ -120,7 +120,7 @@ def assign_units(units, plans):
         FROM (
             SELECT {table}.pid AS id, members.plan
             FROM (
-                SELECT *, ROW_NUMBER() OVER (ORDER BY UUID()) AS rand
+                SELECT *, ROW_NUMBER() OVER (ORDER BY uuid()) AS rand
                 FROM members
             ) members
             JOIN {table} ON {table}.pid = members.rand
@@ -128,6 +128,7 @@ def assign_units(units, plans):
         WHERE assignment.id = {table}.pid
     """)
 
+    print("here")
     duckdb.sql("DROP TABLE members")
 
 
