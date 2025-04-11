@@ -365,18 +365,3 @@ plan.
 assign(units, design).to_csv()
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
