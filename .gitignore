@@ -1,0 +1,14 @@
+.Rproj.user
+lib/__pycache__/translate.cpython-311.pyc
+outputs
+.Rhistory
+*.pyc
+.Rdata
+.httr-oauth
+.DS_Store
+.quarto
+*.csv
+.vscode
+*pycache*
+notes
+venv
