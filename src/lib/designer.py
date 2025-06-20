@@ -6,7 +6,7 @@ from .narray import *
 import numpy as np
 from .candl import *
 from .solver import  BitVecSolver
-from lib.constraint import StartWith, Counterbalance, NoRepeat, InnerBlock, OuterBlock, Constraint
+from lib.constraint import StartWith, Counterbalance, NoRepeat, InnerBlock, OuterBlock, Constraint, SetRank, SetPosition
 from lib.unit import Groups, Units
 
 # NOTE: combine this with des pls
@@ -64,6 +64,21 @@ class Designer:
                     self.start_with(
                         constraint.variable, 
                         constraint.condition
+                    )
+                
+                case SetPosition():
+                    self.set_position(
+                        constraint.variable, 
+                        constraint.condition,
+                        constraint.position
+                    )
+
+                case SetRank():
+                    self.set_rank(
+                        constraint.variable, 
+                        constraint.condition,
+                        constraint.rank,
+                        constraint.condition2
                     )
 
                 case InnerBlock():
@@ -127,8 +142,14 @@ class Designer:
 
     def start_with(self, variable, condition):
         self.solver.start_with(variable, variable.conditions.index(condition))
+
+    def set_rank(self, variable, condition, rank, condition2):
+        self.solver.set_rank(variable, variable.conditions.index(condition), rank, variable.conditions.index(condition2))
     
+    def set_position(self, variable, condition, pos):
+        self.solver.set_position(variable, variable.conditions.index(condition), pos)
     
+
 
     def get_groups(self, model):
         if not len(self.units):

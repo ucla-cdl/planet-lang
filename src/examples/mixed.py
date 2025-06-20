@@ -1,4 +1,9 @@
 from z3 import *
+import sys
+
+sys.path.append("../")
+from lib.assignment import assign
+from lib.unit import Units
 from lib.variable import ExperimentVariable
 from lib.design import Design
 
@@ -12,6 +17,8 @@ count = ExperimentVariable(
     options = ["1", "2"]
 )
 
+units = Units(4)
+
 des = (
     Design()
         .within_subjects(treatment)
@@ -20,4 +27,4 @@ des = (
         .limit_groups(4)
 )
 
-print(des)
+print(assign(units, des))

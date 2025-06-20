@@ -1,8 +1,9 @@
+
 import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
+sys.path.append("../")
 from lib.variable import ExperimentVariable, multifact
-from lib.design import Design, nest
+from lib.design import Design
+from lib.nest import nest
 from lib.unit import Units 
 from lib.assignment import assign 
 
@@ -33,9 +34,9 @@ task_design = (
         .counterbalance(task)
 )
 
-design = nest(task_design, interface_design)
-assign(units, design)
-design.to_latex()
+design = nest(outer=interface_design, inner=task_design)
+print(assign(units, design))
+
 
 
 

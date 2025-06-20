@@ -3,7 +3,8 @@ sys.path.append("../")
 
 from z3 import *
 from lib.variable import ExperimentVariable
-from lib.design import Design, nest, cross
+from lib.design import Design
+from lib.nest import nest, cross
 from lib.assignment import assign, assign_counterbalance
 from lib.unit import Units
 
@@ -29,9 +30,8 @@ units = Units(16)
 task_des = (
     Design()
         .within_subjects(task)
-        .start_with(task, "creation")
+        .set_position(task, "creation", 0)
 )
-
 
 interface_des = (
     Design()
@@ -47,7 +47,7 @@ number_des = (
 )
 
 cross_des = cross(interface_des, number_des)
-des = nest(cross_des, task_des)
+des = nest(outer=task_des, inner=cross_des)
 
 des.to_latex()
 assignment = assign(units, des)

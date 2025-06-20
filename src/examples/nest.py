@@ -1,7 +1,12 @@
+import sys
+sys.path.append("../")
+from lib.variable import ExperimentVariable, multifact
+from lib.unit import Units 
+from lib.assignment import assign 
 from z3 import *
 from lib.variable import ExperimentVariable
 from lib.design import Design
-from lib.design import nest
+from lib.nest import nest
 
 
 # user creates two variables: task and treatment 
@@ -52,16 +57,13 @@ des4 = (Design()
         .limit_groups(2)
 )
 
+units = Units(48)
+
+des = nest(inner=des2, outer=des1)
+
+test = nest(inner=des3, outer=des4)
 
 
-des = nest(des2, des1)
-
-test = nest(des3, des4)
-
-print(des)
-print(test)
-
-
-mega = nest(des, test)
-
-print(mega)
+mega = nest(inner=des, outer=test)
+mega.to_latex()
+print(assign(units, mega))

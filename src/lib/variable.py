@@ -32,7 +32,7 @@ class ExperimentVariable:
         self.condition_map = dict()
         for i in range(num_options):
             # create a name for the condition if not defined
-            attr = options[i] if len(options) > 0 else "condition" + str(i)
+            attr = options[i] if len(options) > 0 else str(i)
             # instance of variable condition which represents a subcondition 
             # of this variable. Pass the current variable so the condition 
             # can refer back 
@@ -53,7 +53,11 @@ class ExperimentVariable:
     
     def __len__(self):
         return self.n
-    
+
+class Replications(ExperimentVariable):
+    def __init__(self, n):
+        self.__init__("replications", n)
+
 class MultiFactVariable(ExperimentVariable):
     def __init__(self, variables):
         self.n = reduce(lambda x, y: x*y, list(map(len, variables)))

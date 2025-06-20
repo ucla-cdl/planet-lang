@@ -1,6 +1,10 @@
+import sys
+sys.path.append("../")
+
 from z3 import *
 from lib.variable import ExperimentVariable
-from lib.design import Design, nest, cross
+from lib.design import Design
+from lib.nest import cross
 
 
 # NOTE: need to make all different wrt. variables. Should this be under the hood though?

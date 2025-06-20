@@ -34,16 +34,6 @@ assign(units, design)
 
 
 
-
-
-
-
-
-
-
-
-
-
 interface = ExperimentVariable(
     name = "interface",
     options = ["AR", "VR", "Reality"]
@@ -71,8 +61,6 @@ task_design = (
 design = nest(task_design, interface_design)
 
 assign(units, design)
-
-
 
 
 

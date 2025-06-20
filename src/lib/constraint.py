@@ -52,5 +52,20 @@ class StartWith(Constraint):
         super().__init__(variable)
         self.condition = condition
 
+class SetRank(Constraint):
+    def __init__(self, variable, condition, rank, condition2):
+        super().__init__(variable)
+        self.condition = condition
+        self.rank = rank
+        self.condition2 = condition2 
+
+class SetPosition(Constraint):
+    def __init__(self, variable, condition, pos):
+        super().__init__(variable)
+        self.condition = condition
+        self.position = pos
+
+
+
 
  
