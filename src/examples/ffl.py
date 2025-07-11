@@ -30,7 +30,7 @@ units = Units(16)
 task_des = (
     Design()
         .within_subjects(task)
-        .set_position(task, "creation", 0)
+        .start_with(task, "creation")
 )
 
 interface_des = (

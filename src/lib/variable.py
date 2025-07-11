@@ -67,10 +67,10 @@ class MultiFactVariable(ExperimentVariable):
         super().__init__("factorial", self.n, options = combinations)
         all(isinstance(variable, ExperimentVariable) for variable in variables)
         self.variables = variables
-        
 
-    def __len__(self):
-        return self.n
+    def get_variables(self):
+        return self.variables
+
 
 def multifact(variables):
     return MultiFactVariable(variables)

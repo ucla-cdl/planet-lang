@@ -7,9 +7,16 @@ from .candl import *
 from .solver import  BitVecSolver
 from .unit import Units, Groups, Clusters
 import pandas as pd
+import math
 import time
 
 import duckdb
+
+def determine_plans(units, design):
+    if design.is_random():
+        return design.random(units.n)
+    else:
+        return design.get_plans()
 
 class Assignment:
     def __init__(self, units, plans):
@@ -18,7 +25,7 @@ class Assignment:
         self.plans = plans
     
     def format_plans(self):
-        matrix = self.plans.get_plans(self.units.n)
+        matrix = determine_plans(self.units, self.plans)
         ret = ""
 
         for i in range(len(matrix)):
@@ -27,7 +34,8 @@ class Assignment:
 
                 end = "" if j == len(matrix[i]) - 1 else "\t" 
                 conditions = matrix[i][j].split("-")
-
+                print(conditions)
+                print(self.plans.variables)
                 test = [f"{self.plans.variables[x].name} = {conditions[x]}" for x in range(len(conditions))]
                 conditions = ", ".join(test)
 
@@ -51,9 +59,6 @@ class Assignment:
         
     def __str__(self):
         ret = f"""***EXPERIMENT PLANS***\n\n{str(self.format_plans())} \n\n***ASSIGNMENT***\n\n{str(self.format_assignment())}"""
-
-    
-
         return ret
 
 def assign_subunits(units, parent):
@@ -72,7 +77,7 @@ def assign_subunits(units, parent):
                         where subunit_assignment.id = {units.table}.pid
         
            """)
-    
+
 
 
 def assign_units(units, plans):
@@ -88,28 +93,19 @@ def assign_units(units, plans):
     """
     
     # Evaluate the units object to ensure it's up-to-date
-    units.eval()
-    table = units.table  # Reference to the database table containing participant data
-
-    plans = plans.get_plans(units.n)  # Retrieve plans based on the number of participants
-
+    table = units.get_table()
+    plans = determine_plans(units, plans)
     num_plans = len(plans)  # Total number of available plans
     num_participants = len(units)  # Total number of participants
     
     # Create a temporary table to store plan assignments
     duckdb.sql("CREATE TABLE members (plan INT)")
-    
 
-    # FIXME: It should be ok if they are not even... create "mock" participants?
-    # round up to closest divisible value, then store -1 in user table. Only select units 
-    # without a -1 at the end 
-    # Ensure that the number of participants can be evenly divided among the
-    # plans
+    required_participants = math.ceil(num_participants/num_plans) * num_plans
+    for i in range(num_participants, required_participants):
+        duckdb.sql(f"insert into {units.table} values ({i+1}, 0)")
     
-
-    assert num_participants % num_plans == 0, "Participants must be evenly divisible by the number of plans"
-    
-    num_per_group = num_participants // num_plans  # Number of participants per plan
+    num_per_group = required_participants // num_plans  # Number of participants per plan
     
     # Insert plan assignments into the temporary table
     for i in range(num_plans):
@@ -130,8 +126,10 @@ def assign_units(units, plans):
         ) AS assignment
         WHERE assignment.id = {table}.pid
     """)
-
     duckdb.sql("DROP TABLE members")
+
+    for i in range(num_participants, required_participants):
+        duckdb.sql(f"update {units.table} set pid = -1 where pid > {num_participants}")
 
 
 def assign_counterbalance(units, plans, parent = None):

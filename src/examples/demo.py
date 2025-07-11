@@ -21,7 +21,7 @@ task = ExperimentVariable(
     options = ["painting", "basketball"]
 )
 
-units = Units(12)
+units = Units(11)
 
 interface_design = (
     Design()

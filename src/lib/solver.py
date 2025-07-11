@@ -51,9 +51,7 @@ class BitVecSolver:
                 hi = len(variable) - 1
                 # required number of bits to encode a given value
                 required_bits = int(math.ceil(math.log(variable.n, 2))) 
-       
                 self.solver.add(
-               
                         And(
                             lo <= Extract(
                                     lower_bit+required_bits, 
@@ -68,7 +66,6 @@ class BitVecSolver:
                         )  
                 )
 
-
             # gives us index of the lower bit of the next variable
             lower_bit += required_bits + 1
 
@@ -81,10 +78,8 @@ class BitVecSolver:
         self.bitvectors = BitVectors(self.num_z3_vars, self.variables)
         self.z3_conditions = self.bitvectors.get_variables()
     
-
     def block_columns(self, arr, width, stride=1):
         return np.array(arr)[:, 0:width:stride]
-
 
     def all_different(self, v=None, width = None, stride = 1):
         # could you prettify this?
@@ -93,7 +88,7 @@ class BitVecSolver:
         if width is not None:
             dim_variables = list(self.block_columns(dim_variables, width, stride))
 
-        test = lambda x: [self.bitvectors.get_variable_assignment(z, x) for z in v[0]]
+        test = lambda x: [self.bitvectors.get_variable_assignment(z, x) for z in v]
 
         for arr in dim_variables:
             # FIXME (fixed but I'm not convinced)
@@ -173,6 +168,26 @@ class BitVecSolver:
                 )
             )
         )
+
+    def absolute_rank(self, var, ranks):
+        x = BitVec("x", self.bitvectors.len)
+
+        orders = get_dim_variables(self.z3_conditions, self.shape, 1)
+        n = self.n_trials()
+
+        rank = Function(f'rank_{str(var)}', BitVecSort(self.bitvectors.determine_num_bits()), IntSort())
+        for order in orders:
+            self.solver.add([rank(order[i]) >= rank(order[i+1]) for i in range(n-1)])
+
+        for condition in ranks:
+            self.solver.add(
+                ForAll([x],
+                    Implies(
+                        self.bitvectors.get_variable_assignment(var, x) == condition,
+                        rank(x) == ranks[condition]
+                    )
+                )
+            )
             
 
     def counterbalance(self, block=[], variables=None):
@@ -269,11 +284,11 @@ class BitVecSolver:
     # works when z3 rep iterates through many arrays
     # NOTE: should I merge these two functions?
     def get_all_models(self):
-        
         all_orders = []
         self.solver.push()
         count = 0
-        while self.solver.check() == sat and count < 100000:
+        capacity = 10000
+        while self.solver.check() == sat and count < capacity:
             model = self.solver.model()
             block = []
             order = []
@@ -284,9 +299,8 @@ class BitVecSolver:
             all_orders.append(order)
             self.solver.add(Or(block))
             count+=1
-
         if self.solver.check() == sat:
-            warnings.warn(f"There are more orders not captured in the model due order capacity (currently set to {720})")
+            warnings.warn(f"There are more orders not captured in the model due order capacity (currently set to {capacity})")
 
         self.solver.pop()
         return all_orders

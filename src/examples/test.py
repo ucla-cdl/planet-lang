@@ -15,16 +15,16 @@ treatment = ExperimentVariable(
 
 task = ExperimentVariable(
     name = "task",
-    options = ["1", "2"]
+    options = ["1", "2", "3", "4"]
 )
 
 
 des = (
     Design()
-        .within_subjects(multifact([treatment, task]))
-        .counterbalance(multifact([treatment, task]))
+        .within_subjects(task)
+        .counterbalance(task)
+        .num_trials(2)
 )
 
-units = Units(12)
-
+units = Units(8)
 print(assign(units, des))

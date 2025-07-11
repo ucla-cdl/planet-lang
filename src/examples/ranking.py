@@ -17,7 +17,7 @@ units = Units(16)
 des = (
     Design()
         .within_subjects(task)
-        .set_position(task, "creation", 0)
+        .absolute_rank(task, "creation", 1)
 )
 
 assignment = assign(units, des)

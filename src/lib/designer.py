@@ -6,7 +6,8 @@ from .narray import *
 import numpy as np
 from .candl import *
 from .solver import  BitVecSolver
-from lib.constraint import StartWith, Counterbalance, NoRepeat, InnerBlock, OuterBlock, Constraint, SetRank, SetPosition
+from lib.constraint import StartWith, Counterbalance, NoRepeat, InnerBlock, OuterBlock, Constraint, SetRank, SetPosition, AbsoluteRank
+from lib.variable import MultiFactVariable
 from lib.unit import Groups, Units
 
 # NOTE: combine this with des pls
@@ -31,14 +32,21 @@ class Designer:
         self.shape = self.determine_shape()
         self.solver = BitVecSolver(self.shape, self.variables)
 
+    def _get_experiment_variables(self, constraint):
+        if isinstance(constraint.variable, MultiFactVariable):
+            return constraint.get_variable().get_variables()
+        else:    
+            return [constraint.get_variable()]
 
     def eval_constraints(self, constraints, groups, width):
         # Process constraints
         for constraint in constraints:
             assert isinstance(constraint, Constraint)
+            variable = self._get_experiment_variables(constraint)
+
             match constraint:
-                
                 case Counterbalance():
+                    # FIXME
                     if groups:
                         constraint.width = (
                             constraint.width if constraint.width else width
@@ -46,8 +54,9 @@ class Designer:
                         constraint.height = (
                             constraint.height if constraint.height else len(groups)
                         )
+
                     self.counterbalance(
-                        constraint.variable,
+                        variable,
                         w=constraint.width,
                         h=constraint.height,
                         stride=constraint.stride,
@@ -55,7 +64,7 @@ class Designer:
 
                 case NoRepeat():
                     self.solver.all_different(
-                        constraint.variable, 
+                        variable, 
                         constraint.width, 
                         constraint.stride
                     )
@@ -81,6 +90,12 @@ class Designer:
                         constraint.condition2
                     )
 
+                case AbsoluteRank():
+                    self.absolute_rank(
+                        constraint.variable, 
+                        constraint.ranks
+                    )
+
                 case InnerBlock():
                     self.match_inner(
                         constraint.variable, 
@@ -95,11 +110,8 @@ class Designer:
                         constraint.height
                     )
                 case _:
-                    print("failure")
+                    raise ValueError("Could not identify proper constraint")
         
-
-
-
     def determine_shape(self):
         if len(self.units): 
             n = len(self.units)
@@ -149,7 +161,10 @@ class Designer:
     def set_position(self, variable, condition, pos):
         self.solver.set_position(variable, variable.conditions.index(condition), pos)
     
-
+    def absolute_rank(self, variable, ranks):
+        transformed_ranks = {variable.conditions.index(condition): rank for condition, rank in ranks.items()}
+        self.solver.absolute_rank(variable, transformed_ranks)
+    
 
     def get_groups(self, model):
         if not len(self.units):

@@ -14,7 +14,7 @@ from lib.nest import nest
 # of the possible conditions for the variable
 treatment = ExperimentVariable( 
     name = "treatment",
-    options = ["A", "B"]
+    options = ["A", "B", "C"]
 )
 task = ExperimentVariable(
     name = "task",
@@ -61,9 +61,7 @@ units = Units(48)
 
 des = nest(inner=des2, outer=des1)
 
-test = nest(inner=des3, outer=des4)
 
-
-mega = nest(inner=des, outer=test)
-mega.to_latex()
-print(assign(units, mega))
+# mega = nest(inner=des, outer=test)
+# mega.to_latex()
+print(assign(units, des))
