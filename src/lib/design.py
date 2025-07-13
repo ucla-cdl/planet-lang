@@ -26,6 +26,41 @@ class Plans:
         self.counterbalanced = False
         self.plans = None
 
+        # test
+        self.random_var = None
+
+    def is_random(self):
+        return not self.counterbalanced
+
+class RandomPlan(Plans):
+    """This is like creating a vector of random variables."""
+    def __init__(self, variables):
+        super().__init__()
+        for var in variables:
+            self._add_variable(var)
+            self.random_var = var
+            
+        self.groups = Groups(1)
+
+    def num_trials(self, n):
+        self.trials = n
+        return self
+    
+    def _add_variable(self, variable):
+        assert isinstance(variable, ExperimentVariable)
+
+        if isinstance(variable, MultiFactVariable):
+            variables = variable.variables
+        else:
+            variables = [variable]
+
+        self.variables.extend(variables)
+        self.ws_variables.extend(variables)
+    
+    
+    def get_width(self):
+        return self.trials or math.prod(v.n for v in self.ws_variables)
+
 class Design(Plans):
     """Main class for creating experimental designs."""
     def __init__(self):
@@ -73,13 +108,75 @@ class Design(Plans):
         self.groups = Groups(n)
         return self
     
-    def is_random(self):
-        return not self.counterbalanced
+    def has_random_variable(self):
+        return self.random_var is not None
     
-    def get_plans(self):
+
+    def _generate_random_variables(self, n, variable, width):
+        ws_conditions = generate_conditions(n, variable, width)
+        return ws_conditions
+    
+    def _determine_random_width(self):
+        width = self.get_width()
+        div = 1
+        for constraint in self.constraints:
+            if isinstance(constraint, OuterBlock) and constraint.variable == self.random_var:
+                width = constraint.width
+  
+            elif isinstance(constraint, InnerBlock) and constraint.variable == self.random_var:
+                div = constraint.width
+          
+        return int(width/div)
+    
+
+    def _determine_random_span(self):
+        span = 1
+        for constraint in self.constraints:
+            if isinstance(constraint, InnerBlock) and constraint.variable == self.random_var:
+               span = constraint.width
+        return span
+
+    def _instantiate_random_variables(self, n):
+        # NOTE to self: this will only work if there is one random variable :)
+        """
+        Think about this like instantiating the elements of a matrix of random variables
+        """
+        assert self.plans is not None
+        new_plans = []
+        random_index = self.variables.index(self.random_var)
+        width = self._determine_random_width()
+        span = self._determine_random_span()
+
+        rand_vars = self._generate_random_variables(int(n / len(self.plans)), self.random_var, width)
+        for plan in self.plans:
+            for rand_var in rand_vars:
+                new_plan = []
+                # NOTE: expand this to edit span conditions at a time in span. 
+                for i, condition in enumerate(plan):
+                    parts = condition.split("-")
+                    parts[random_index] = rand_var[i // span % width]
+                    new_condition = "-".join(parts)
+                    new_plan.append(new_condition)
+                new_plans.append(new_plan)
+
+
+        self.plans = new_plans
+    
+
+
+    def get_plans(self, n = None):
+        if self.is_random():
+            assert n is not None
+            return self.random(n)
         if self.plans is not None:
             return self.plans
-        return self.eval()
+        else:
+            self.eval()
+   
+        if self.has_random_variable():
+            assert n is not None
+            self._instantiate_random_variables(n)
+        return self.plans
     
     
     def get_width(self):
@@ -87,6 +184,7 @@ class Design(Plans):
     
     def start_with(self, variable, condition):
         assert isinstance(variable, ExperimentVariable)
+        self.counterbalanced = True
         self.constraints.append(StartWith(variable, condition))
         return self
     
@@ -115,18 +213,28 @@ class Design(Plans):
 
         return self
     
+  
+    
     def _determine_num_plans(self):
         if not self.groups:
             counterbalanced_groups = []
+            start_with_groups = []
             for constraint in self.constraints:
                 if isinstance(constraint, Counterbalance):
                     counterbalanced_variable = constraint.get_variable()
+                    num_conditions = len(counterbalanced_variable)
                     if isinstance(counterbalanced_variable, MultiFactVariable):
-                        counterbalanced_groups.append((counterbalanced_variable.get_variables(), len(counterbalanced_variable)))
+                        counterbalanced_groups.append((counterbalanced_variable.get_variables(), num_conditions))
                     else:
-                        counterbalanced_groups.append(([counterbalanced_variable], len(counterbalanced_variable)))
-
+                        counterbalanced_groups.append(([counterbalanced_variable], num_conditions))
+                # FIXME: ugly
+                if isinstance(constraint, StartWith):
+                    self.groups = Groups(1)
+                    return
+    
+            
             total_n_plans = 1
+
             for group in counterbalanced_groups:
                 num_trials = self.get_width()
                 if num_trials > group[1]:
@@ -136,10 +244,14 @@ class Design(Plans):
                     total_n_plans *= math.factorial(group[1]) / math.factorial(group[1] - num_trials)
                 else: 
                     total_n_plans *= math.factorial(group[1])
+
+   
             if counterbalanced_groups:
                 self.groups = Groups(int(total_n_plans))
             else:
                 self.groups = Groups(0)
+
+   
             
 
 
@@ -149,6 +261,7 @@ class Design(Plans):
         sequence = Sequence(width)
         self._determine_num_plans()
         
+   
         self.designer.start(
             self.groups, 
             sequence, 
@@ -175,7 +288,8 @@ class Design(Plans):
 
     def eval(self):
         self._eval()
-        return self.designer.eval()
+        plans = self.designer.eval()
+        self.plans = plans
 
         
     def counterbalance(self, variable, w = 0, h = 0, stride = [1, 1]):
@@ -229,10 +343,11 @@ class Design(Plans):
 
         ws_variable = self._new_ws_variables()
         ws_conditions = generate_conditions(n, ws_variable,self.get_width())
+
         
         bs_variable = self._new_bs_variables()
         bs_conditions = generate_conditions(n, bs_variable,1)
-        
+            
         return self._combined_conditions(bs_conditions, ws_conditions)
     
 

@@ -204,14 +204,14 @@ class BitVecSolver:
       
         # Get dimensional variables from z3 conditions
         plans = get_dim_variables(self.z3_conditions, self.shape, 1)
-        
+
         # Apply blocks if provided
         if len(block):
             plans = self.block_array(plans, block)
         
         # Transpose the plans for processing
         plans = np.transpose(plans)
-        
+
         # Initialize counts for tracking variable combinations
         counts = []
         
@@ -230,6 +230,7 @@ class BitVecSolver:
         ))
         
         # Process each plan
+
         for plan_idx in range(len(plans)):
             # Map variables to their assignments in the current plan
             assignments = list(zip(*[

@@ -13,10 +13,8 @@ import time
 import duckdb
 
 def determine_plans(units, design):
-    if design.is_random():
-        return design.random(units.n)
-    else:
-        return design.get_plans()
+  
+    return design.get_plans(n=len(units))
 
 class Assignment:
     def __init__(self, units, plans):
@@ -34,8 +32,6 @@ class Assignment:
 
                 end = "" if j == len(matrix[i]) - 1 else "\t" 
                 conditions = matrix[i][j].split("-")
-                print(conditions)
-                print(self.plans.variables)
                 test = [f"{self.plans.variables[x].name} = {conditions[x]}" for x in range(len(conditions))]
                 conditions = ", ".join(test)
 

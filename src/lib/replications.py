@@ -24,6 +24,7 @@ class Replications(Plans):
         var = ExperimentVariable("replications", n)
         self._add_variable(var)
         self.groups = Groups(1)
+        self.counterbalanced = True
 
     def num_trials(self, n):
         self.trials = n
