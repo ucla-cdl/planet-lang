@@ -12,6 +12,7 @@ from lib.designer import Designer
 from lib.candl import generate_conditions
 import math
 import pandas as pd
+from lib.randomizer import Randomizer
 
 class Plans:
     def __init__(self):
@@ -118,6 +119,7 @@ class Design(Plans):
     
     def _determine_random_width(self):
         width = self.get_width()
+        
         div = 1
         for constraint in self.constraints:
             if isinstance(constraint, OuterBlock) and constraint.variable == self.random_var:
@@ -125,7 +127,7 @@ class Design(Plans):
   
             elif isinstance(constraint, InnerBlock) and constraint.variable == self.random_var:
                 div = constraint.width
-          
+        
         return int(width/div)
     
 
@@ -136,14 +138,12 @@ class Design(Plans):
                span = constraint.width
         return span
     
-
-
-    def get_blocks(plan, width, span):
+    def get_blocks(self, plan, width, span):
         """Chunk the plan into blocks of size width * span."""
         block_size = width * span
         return [plan[i:i + block_size] for i in range(0, len(plan), block_size)]
 
-    def replace_condition(condition_str, replacement, index_to_replace):
+    def replace_condition(self, condition_str, replacement, index_to_replace):
         """Replace part of a condition string at the given index."""
         parts = condition_str.split("-")
         parts[index_to_replace] = replacement
@@ -151,24 +151,23 @@ class Design(Plans):
 
     def apply_randomization(self, rand_vars, width, span, random_index, n):
         new_plans = []
-
         for plan_idx, plan in enumerate(self.plans):
-            blocks = get_blocks(plan, width, span)
+            blocks = self.get_blocks(plan, width, span)
             reps_per_plan = int(n / len(self.plans))
 
             for rep_idx in range(reps_per_plan):
                 new_plan = []
 
                 for block_idx, block in enumerate(blocks):
+                    # FIXME: does  not work when random variables are the outer design
                     rand_idx = rep_idx * len(blocks) + plan_idx * n + block_idx
                     rand_var = rand_vars[rand_idx]
-
                     for cond_idx in range(width):
                         for within_block_idx in range(span):
                             index = cond_idx * span + within_block_idx
                             old_condition = block[index]
                             replacement = rand_var[cond_idx]
-                            new_condition = replace_condition(old_condition, replacement, random_index)
+                            new_condition = self.replace_condition(old_condition, replacement, random_index)
                             new_plan.append(new_condition)
 
                 new_plans.append(new_plan)
@@ -182,36 +181,16 @@ class Design(Plans):
         Think about this like instantiating the elements of a matrix of random variables
         """
         assert self.plans is not None
-        new_plans = []
+
         random_index = self.variables.index(self.random_var)
         width = self._determine_random_width()
         span = self._determine_random_span()
         # randomly generates plans for every block of random var. 
-        rand_vars = self._generate_random_variables(int(n * (width)), self.random_var, width) 
-        #self.apply_randomization(rand_vars, width, span, random_index, n)
+        # rand_vars = self._generate_random_variables(int(n*self.get_width()/width/span), self.random_var, width) 
+        # self.apply_randomization(rand_vars, width, span, random_index, n)
 
-        # # this is a list of the order of the random var
-     
-        for i, plan in enumerate(self.plans):
-            blocks = [plan[i:i+width*span] for i in range(0, len(plan), width*span)]          
-            for x in range(int(n/len(self.plans))):
-                new_plan = []
-                for j, block in enumerate(blocks):
-                    y = x*len(blocks) + i*n + j
-                    rand_var = rand_vars[y]
-                    for k in range(width):
-                        for w in range(span):
-                            old_c = block[k*span+w]
-                            replacement = rand_var[k]
-                            parts = old_c.split("-")
-                            parts[random_index] = replacement
-                            new_condition = "-".join(parts)
-                            new_plan.append(new_condition)
-                new_plans.append(new_plan)
-
-        self.plans = new_plans
-    
-
+        randomizer = Randomizer(self.random_var, width, span, random_index, int(n*self.get_width()/width/span), n, self.plans)
+        self.plans = randomizer.get_plans()
 
     def get_plans(self, n = None):
         if self.is_random():

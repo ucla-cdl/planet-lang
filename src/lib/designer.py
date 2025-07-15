@@ -41,10 +41,11 @@ class Designer:
     def eval_constraints(self, constraints, groups, width):
         # Process constraints
         for constraint in constraints:
+            print(constraint.variable, constraint)
             assert isinstance(constraint, Constraint)
             variable = self._get_experiment_variables(constraint)
-
             match constraint:
+                
                 case Counterbalance():
                     # FIXME
                     if groups:
@@ -97,6 +98,7 @@ class Designer:
                     )
 
                 case InnerBlock():
+                    print(constraint.width, constraint.height)
                     self.match_inner(
                         constraint.variable, 
                         constraint.width, 

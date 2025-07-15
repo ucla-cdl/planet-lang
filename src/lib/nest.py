@@ -106,11 +106,11 @@ def copy_nested_constraints(design1, design2):
                 )
         
         elif isinstance(constraint, NoRepeat):
-              constraints.append(
+            constraints.append(
                 NoRepeat(
                     constraint.variable,
-                    total_conditions,
-                    width1*constraint.stride
+                    constraint.width*width1,
+                    constraint.stride*width1
                 )
             )
     
@@ -139,6 +139,9 @@ def copy_nested_constraints(design1, design2):
 def can_nest(d1, d2):
     if isinstance(d1, Plans) and isinstance(d2, Plans):
         return True
+    
+class RandomDesignError(Exception):
+    pass
 
 def nest(*, outer, inner):
     """
@@ -152,10 +155,16 @@ def nest(*, outer, inner):
         Combined design object
     """
     
+    # FIXME: problem with norepeat when recursive nest and nested design is
+    # outer design of a new nested design
+
     # first, check if one design is random
     # if so, conver to a special replications type.
     if (not isinstance(inner, Replications)) and (inner.has_random_variable() or inner.is_random()):
         inner = RandomPlan(inner.variables)
+
+    elif (not isinstance(outer, Replications)) and (outer.has_random_variable() or outer.is_random()):
+        raise RandomDesignError("Unsupported design: random variables are not supported as outer designs in a nested structure.")
 
     assert can_nest(outer, inner)
 
@@ -187,8 +196,8 @@ def nest(*, outer, inner):
     combined_design.counterbalanced = is_counterbalanced(inner, outer)
 
     # FIXME
-    combined_design.random_var = inner.random_var if inner.random_var is not None else outer.random_var
-    print("rand", combined_design.random_var)
+
+    combined_design.random_var = inner.random_var 
     combined_design.constraints.extend(nest_structure(inner, outer))
 
     inner_constraints = copy_nested_constraints(inner, outer)
