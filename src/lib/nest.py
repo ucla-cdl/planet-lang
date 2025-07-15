@@ -60,26 +60,24 @@ def copy_nested_constraints(design1, design2):
     # Add counterbalance constraints from design1
     for constraint in design1.constraints:
         if isinstance(constraint, Counterbalance):
-            if not constraint.width or not constraint.height:
-                constraints.append(
-                    Counterbalance(
-                        constraint.variable,
-                        width=design1.get_width(),
-                        height=len(design1.groups),
-                        stride=constraint.stride
-                    )
-                )
-        else:
+            width = constraint.width or design1.get_width()
+            height = constraint.height or len(design1.groups)
             constraints.append(
-                copy.copy(constraint)
+                Counterbalance(
+                    constraint.variable,
+                    width=width,
+                    height=height,
+                    stride=constraint.stride
+                )
             )
-
+        else:
+            constraints.append(copy.copy(constraint))
 
     # need to modify out constraint region
     for constraint in design2.constraints:
         # FIXME FIXME, I think this is a ratio problem
         if isinstance(constraint, Counterbalance):
-      
+       
             # Add counterbalance constraint for design2 variables
             constraints.append(
                 Counterbalance(
@@ -185,15 +183,13 @@ def nest(*, outer, inner):
     width2 = outer.get_width()
     total_conditions = width2 * width1
     
+
     # Create a new design with the combined variables
     combined_design = (Design()
                        .within_subjects(multifact(combined_variables))
                        .limit_groups(total_groups)
                        .num_trials(total_conditions)
                     )
-    
-
-    combined_design.counterbalanced = is_counterbalanced(inner, outer)
 
     # FIXME
 
@@ -249,7 +245,6 @@ def cross(design1, design2):
     # Add counterbalance constraints from design1
     for constraint in design1.constraints:
         if isinstance(constraint, Counterbalance):
-            combined_design.counterbalanced = True
             if constraint.width and constraint.height:
                 combined_design.constraints.append(
                     Counterbalance(
@@ -284,7 +279,6 @@ def cross(design1, design2):
     # need to modify out constraint region
     for constraint in design2.constraints:
         if isinstance(constraint, Counterbalance):
-            combined_design.counterbalanced = True
             # Add counterbalance constraint for design2 variables
             combined_design.constraints.append(
                 Counterbalance(

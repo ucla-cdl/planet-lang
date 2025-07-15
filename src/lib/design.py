@@ -25,7 +25,6 @@ class Plans:
         self.constraints = []
         self.trials = 0
         self.designer = Designer()
-        self.counterbalanced = False
         self.plans = None
 
         # test
@@ -144,6 +143,7 @@ class Design(Plans):
         self.plans = randomizer.get_plans()
 
     def get_plans(self, n = None):
+        print(self.constraints)
         if self.is_random():
             assert n is not None
             return self.random(n)
@@ -163,7 +163,6 @@ class Design(Plans):
     
     def start_with(self, variable, condition):
         assert isinstance(variable, ExperimentVariable)
-        self.counterbalanced = True
 
         condition = as_list(condition)
         rank = 1
@@ -175,20 +174,17 @@ class Design(Plans):
     
     def set_position(self, variable, condition, pos):
         assert isinstance(variable, ExperimentVariable)
-        self.counterbalanced = True
         self.constraints.append(SetPosition(variable, condition, pos))
         return self
     
     def set_rank(self, variable, condition, rank, condition2):
         assert isinstance(variable, ExperimentVariable)
-        self.counterbalanced = True
         self.constraints.append(SetRank(variable, condition, rank, condition2))
         return self
     
     def absolute_rank(self, variable, condition, rank):
         assert isinstance(variable, ExperimentVariable)
         if variable not in self.rank_constraints:
-            self.counterbalanced = True
             self.rank_constraints[variable] = len(self.constraints)
             self.constraints.append(AbsoluteRank(variable, condition, rank))
         else:
@@ -274,12 +270,14 @@ class Design(Plans):
         plans = self.designer.eval()
         self.plans = plans
 
+    @property
+    def counterbalanced(self):
+        return any(isinstance(c, Counterbalance) or isinstance(c, AbsoluteRank) for c in self.constraints)
+
+
         
     def counterbalance(self, variable, w = 0, h = 0, stride = [1, 1]):
         assert isinstance(variable, ExperimentVariable)
-     
-        # FIXME: this flag is awful. How to circumvent this? 
-        self.counterbalanced = True
         
         if isinstance(variable, MultiFactVariable):
             variables = variable.get_variables()
@@ -293,6 +291,7 @@ class Design(Plans):
         # FIXME: should probably decouble this constraint block concept?
         self.constraints.append(NoRepeat(variable, width=width))
         self.constraints.append(Counterbalance(variable, width = w, height = h, stride = stride))
+        print(self.constraints)
         return self
     
     def _new_ws_variables(self):

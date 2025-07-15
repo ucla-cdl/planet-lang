@@ -82,6 +82,7 @@ class BitVecSolver:
         return np.array(arr)[:, 0:width:stride]
 
     def all_different(self, v=None, width = None, stride = 1):
+        print(v, width, stride)
         # could you prettify this?
         dim_variables = get_dim_variables(self.z3_conditions, self.shape, 1)
 
