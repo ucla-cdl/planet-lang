@@ -81,7 +81,6 @@ class Design(Plans):
     
     def add_variable(self, variable, l):
         assert isinstance(variable, ExperimentVariable)
-
         if isinstance(variable, MultiFactVariable):
             variables = variable.variables
         else:
@@ -165,7 +164,13 @@ class Design(Plans):
     def start_with(self, variable, condition):
         assert isinstance(variable, ExperimentVariable)
         self.counterbalanced = True
-        self.constraints.append(StartWith(variable, condition))
+
+        condition = as_list(condition)
+        rank = 1
+        for c in condition:
+            self.absolute_rank(variable, c, rank)
+        rank+=1
+  
         return self
     
     def set_position(self, variable, condition, pos):
@@ -193,12 +198,9 @@ class Design(Plans):
 
         return self
     
-  
-    
     def _determine_num_plans(self):
         if not self.groups:
             counterbalanced_groups = []
-            start_with_groups = []
             for constraint in self.constraints:
                 if isinstance(constraint, Counterbalance):
                     counterbalanced_variable = constraint.get_variable()
@@ -207,7 +209,8 @@ class Design(Plans):
                         counterbalanced_groups.append((counterbalanced_variable.get_variables(), num_conditions))
                     else:
                         counterbalanced_groups.append(([counterbalanced_variable], num_conditions))
-                # FIXME: ugly
+                # FIXME: ugly. how to handle startswith and counterbalancing
+                # together? 
                 if isinstance(constraint, StartWith):
                     self.groups = Groups(1)
                     return
