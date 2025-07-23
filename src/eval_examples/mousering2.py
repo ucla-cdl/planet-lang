@@ -13,9 +13,9 @@ from lib.replications import Replications
 https://dl.acm.org/doi/pdf/10.1145/3613904.3642225
 """
 
-input_method = ExperimentVariable("input", options=["touchpad1", "touchpad2", "airmouse1", "airmouse2", "mouseringdouble1", "mouseringdouble2", "mouseringdouble3", "mouseringdouble4", "mouseringsingle1", "mouseringsingle2", "mouseringsingle3", "mouseringsingle4"])
-page = ExperimentVariable("page", options = [f"{i+1}" for i in range(3)])
-repitition = Replications(2)
+input_method = ExperimentVariable("input", options=["touchpad", "airmouse", "mouseringdouble", "mouseringsingle"])
+round = Replications(5)
+repeat = Replications(10)
 
 
 design = (
@@ -25,13 +25,9 @@ design = (
     .limit_groups(12)
 )
 
-page_design = (
-    Design()
-    .within_subjects(page)
-)
 
-design = nest(inner=page_design, outer=design)
-design = nest(inner = repitition, outer = design)
+design = nest(inner=repeat, outer=design)
+design = nest(inner = design, outer = round)
 participants = Units(12)
 
 print(assign(participants, design))

@@ -53,6 +53,7 @@ class Counterbalance(BlockConstraint):
 class StartWith(Constraint):
     def __init__(self, variable, condition):
         super().__init__(variable)
+        # FIXME: modifying variables to contain list
         self.condition = condition
 
 class SetRank(Constraint):

@@ -4,7 +4,7 @@ from lib.orders import Sequence
 from lib.candl import *
 from lib.variable import MultiFactVariable, multifact
 from lib.replications import Replications
-from lib.design import Design
+from lib.design import Design, RandomPlan, Plans
 from .helpers import *
 from .narray import *
 from .candl import *
@@ -19,7 +19,8 @@ import pandas as pd
 def eval(designs):
     for design in designs:
         if design.groups is None:
-            design.eval()
+            design._determine_num_plans()
+        
 
 
 def is_counterbalanced(d1, d2):
@@ -28,6 +29,7 @@ def is_counterbalanced(d1, d2):
 def nest_structure(d1, d2):
     constraints = []
     # Match all variables from the outer design within each block matrix
+    
     for i in range(len(d2.variables)):
         constraints.append(InnerBlock(
             d2.variables[i],
@@ -37,6 +39,7 @@ def nest_structure(d1, d2):
         ))
 
      # Match all variables from the inner design across every block
+
     for i in range(len(d1.variables)):
         constraints.append(OuterBlock(
             d1.variables[i],
@@ -45,6 +48,7 @@ def nest_structure(d1, d2):
             stride = [1, 1]
         ))
 
+ 
     return constraints
 
 
@@ -52,42 +56,51 @@ def copy_nested_constraints(design1, design2):
     width1, width2 = design1.get_width(), design2.get_width()
     total_groups, total_conditions = len(design1.groups) * len(design2.groups), width2 * width1
     constraints = []
-
     total_conditions = width2 * width1
     constraints = []
     # need to modify the inner constraints region
     # Add counterbalance constraints from design1
     for constraint in design1.constraints:
         if isinstance(constraint, Counterbalance):
-            if not constraint.width or not constraint.height:
-                constraints.append(
-                    Counterbalance(
-                        constraint.variable,
-                        width=design1.get_width(),
-                        height=len(design1.groups),
-                        stride=constraint.stride
-                    )
-                )
-        else:
+            width = constraint.width or design1.get_width()
+            height = constraint.height or len(design1.groups)
             constraints.append(
-                copy.copy(constraint)
+                Counterbalance(
+                    constraint.variable,
+                    width=width,
+                    height=height,
+                    stride=constraint.stride
+                )
             )
+        elif isinstance(constraint, NoRepeat):
+  
+            constraints.append(
+                NoRepeat(
+                    constraint.variable,
+                    width=width1,
+                    stride=constraint.stride
+                )
+            )
+        else:
+            constraints.append(copy.copy(constraint))
 
 
     # need to modify out constraint region
     for constraint in design2.constraints:
+        # FIXME FIXME, I think this is a ratio problem
         if isinstance(constraint, Counterbalance):
+            
             # Add counterbalance constraint for design2 variables
             constraints.append(
                 Counterbalance(
                     constraint.variable,
                     width=total_conditions,
                     height=total_groups,
-                    stride=[width1*constraint.stride[0], len(design1.groups)*constraint.stride[1]]
+                    stride=[len(design1.groups), width1*constraint.stride[1]]
                 )
             )
 
-        elif isinstance(constraint, StartWith):
+        if isinstance(constraint, StartWith):
                 constraints.append(
                     copy.copy(constraint)
                 )
@@ -103,11 +116,11 @@ def copy_nested_constraints(design1, design2):
                 )
         
         elif isinstance(constraint, NoRepeat):
-              constraints.append(
+            constraints.append(
                 NoRepeat(
                     constraint.variable,
-                    total_conditions,
-                    width1*constraint.stride
+                    constraint.width*width1,
+                    constraint.stride*width1
                 )
             )
     
@@ -130,17 +143,15 @@ def copy_nested_constraints(design1, design2):
                     stride = [1, 1])
             )
 
-        return constraints
+    return constraints
 
 
 def can_nest(d1, d2):
-    if isinstance(d1, Design) and isinstance(d2, Design):
+    if isinstance(d1, Plans) and isinstance(d2, Plans):
         return True
-    elif isinstance(d1, Design) and isinstance(d2, Replications):
-        return True
-    elif isinstance(d2, Design) and isinstance(d1, Replications):
-        return True
-    return False
+    
+class RandomDesignError(Exception):
+    pass
 
 def nest(*, outer, inner):
     """
@@ -153,13 +164,28 @@ def nest(*, outer, inner):
     Returns:
         Combined design object
     """
+    
+    # FIXME: problem with norepeat when recursive nest and nested design is
+    # outer design of a new nested design
+
+    # first, check if one design is random
+    # if so, conver to a special replications type.
+    if (not isinstance(inner, Replications)) and (inner.has_random_variable() or inner.is_random()):
+        inner = RandomPlan(inner.variables).num_trials(inner.get_width())
+
+    elif (not isinstance(outer, Replications)) and (outer.has_random_variable() or outer.is_random()):
+        outer = RandomPlan(outer.variables)
 
     assert can_nest(outer, inner)
 
     eval([inner, outer])
-
+    # FIXME: ugly
+    num_groups = len(outer.groups)
+    if not len(outer.groups):
+        outer.eval()
+        num_groups = len(outer.plans)
     # Calculate the total number of groups in the combined design
-    total_groups = len(inner.groups) * len(outer.groups)
+    total_groups = len(inner.groups) * num_groups
 
     # Combine variables from both designs
     combined_variables = combine_lists(inner.variables, outer.variables)
@@ -168,21 +194,28 @@ def nest(*, outer, inner):
     width1 = inner.get_width()
     width2 = outer.get_width()
     total_conditions = width2 * width1
-    
+ 
     # Create a new design with the combined variables
     combined_design = (Design()
-                       .within_subjects(multifact(combined_variables))
+                    #    .within_subjects(multifact(combined_variables))
                        .limit_groups(total_groups)
                        .num_trials(total_conditions)
                     )
-    
-    combined_design.counterbalanced = is_counterbalanced(inner, outer)
+
+
+    # FIXME
+    combined_design._add_variable(multifact(combined_variables))
+
+    combined_design.random_var.extend(inner.random_var)
+    combined_design.random_var.extend(outer.random_var)
     combined_design.constraints.extend(nest_structure(inner, outer))
 
     inner_constraints = copy_nested_constraints(inner, outer)
     if inner_constraints is not None:
-        combined_design.constraints.extend(copy_nested_constraints(inner, outer))
+        combined_design.constraints.extend(inner_constraints)
     
+    
+ 
     return combined_design
 
 
@@ -228,7 +261,6 @@ def cross(design1, design2):
     # Add counterbalance constraints from design1
     for constraint in design1.constraints:
         if isinstance(constraint, Counterbalance):
-            combined_design.counterbalanced = True
             if constraint.width and constraint.height:
                 combined_design.constraints.append(
                     Counterbalance(
@@ -263,7 +295,6 @@ def cross(design1, design2):
     # need to modify out constraint region
     for constraint in design2.constraints:
         if isinstance(constraint, Counterbalance):
-            combined_design.counterbalanced = True
             # Add counterbalance constraint for design2 variables
             combined_design.constraints.append(
                 Counterbalance(

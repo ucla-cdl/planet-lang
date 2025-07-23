@@ -21,9 +21,11 @@ class Replications(Plans):
     """Main class for creating experimental designs."""
     def __init__(self, n):
         super().__init__()
-        var = ExperimentVariable("replications", n)
+        var = ExperimentVariable("replications", 1)
         self._add_variable(var)
         self.groups = Groups(1)
+        self.num_trials(n)
+        self.constraints.append(Counterbalance(var, width = n, height = 1, stride = [1,1]))
 
     def num_trials(self, n):
         self.trials = n

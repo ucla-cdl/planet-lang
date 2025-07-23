@@ -12,6 +12,8 @@ from lib.designer import Designer
 from lib.candl import generate_conditions
 import math
 import pandas as pd
+from lib.randomizer import Randomizer
+from lib.formatter import LatexExport
 
 class Plans:
     def __init__(self):
@@ -23,8 +25,44 @@ class Plans:
         self.constraints = []
         self.trials = 0
         self.designer = Designer()
-        self.counterbalanced = False
         self.plans = None
+        # test
+        self.random_var = []
+
+    def is_random(self):
+        return not self.counterbalanced
+    
+    #FIXME: come back to this
+    def _add_variable(self, variable):
+        assert isinstance(variable, ExperimentVariable)
+
+        if isinstance(variable, MultiFactVariable):
+            variables = variable.variables
+        else:
+            variables = [variable]
+
+        self.variables.extend(variables)
+        self.ws_variables.extend(variables)
+
+class RandomPlan(Plans):
+    """This is like creating a vector of random variables."""
+    def __init__(self, variables):
+        super().__init__()
+        for var in variables:
+            self._add_variable(var)
+            self.random_var = [var]
+            
+        self.groups = Groups(1)
+        self.constraints.append(NoRepeat(self.random_var[0], self.get_width()))
+
+    def num_trials(self, n):
+        self.trials = n
+        return self
+    
+    
+    
+    def get_width(self):
+        return self.trials or math.prod(v.n for v in self.ws_variables)
 
 class Design(Plans):
     """Main class for creating experimental designs."""
@@ -33,18 +71,10 @@ class Design(Plans):
         self.rank_constraints = {}
   
     def to_latex(self):
-        matrix = self.eval()
-        trials = [f"trial{i+1}" for i in range(len(matrix[0]))]
-        df = pd.DataFrame(matrix, columns=trials)
-
-        try:
-            filepath = "../outputs/design.tex"
-            create_directory_for_file(filepath)
-            with open(filepath, 'w', encoding='utf-8') as tex_file:
-                tex_file.write(df.to_latex())
-            print(f"success")
-        except Exception as e:
-            print(f"An error occurred: {e}")
+        # FIXME: won't work with random plans
+        matrix = self.get_plans()
+        formatter = LatexExport(matrix)
+        formatter.to_latex()
 
     def num_trials(self, n):
         self.trials = n
@@ -52,7 +82,6 @@ class Design(Plans):
     
     def add_variable(self, variable, l):
         assert isinstance(variable, ExperimentVariable)
-
         if isinstance(variable, MultiFactVariable):
             variables = variable.variables
         else:
@@ -67,19 +96,73 @@ class Design(Plans):
 
     def within_subjects(self, variable):
         self.add_variable(variable, self.ws_variables)
+        width = self.get_width()
+        # FIXME: should probably decouble this constraint block concept?
+        self.constraints.append(NoRepeat(variable, width=width))
         return self
     
     def limit_groups(self, n):
         self.groups = Groups(n)
         return self
     
-    def is_random(self):
-        return not self.counterbalanced
+    def has_random_variable(self):
+        return bool(self.random_var)
     
-    def get_plans(self):
+    
+    def _determine_random_width(self, rand):
+        width = self.get_width()
+        
+        div = 1
+        for constraint in self.constraints:
+            if isinstance(constraint, OuterBlock) and constraint.variable == rand:
+                width = constraint.width
+  
+            elif isinstance(constraint, InnerBlock) and constraint.variable == rand:
+                div = constraint.width
+        
+        return int(width/div)
+    
+
+    def _determine_random_span(self, rand):
+        span = 1
+        for constraint in self.constraints:
+            if isinstance(constraint, InnerBlock) and constraint.variable == rand:
+               span = constraint.width
+        return span
+    
+    def _instantiate_random_variables(self, n, rand):
+        # NOTE to self: this will only work if there is one random variable :)
+        """
+        Think about this like instantiating the elements of a matrix of random variables
+        """
+        assert self.plans is not None
+        random_index = self.variables.index(rand)
+        width = self._determine_random_width(rand)
+        span = self._determine_random_span(rand)
+        # randomly generates plans for every block of random var. 
+        # rand_vars = self._generate_random_variables(int(n*self.get_width()/width/span), self.random_var, width) 
+        # self.apply_randomization(rand_vars, width, span, random_index, n)
+        randomizer = Randomizer(rand, width, span, random_index, int(n*self.get_width()/width/span), n, self.plans)
+        self.plans = randomizer.get_plans()
+           
+
+    def get_plans(self, n = None):
+        
+        if self.is_random():
+            assert n is not None
+            return self.random(n)
         if self.plans is not None:
             return self.plans
-        return self.eval()
+        else:
+            self.eval()
+   
+        if self.has_random_variable():
+          
+            assert n is not None
+            n = math.ceil(n/len(self.plans)) * len(self.plans)
+            for rand in self.random_var:
+                self._instantiate_random_variables(n, rand)
+        return self.plans
     
     
     def get_width(self):
@@ -87,25 +170,28 @@ class Design(Plans):
     
     def start_with(self, variable, condition):
         assert isinstance(variable, ExperimentVariable)
-        self.constraints.append(StartWith(variable, condition))
+
+        condition = as_list(condition)
+        rank = 1
+        for c in condition:
+            self.absolute_rank(variable, c, rank)
+        rank+=1
+  
         return self
     
     def set_position(self, variable, condition, pos):
         assert isinstance(variable, ExperimentVariable)
-        self.counterbalanced = True
         self.constraints.append(SetPosition(variable, condition, pos))
         return self
     
     def set_rank(self, variable, condition, rank, condition2):
         assert isinstance(variable, ExperimentVariable)
-        self.counterbalanced = True
         self.constraints.append(SetRank(variable, condition, rank, condition2))
         return self
     
     def absolute_rank(self, variable, condition, rank):
         assert isinstance(variable, ExperimentVariable)
         if variable not in self.rank_constraints:
-            self.counterbalanced = True
             self.rank_constraints[variable] = len(self.constraints)
             self.constraints.append(AbsoluteRank(variable, condition, rank))
         else:
@@ -121,12 +207,20 @@ class Design(Plans):
             for constraint in self.constraints:
                 if isinstance(constraint, Counterbalance):
                     counterbalanced_variable = constraint.get_variable()
+                    num_conditions = len(counterbalanced_variable)
                     if isinstance(counterbalanced_variable, MultiFactVariable):
-                        counterbalanced_groups.append((counterbalanced_variable.get_variables(), len(counterbalanced_variable)))
+                        counterbalanced_groups.append((counterbalanced_variable.get_variables(), num_conditions))
                     else:
-                        counterbalanced_groups.append(([counterbalanced_variable], len(counterbalanced_variable)))
-
+                        counterbalanced_groups.append(([counterbalanced_variable], num_conditions))
+                # FIXME: ugly. how to handle startswith and counterbalancing
+                # together? 
+                if isinstance(constraint, StartWith):
+                    self.groups = Groups(1)
+                    return
+    
+            
             total_n_plans = 1
+
             for group in counterbalanced_groups:
                 num_trials = self.get_width()
                 if num_trials > group[1]:
@@ -136,10 +230,14 @@ class Design(Plans):
                     total_n_plans *= math.factorial(group[1]) / math.factorial(group[1] - num_trials)
                 else: 
                     total_n_plans *= math.factorial(group[1])
+
+   
             if counterbalanced_groups:
                 self.groups = Groups(int(total_n_plans))
             else:
                 self.groups = Groups(0)
+
+   
             
 
 
@@ -149,6 +247,7 @@ class Design(Plans):
         sequence = Sequence(width)
         self._determine_num_plans()
         
+   
         self.designer.start(
             self.groups, 
             sequence, 
@@ -164,8 +263,9 @@ class Design(Plans):
                     1
                 )
             )
-          
-        self.designer.solver.all_different()
+        
+        # NOTE: ensure no downstream effects :)
+        # self.designer.solver.all_different()
         self.designer.eval_constraints(self.constraints, self.groups, width)
 
     def test_eval(self):
@@ -175,26 +275,22 @@ class Design(Plans):
 
     def eval(self):
         self._eval()
-        return self.designer.eval()
+        plans = self.designer.eval()
+        self.plans = plans
+
+    @property
+    def counterbalanced(self):
+        # FIXME: not handled for replicated trials
+        return any(isinstance(c, Counterbalance) or isinstance(c, AbsoluteRank) for c in self.constraints)
+
 
         
     def counterbalance(self, variable, w = 0, h = 0, stride = [1, 1]):
         assert isinstance(variable, ExperimentVariable)
-     
-        # FIXME: this flag is awful. How to circumvent this? 
-        self.counterbalanced = True
         
-        if isinstance(variable, MultiFactVariable):
-            variables = variable.get_variables()
-        else:
-            variables = [variable]
 
-        width = 1
-        for v in variables: 
-            width *= len(v)
+        width = self.get_width()
 
-        # FIXME: should probably decouble this constraint block concept?
-        self.constraints.append(NoRepeat(variable, width=width))
         self.constraints.append(Counterbalance(variable, width = w, height = h, stride = stride))
         return self
     
@@ -229,10 +325,11 @@ class Design(Plans):
 
         ws_variable = self._new_ws_variables()
         ws_conditions = generate_conditions(n, ws_variable,self.get_width())
+
         
         bs_variable = self._new_bs_variables()
         bs_conditions = generate_conditions(n, bs_variable,1)
-        
+            
         return self._combined_conditions(bs_conditions, ws_conditions)
     
 

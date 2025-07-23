@@ -45,6 +45,7 @@ class Designer:
             variable = self._get_experiment_variables(constraint)
 
             match constraint:
+                
                 case Counterbalance():
                     # FIXME
                     if groups:
@@ -63,11 +64,12 @@ class Designer:
                     )
 
                 case NoRepeat():
-                    self.solver.all_different(
-                        variable, 
-                        constraint.width, 
-                        constraint.stride
-                    )
+            
+                        self.solver.all_different(
+                            variable, 
+                            constraint.width, 
+                            constraint.stride
+                        )
 
                 case StartWith():
                     self.start_with(
@@ -125,7 +127,6 @@ class Designer:
 
     # NEED TO DECOUPLE THIS
     def match_inner(self, variable, width, height):
-
         # get number of block matrices per column
         n = int(self.shape[0] / height)
         # get number of block matrices per row

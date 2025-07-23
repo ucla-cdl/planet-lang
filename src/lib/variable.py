@@ -53,6 +53,19 @@ class ExperimentVariable:
     
     def __len__(self):
         return self.n
+    
+class DesignVariable:
+    def __init__(self, var):
+        assert isinstance(var, ExperimentVariable)
+        self.var = var
+        self.counterbalanced = False
+        self.within_subjects = False
+
+    def is_within_subjects(self, flag = True):
+        self.within_subjects = flag
+
+    def counterbalance(self, flag = True):
+        self.counterbalanced = flag
 
 class Replications(ExperimentVariable):
     def __init__(self, n):

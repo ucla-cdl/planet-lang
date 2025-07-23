@@ -160,3 +160,10 @@ def create_directory_for_file(filepath):
     directory = os.path.dirname(filepath)
     if directory:
         os.makedirs(directory, exist_ok=True)
+
+
+def as_list(variables):
+    if isinstance(variables, list):
+        return variables
+    else:
+        return [variables]
