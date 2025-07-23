@@ -4,11 +4,13 @@ from .candl import *
 from .helpers import *
 from functools import reduce
 from .bitvector import BitVectors
-import time
 import itertools
+import logging
 import warnings
 
 warnings.simplefilter('default')
+logging.basicConfig(level=logging.DEBUG)
+
 
 # NOTE: to decouple, should we have an ndarray class that 
 # has z3 vars as special type? not sure if this infrastructure is necessary?
@@ -22,12 +24,17 @@ class BitVecSolver:
         self.variables = variables
         self.num_z3_vars = np.prod(self.shape)
         self.solver = z3.Optimize()
-
         self.bitvectors = []
        
         self.create_z3_variables()
         self.constrain_z3_values()
         self.distinguish_rows()
+
+        self.rank_functions = {}
+        self.ranks = {}
+
+        self.logger = logging.getLogger(__name__)
+ 
 
     # you can come up with a better name
     def constrain_z3_values(self):
@@ -44,9 +51,7 @@ class BitVecSolver:
                 hi = len(variable) - 1
                 # required number of bits to encode a given value
                 required_bits = int(math.ceil(math.log(variable.n, 2))) 
-       
                 self.solver.add(
-               
                         And(
                             lo <= Extract(
                                     lower_bit+required_bits, 
@@ -61,7 +66,6 @@ class BitVecSolver:
                         )  
                 )
 
-
             # gives us index of the lower bit of the next variable
             lower_bit += required_bits + 1
 
@@ -74,10 +78,8 @@ class BitVecSolver:
         self.bitvectors = BitVectors(self.num_z3_vars, self.variables)
         self.z3_conditions = self.bitvectors.get_variables()
     
-
     def block_columns(self, arr, width, stride=1):
         return np.array(arr)[:, 0:width:stride]
-
 
     def all_different(self, v=None, width = None, stride = 1):
         # could you prettify this?
@@ -86,7 +88,7 @@ class BitVecSolver:
         if width is not None:
             dim_variables = list(self.block_columns(dim_variables, width, stride))
 
-        test = lambda x: [self.bitvectors.get_variable_assignment(z, x) for z in v[0]]
+        test = lambda x: [self.bitvectors.get_variable_assignment(z, x) for z in v]
 
         for arr in dim_variables:
             # FIXME (fixed but I'm not convinced)
@@ -95,6 +97,8 @@ class BitVecSolver:
             else:
                 self.solver.add(Distinct(arr))
 
+    def n_trials(self):
+        return self.shape[1]
 
     # NOTE: no rows can repeat in a given matrix 
     def distinguish_rows(self):
@@ -106,6 +110,18 @@ class BitVecSolver:
                     for n in range(len(plans[j])):
                         assignment.append(plans[i][n] != plans[j][n])
                     self.solver.add(Or(assignment))
+
+
+
+    def establish_ranking(self, var):
+        orders = get_dim_variables(self.z3_conditions, self.shape, 1)
+        n = self.n_trials()
+
+        for var in self.rank_functions:
+            rank = self.rank_functions[var]
+            for order in orders:
+                self.solver.add([rank(order[i]) >= rank(order[i+1]) for i in range(n-1)])
+
 
 
     def count(self, l, x, f):
@@ -126,6 +142,53 @@ class BitVecSolver:
             self.solver.add(self.bitvectors.get_variable_assignment(variable, z3) == condition)
 
 
+    def set_position(self, variable, condition, pos):
+        plans = np.array(get_dim_variables(self.z3_conditions, self.shape, 1))
+
+        arr = plans[:, pos]
+        for z3 in arr:
+            self.solver.add(self.bitvectors.get_variable_assignment(variable, z3) == condition)
+
+
+    def set_rank(self, var, condition, rank, condition2):
+        x = BitVec("x", self.bitvectors.len)
+        y = BitVec("y", self.bitvectors.len)
+
+        if var not in self.rank_functions:
+            self.rank_functions[var] = Function(f'rank_{str(var)}', BitVecSort(self.bitvectors.determine_num_bits()), IntSort())
+            self.establish_ranking(var)
+
+        rank = self.rank_functions[var]
+        self.solver.add(
+            ForAll([x,y],
+                Implies(
+                    And(self.bitvectors.get_variable_assignment(var, x) == condition, 
+                        self.bitvectors.get_variable_assignment(var, y) == condition2),
+                    rank(x) > rank(y)
+                )
+            )
+        )
+
+    def absolute_rank(self, var, ranks):
+        x = BitVec("x", self.bitvectors.len)
+
+        orders = get_dim_variables(self.z3_conditions, self.shape, 1)
+        n = self.n_trials()
+
+        rank = Function(f'rank_{str(var)}', BitVecSort(self.bitvectors.determine_num_bits()), IntSort())
+        for order in orders:
+            self.solver.add([rank(order[i]) >= rank(order[i+1]) for i in range(n-1)])
+
+        for condition in ranks:
+            self.solver.add(
+                ForAll([x],
+                    Implies(
+                        self.bitvectors.get_variable_assignment(var, x) == condition,
+                        rank(x) == ranks[condition]
+                    )
+                )
+            )
+            
 
     def counterbalance(self, block=[], variables=None):
         """
@@ -204,7 +267,6 @@ class BitVecSolver:
 
         # works when z3 representation is a matrix 
     def get_one_model(self):
-        
         all_assignments = []
     
         if (self.solver.check() == sat):
@@ -225,9 +287,9 @@ class BitVecSolver:
         all_orders = []
         self.solver.push()
         count = 0
-        while self.solver.check() == sat and count < 100000:
+        capacity = 10000
+        while self.solver.check() == sat and count < capacity:
             model = self.solver.model()
-
             block = []
             order = []
             for var in self.z3_conditions:
@@ -237,9 +299,8 @@ class BitVecSolver:
             all_orders.append(order)
             self.solver.add(Or(block))
             count+=1
-
         if self.solver.check() == sat:
-            warnings.warn(f"There are more orders not captured in the model due order capacity (currently set to {720})")
+            warnings.warn(f"There are more orders not captured in the model due order capacity (currently set to {capacity})")
 
         self.solver.pop()
         return all_orders
@@ -283,7 +344,6 @@ class BitVecSolver:
 
                 # conder variable assignment to a string representation 
                 decoded_assignment+=str(condition)
-
                 # FIXME; hyphenate output for readability
                 if i < len(variables)-1:
                     decoded_assignment+="-"
@@ -293,7 +353,7 @@ class BitVecSolver:
         # return back in original form
         return shape_array(orders, np.array(all_orders).shape)
     
-    def name_to_encoding(self, model, variables):
+    def name_to_encoding(self, model):
 
         # this makes life much easier
         model_assignments = flatten_array(model)

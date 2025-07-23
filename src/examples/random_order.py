@@ -1,3 +1,6 @@
+import sys
+sys.path.append("../")
+
 from z3 import *
 from lib.variable import ExperimentVariable, multifact
 from lib.design import Design
@@ -18,10 +21,10 @@ task = ExperimentVariable(
 
 des = (
     Design()
-        .within_subjects(multifact([treatment, task]))
+        .within_subjects(treatment)
 )
 
-units = Units(6)
+units = Units(8)
 
 
 print(assign(units, des))

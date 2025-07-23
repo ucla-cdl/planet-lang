@@ -3,7 +3,8 @@ from z3 import *
 import sys
 sys.path.append("../")
 from lib.variable import ExperimentVariable, multifact
-from lib.design import Design, nest
+from lib.design import Design
+from lib.nest import nest
 from lib.assignment import assign
 from lib.unit import Units
 
@@ -54,7 +55,7 @@ des4 = (Design()
         .limit_groups(2)
 )
 
-d2 = nest(des3, des)
-d5 = nest(d2, des4)
+d2 = nest(outer=des3, inner=des)
+d5 = nest(outer=d2, inner=des4)
 
 print(assign(units, d5))

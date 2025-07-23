@@ -5,6 +5,9 @@ class Constraint:
     def __init__(self, variable):
         self.variable = variable
 
+    def get_variable(self):
+        return self.variable
+
 class BlockConstraint(Constraint):
     def __init__(self, variable, width, height, stride):
         super().__init__(variable)
@@ -51,6 +54,33 @@ class StartWith(Constraint):
     def __init__(self, variable, condition):
         super().__init__(variable)
         self.condition = condition
+
+class SetRank(Constraint):
+    def __init__(self, variable, condition, rank, condition2):
+        super().__init__(variable)
+        self.condition = condition
+        self.rank = rank
+        self.condition2 = condition2 
+
+    
+class AbsoluteRank(Constraint):
+    def __init__(self, variable, condition, rank):
+        super().__init__(variable)
+        self.ranks = dict.fromkeys(variable.conditions, 0)
+        self.add_rank(condition, rank)
+
+    def add_rank(self, condition, rank):
+        self.ranks[condition] = rank
+
+    
+
+class SetPosition(Constraint):
+    def __init__(self, variable, condition, pos):
+        super().__init__(variable)
+        self.condition = condition
+        self.position = pos
+
+
 
 
  

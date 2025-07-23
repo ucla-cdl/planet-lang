@@ -18,6 +18,7 @@ class Units:
         self.attributes = []
         self.hash = str(time.time()).replace(".", "")
         self.table = table + self.hash
+        self.evaled = False
 
     def add_attribute(self, attr):
 
@@ -26,10 +27,15 @@ class Units:
 
     
     def eval(self):
-        duckdb.sql(f"create table {self.table} ( pid int, plan int )")
-        for i in range(self.n):
-            duckdb.sql(f"insert into {self.table} values ({i+1}, 0)")
+        if not self.evaled:
+            duckdb.sql(f"create table {self.table} ( pid int, plan int )")
+            for i in range(self.n):
+                duckdb.sql(f"insert into {self.table} values ({i+1}, 0)")
+            self.evaled = True
 
+    def get_table(self):
+        self.eval()
+        return self.table
 
     def get_plan(self, n):
         return duckdb.execute(f"select plan from {self.table} where pid = {n}").fetchone()[0]

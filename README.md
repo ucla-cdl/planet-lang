@@ -1,4 +1,14 @@
 # PLanet
+Welcome to the PLanet repository. PLanet is a high-level, declaritive
+programming language to help researchers author verifiable experimental designs. 
+
+To set up the environment, install the requirements using `pip3 install -r requirements.txt`. 
+Source files are located in `src/lib`. Example programs are
+located in `src/examples` and `src/eval_examples`. Outputs from the program
+(such as the latex table or csv file) are located in `src/outputs`. 
+
+
+# Objects and Operators
 ## Units
 
 ```python
@@ -180,15 +190,39 @@ design = (
 )
 ```
 
-The result is a fully-counterbalanced, within-subjects design, where each units gets observed twice. This means that not every unit sees every assignment value of the treatment variable. The number of plans 3!/1! = 6: 
+The result is a fully-counterbalanced, within-subjects design, where each units
+gets observed twice. This means that not every unit sees every assignment value
+of the treatment variable. The number of plans 3!/1! = 6. 
 
+### to_latex()
+Creates a file called design.tex in an folder called outputs. The design.tex
+file contains latex code for displaying a table representing the design. 
+
+```python
+Design().to_latex()
+```
+
+
+### Example Output
+```latex
+\begin{tabular}{lllll}
+\toprule
+ & trial1 & trial2 & trial3 & trial4 \\
+\midrule
+0 & basketball-VR & painting-VR & basketball-baseline & painting-baseline \\
+1 & painting-VR & basketball-VR & painting-baseline & basketball-baseline \\
+2 & basketball-baseline & painting-baseline & basketball-VR & painting-VR \\
+3 & painting-baseline & basketball-baseline & painting-VR & basketball-VR \\
+\bottomrule
+\end{tabular}
+```
 
 ## Combining Designs
 
 ### nest
 Combines two designs into one with a nesting strategy, meaning that within every trial of the outer design, we observe every trial of the secodn design. The overall condition is now the combination of conditions assigned in each of the sub-designs. 
 
-An experimenter may use a nested design when they need to counterbalance a multifactorial design, and they have assumptions about how the values of some variable may effect a participant when completing a future task.  
+An experimenter may use a nested design when they need to counterbalance a multifactorial design, and they have assumptions about how the values of some variable may effect a unit when completing a future task.  
 
 
 ```python
@@ -305,19 +339,29 @@ multi_fact_variable = multifact(treatment, task)
 multi_fact_variable = Variable("treatment_task", options=["drug-walk", "placebo-walk", "drug-run", "placebo-walk"])
 ```
 
+### assign
+Randomly matches units to plans based on the strategy specified in the design.
+Every unit is assigned exactly one plan. The same plan can be assigned to
+multiple units. 
 
+```python
+assign(units, design)
+```
 
+Parameters:
 
+- `units: Units` -- a sample of units to which we want to assign an experiment plan
+-  `design: Design` -- a design specifying how conditions are assigned to unit. 
 
+Returns: An `Assignment` object
 
+### to_csv()
+Creates a csv file in a folder called outputs. The 
+file contains a csv file with a row for every unit. The first column contains a
+unit id, and there are n additional columns for every trial in the experiment
+plan.  
 
-
-
-
-
-
-
-
-
-
+```python
+assign(units, design).to_csv()
+```
 

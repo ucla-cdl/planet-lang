@@ -10,4 +10,5 @@ outputs
 *.csv
 .vscode
 *pycache*
-
+notes
+venv

@@ -1,6 +1,12 @@
+import sys
+sys.path.append("../")
+
 from z3 import *
 from lib.variable import ExperimentVariable
-from lib.design import Design, nest, cross
+from lib.design import Design
+from lib.nest import cross, nest
+from lib.unit import Units
+from lib.assignment import assign
 
 
 # NOTE: need to make all different wrt. variables. Should this be under the hood though?
@@ -12,7 +18,7 @@ treatment = ExperimentVariable(
 
 task = ExperimentVariable(
     name = "task",
-    options = ["A", "B"]
+    options = ["A", "B", "C", "D"]
 )
 
 test = ExperimentVariable(
@@ -31,6 +37,7 @@ des = (
     Design()
         .within_subjects(task)
         .counterbalance(task)
+        .limit_groups(4)
      
 )
 
@@ -39,7 +46,15 @@ des2 = (Design()
         .counterbalance(test)
 )
 
+des3 = (Design()
+        .within_subjects(test2)
+        .counterbalance(test2)
+)
 
-final = cross(des, des2)
+intermediate = nest(inner=des3, outer=des2)
 
-print(final)
+units = Units(4)
+
+final = cross(des, intermediate)
+print(assign(units, final))
+

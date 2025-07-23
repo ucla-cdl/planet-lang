@@ -1,9 +1,8 @@
 import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
+sys.path.append("../")
 
 from lib.variable import ExperimentVariable, multifact
-from lib.design import Design, nest
+from lib.design import Design
 from lib.unit import Units 
 from lib.assignment import assign 
 
@@ -17,6 +16,7 @@ participants = Units(10)
 design = (
     Design()
     .within_subjects(gesture)
+    .num_trials(10)
 )
 
-assign(participants, design)
+print(assign(participants, design))

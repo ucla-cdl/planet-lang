@@ -5,9 +5,6 @@ import numpy as np
 from itertools import product
 import math
 from z3 import *
-
-
-
 import random
 
 def distinct_or(variables):
@@ -22,7 +19,7 @@ def distinct_or(variables):
     return ret
 
 
-def generate_conditions(participants, conditions, n):
+def generate_conditions(participants, variable, n):
     """
     Generates a randomized sequence of conditions for each participant.
     
@@ -31,12 +28,12 @@ def generate_conditions(participants, conditions, n):
     :param trials_per_condition: Number of times each condition should appear
     :return: Dictionary mapping participant IDs to their condition sequences
     """
+    
     experiment_data = []
-
-   
-
-    for _ in range(participants):
-        experiment_data.append(random.sample(conditions, n))
+    if variable: 
+        conditions = variable.conditions
+        for _ in range(participants):
+            experiment_data.append(random.sample(conditions, n))
    
     return experiment_data
 

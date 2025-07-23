@@ -1,9 +1,8 @@
-import os
 import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
+sys.path.append("../")
 
 from lib.variable import ExperimentVariable, multifact
-from lib.design import Design, nest
+from lib.design import Design
 from lib.unit import Units 
 from lib.assignment import assign 
 
@@ -11,15 +10,17 @@ from lib.assignment import assign
 https://dl.acm.org/doi/pdf/10.1145/3544548.3580672
 """
 
-intervention = ExperimentVariable("Intervention", options=["Control", "Causal AI Explanation", "AI-Framed Questioning"])
-statement_validity = ExperimentVariable("Statement Validity", options=["Valid", "Invalid"])
+# NOTE to self: ensure no hyphens in condition strings
+intervention = ExperimentVariable("Intervention", options=["Control", "Causal AI Explanation", "AIFramed Questioning"])
+statement = ExperimentVariable("Statement", options=[f"{i+1}" for i in range(40)])
 
 participants = Units(204)
 
 design = (
     Design()
     .between_subjects(intervention)
-    .within_subjects(statement_validity)
+    .within_subjects(statement)
+    .num_trials(10)
 )
 
-assign(participants, design)
+print(assign(participants, design))
