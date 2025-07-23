@@ -40,10 +40,10 @@ class Designer:
 
     def eval_constraints(self, constraints, groups, width):
         # Process constraints
-
         for constraint in constraints:
             assert isinstance(constraint, Constraint)
             variable = self._get_experiment_variables(constraint)
+
             match constraint:
                 
                 case Counterbalance():
@@ -64,11 +64,12 @@ class Designer:
                     )
 
                 case NoRepeat():
-                    self.solver.all_different(
-                        variable, 
-                        constraint.width, 
-                        constraint.stride
-                    )
+            
+                        self.solver.all_different(
+                            variable, 
+                            constraint.width, 
+                            constraint.stride
+                        )
 
                 case StartWith():
                     self.start_with(

@@ -1,5 +1,6 @@
 import sys
-sys.path.append("../../")
+
+sys.path.append("../")
 
 from z3 import *
 from lib.replications import Replications

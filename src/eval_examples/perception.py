@@ -3,7 +3,8 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 
 from lib.variable import ExperimentVariable, multifact
-from lib.design import Design, nest
+from lib.design import Design
+from lib.nest import nest
 from lib.unit import Units 
 from lib.assignment import assign 
 
@@ -17,4 +18,4 @@ design = (
     .between_subjects(condition)
 )
 
-assign(participants, design)
+print(assign(participants, design))

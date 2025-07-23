@@ -26,27 +26,13 @@ class Plans:
         self.trials = 0
         self.designer = Designer()
         self.plans = None
-
         # test
-        self.random_var = None
+        self.random_var = []
 
     def is_random(self):
         return not self.counterbalanced
-
-class RandomPlan(Plans):
-    """This is like creating a vector of random variables."""
-    def __init__(self, variables):
-        super().__init__()
-        for var in variables:
-            self._add_variable(var)
-            self.random_var = var
-            
-        self.groups = Groups(1)
-
-    def num_trials(self, n):
-        self.trials = n
-        return self
     
+    #FIXME: come back to this
     def _add_variable(self, variable):
         assert isinstance(variable, ExperimentVariable)
 
@@ -57,6 +43,22 @@ class RandomPlan(Plans):
 
         self.variables.extend(variables)
         self.ws_variables.extend(variables)
+
+class RandomPlan(Plans):
+    """This is like creating a vector of random variables."""
+    def __init__(self, variables):
+        super().__init__()
+        for var in variables:
+            self._add_variable(var)
+            self.random_var = [var]
+            
+        self.groups = Groups(1)
+        self.constraints.append(NoRepeat(self.random_var[0], self.get_width()))
+
+    def num_trials(self, n):
+        self.trials = n
+        return self
+    
     
     
     def get_width(self):
@@ -94,6 +96,9 @@ class Design(Plans):
 
     def within_subjects(self, variable):
         self.add_variable(variable, self.ws_variables)
+        width = self.get_width()
+        # FIXME: should probably decouble this constraint block concept?
+        self.constraints.append(NoRepeat(variable, width=width))
         return self
     
     def limit_groups(self, n):
@@ -101,49 +106,48 @@ class Design(Plans):
         return self
     
     def has_random_variable(self):
-        return self.random_var is not None
+        return bool(self.random_var)
     
     
-    def _determine_random_width(self):
+    def _determine_random_width(self, rand):
         width = self.get_width()
         
         div = 1
         for constraint in self.constraints:
-            if isinstance(constraint, OuterBlock) and constraint.variable == self.random_var:
+            if isinstance(constraint, OuterBlock) and constraint.variable == rand:
                 width = constraint.width
   
-            elif isinstance(constraint, InnerBlock) and constraint.variable == self.random_var:
+            elif isinstance(constraint, InnerBlock) and constraint.variable == rand:
                 div = constraint.width
         
         return int(width/div)
     
 
-    def _determine_random_span(self):
+    def _determine_random_span(self, rand):
         span = 1
         for constraint in self.constraints:
-            if isinstance(constraint, InnerBlock) and constraint.variable == self.random_var:
+            if isinstance(constraint, InnerBlock) and constraint.variable == rand:
                span = constraint.width
         return span
     
-    def _instantiate_random_variables(self, n):
+    def _instantiate_random_variables(self, n, rand):
         # NOTE to self: this will only work if there is one random variable :)
         """
         Think about this like instantiating the elements of a matrix of random variables
         """
         assert self.plans is not None
-
-        random_index = self.variables.index(self.random_var)
-        width = self._determine_random_width()
-        span = self._determine_random_span()
+        random_index = self.variables.index(rand)
+        width = self._determine_random_width(rand)
+        span = self._determine_random_span(rand)
         # randomly generates plans for every block of random var. 
         # rand_vars = self._generate_random_variables(int(n*self.get_width()/width/span), self.random_var, width) 
         # self.apply_randomization(rand_vars, width, span, random_index, n)
-
-        randomizer = Randomizer(self.random_var, width, span, random_index, int(n*self.get_width()/width/span), n, self.plans)
+        randomizer = Randomizer(rand, width, span, random_index, int(n*self.get_width()/width/span), n, self.plans)
         self.plans = randomizer.get_plans()
+           
 
     def get_plans(self, n = None):
-        print(self.constraints)
+        
         if self.is_random():
             assert n is not None
             return self.random(n)
@@ -153,8 +157,11 @@ class Design(Plans):
             self.eval()
    
         if self.has_random_variable():
+          
             assert n is not None
-            self._instantiate_random_variables(n)
+            n = math.ceil(n/len(self.plans)) * len(self.plans)
+            for rand in self.random_var:
+                self._instantiate_random_variables(n, rand)
         return self.plans
     
     
@@ -256,8 +263,9 @@ class Design(Plans):
                     1
                 )
             )
-          
-        self.designer.solver.all_different()
+        
+        # NOTE: ensure no downstream effects :)
+        # self.designer.solver.all_different()
         self.designer.eval_constraints(self.constraints, self.groups, width)
 
     def test_eval(self):
@@ -272,6 +280,7 @@ class Design(Plans):
 
     @property
     def counterbalanced(self):
+        # FIXME: not handled for replicated trials
         return any(isinstance(c, Counterbalance) or isinstance(c, AbsoluteRank) for c in self.constraints)
 
 
@@ -279,19 +288,10 @@ class Design(Plans):
     def counterbalance(self, variable, w = 0, h = 0, stride = [1, 1]):
         assert isinstance(variable, ExperimentVariable)
         
-        if isinstance(variable, MultiFactVariable):
-            variables = variable.get_variables()
-        else:
-            variables = [variable]
 
-        width = 1
-        for v in variables: 
-            width *= len(v)
+        width = self.get_width()
 
-        # FIXME: should probably decouble this constraint block concept?
-        self.constraints.append(NoRepeat(variable, width=width))
         self.constraints.append(Counterbalance(variable, width = w, height = h, stride = stride))
-        print(self.constraints)
         return self
     
     def _new_ws_variables(self):

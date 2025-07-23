@@ -7,7 +7,7 @@ class Randomizer:
     def __init__(self, variable, width, span, random_index, n, participants, plans):
         rand_vars = self._generate_random_variables(n, variable, width)
         self.randomized_plans = self._apply_randomization(rand_vars, width, span, random_index, participants, plans)
-
+      
     def _generate_random_variables(self, n, variable, width):
         ws_conditions = generate_conditions(n, variable, width)
         return ws_conditions
@@ -25,6 +25,8 @@ class Randomizer:
 
     def _apply_randomization(self, rand_vars, width, span, random_index, n, plans):
         new_plans = []
+
+      
         for plan_idx, plan in enumerate(plans):
             blocks = self.get_blocks(plan, width, span)
             reps_per_plan = int(n / len(plans))
@@ -34,7 +36,7 @@ class Randomizer:
 
                 for block_idx, block in enumerate(blocks):
                     # FIXME: does  not work when random variables are the outer design
-                    rand_idx = rep_idx * len(blocks) + plan_idx * n + block_idx
+                    rand_idx = rep_idx * len(blocks) + plan_idx * int(n/len(plans)) + block_idx
                     rand_var = rand_vars[rand_idx]
                     for cond_idx in range(width):
                         for within_block_idx in range(span):

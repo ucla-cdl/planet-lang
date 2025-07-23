@@ -82,7 +82,8 @@ class BitVecSolver:
         return np.array(arr)[:, 0:width:stride]
 
     def all_different(self, v=None, width = None, stride = 1):
-        print(v, width, stride)
+        if v is None: 
+            return
         # could you prettify this?
         dim_variables = get_dim_variables(self.z3_conditions, self.shape, 1)
 
@@ -274,7 +275,6 @@ class BitVecSolver:
         if (self.solver.check() == sat):
             all_assignments = []
             model = self.solver.model()
-
       
             for var in self.z3_conditions:
                 all_assignments.append(model.evaluate(model[var]))

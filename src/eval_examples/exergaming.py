@@ -3,7 +3,8 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 
 from lib.variable import ExperimentVariable, multifact
-from lib.design import Design, nest
+from lib.design import Design
+from lib.nest import nest
 from lib.unit import Units 
 from lib.assignment import assign 
 
@@ -28,7 +29,8 @@ exercise_design = (
     .limit_groups(len(exercise_intensity))
 )
 
-design = nest(emotion_design, exercise_design)
+design = nest(inner = emotion_design, outer = exercise_design)
 participants = Units(72)
 
 assignment = assign(participants, design)
+print(assignment)

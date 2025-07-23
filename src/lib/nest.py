@@ -29,6 +29,7 @@ def is_counterbalanced(d1, d2):
 def nest_structure(d1, d2):
     constraints = []
     # Match all variables from the outer design within each block matrix
+    
     for i in range(len(d2.variables)):
         constraints.append(InnerBlock(
             d2.variables[i],
@@ -38,6 +39,7 @@ def nest_structure(d1, d2):
         ))
 
      # Match all variables from the inner design across every block
+
     for i in range(len(d1.variables)):
         constraints.append(OuterBlock(
             d1.variables[i],
@@ -46,7 +48,7 @@ def nest_structure(d1, d2):
             stride = [1, 1]
         ))
 
-
+ 
     return constraints
 
 
@@ -70,14 +72,24 @@ def copy_nested_constraints(design1, design2):
                     stride=constraint.stride
                 )
             )
+        elif isinstance(constraint, NoRepeat):
+  
+            constraints.append(
+                NoRepeat(
+                    constraint.variable,
+                    width=width1,
+                    stride=constraint.stride
+                )
+            )
         else:
             constraints.append(copy.copy(constraint))
+
 
     # need to modify out constraint region
     for constraint in design2.constraints:
         # FIXME FIXME, I think this is a ratio problem
         if isinstance(constraint, Counterbalance):
-       
+            
             # Add counterbalance constraint for design2 variables
             constraints.append(
                 Counterbalance(
@@ -159,10 +171,10 @@ def nest(*, outer, inner):
     # first, check if one design is random
     # if so, conver to a special replications type.
     if (not isinstance(inner, Replications)) and (inner.has_random_variable() or inner.is_random()):
-        inner = RandomPlan(inner.variables)
+        inner = RandomPlan(inner.variables).num_trials(inner.get_width())
 
     elif (not isinstance(outer, Replications)) and (outer.has_random_variable() or outer.is_random()):
-        raise RandomDesignError("Unsupported design: random variables are not supported as outer designs in a nested structure.")
+        outer = RandomPlan(outer.variables)
 
     assert can_nest(outer, inner)
 
@@ -182,24 +194,28 @@ def nest(*, outer, inner):
     width1 = inner.get_width()
     width2 = outer.get_width()
     total_conditions = width2 * width1
-    
-
+ 
     # Create a new design with the combined variables
     combined_design = (Design()
-                       .within_subjects(multifact(combined_variables))
+                    #    .within_subjects(multifact(combined_variables))
                        .limit_groups(total_groups)
                        .num_trials(total_conditions)
                     )
 
-    # FIXME
 
-    combined_design.random_var = inner.random_var 
+    # FIXME
+    combined_design._add_variable(multifact(combined_variables))
+
+    combined_design.random_var.extend(inner.random_var)
+    combined_design.random_var.extend(outer.random_var)
     combined_design.constraints.extend(nest_structure(inner, outer))
 
     inner_constraints = copy_nested_constraints(inner, outer)
     if inner_constraints is not None:
         combined_design.constraints.extend(inner_constraints)
     
+    
+ 
     return combined_design
 
 

@@ -21,18 +21,13 @@ task = ExperimentVariable(
     options = ["a", "b"]
 )
 
-num = ExperimentVariable(
-    name = "num",
-    options = ["1", "2"]
-)
 rep = Replications(2)
-
 
 
 des1 = (
     Design()
         .within_subjects(treatment)
-        .counterbalance(treatment)
+        # .counterbalance(treatment)
 )
 
 des2 = (
@@ -40,26 +35,11 @@ des2 = (
         .within_subjects(task)
 )
 
-des3 = (
-    Design()
-        .within_subjects(num)
-)
-
-
 units = Units(10)
 
 
 
-print("\n\n\n")
-print("performing proper nest")
 
-des = nest(inner=des2, outer=des1)
-mega = nest(inner=des3, outer=des)
-# # mega.to_latex()
-# print("step2")
-
-final = assign(units, mega)
-# # print("step3")
+des = nest(inner=des1, outer=des2)
+final = assign(units, des)
 print(final)
-# print(assign(units, des1))
-
