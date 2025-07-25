@@ -88,6 +88,10 @@ class MultiFactVariable(ExperimentVariable):
 def multifact(variables):
     return MultiFactVariable(variables)
 
+class BaseVariable(ExperimentVariable):
+    def __init__(self):
+        super().__init__("base", 1)
+
 
 class VariableCondition:
     """The Variable represents a value that a user can assign to 

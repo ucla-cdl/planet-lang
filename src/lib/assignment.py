@@ -75,26 +75,8 @@ def assign_subunits(units, parent):
            """)
 
 
-
-def assign_units(units, plans):
-    """
-    Assigns participants (units) to different plans in a balanced manner.
-    Ensures that the number of participants is evenly distributed across all plans.
-
-    Parameters:
-    units : object
-        An object containing participant data and metadata.
-    plans : object
-        An object containing plan assignment logic.
-    """
-    
-    # Evaluate the units object to ensure it's up-to-date
-    table = units.get_table()
-    plans = determine_plans(units, plans)
-    num_plans = len(plans)  # Total number of available plans
-    num_participants = len(units)  # Total number of participants
-    
-    # Create a temporary table to store plan assignments
+def construct_assignment_table(table, units, num_plans, num_participants):
+     # Create a temporary table to store plan assignments
     duckdb.sql("CREATE TABLE members (plan INT)")
 
    
@@ -129,6 +111,29 @@ def assign_units(units, plans):
         duckdb.sql(f"update {units.table} set pid = -1 where pid > {num_participants}")
 
 
+
+def assign_units(units, plans):
+    """
+    Assigns participants (units) to different plans in a balanced manner.
+    Ensures that the number of participants is evenly distributed across all plans.
+
+    Parameters:
+    units : object
+        An object containing participant data and metadata.
+    plans : object
+        An object containing plan assignment logic.
+    """
+    
+    # Evaluate the units object to ensure it's up-to-date
+    table = units.get_table()
+    plans = determine_plans(units, plans)
+    num_plans = len(plans)  # Total number of available plans
+    num_participants = len(units)  # Total number of participants
+
+    if num_plans:
+        construct_assignment_table(table, units, num_plans, num_participants)
+    
+   
 def assign_counterbalance(units, plans, parent = None):
     if parent is not None:
         assign_subunits(units, parent)

@@ -10,7 +10,7 @@ from .narray import *
 from .candl import *
 from .unit import Groups
 import copy
-from lib.constraint import StartWith, Counterbalance, NoRepeat, InnerBlock, OuterBlock, Constraint, SetRank, SetPosition
+from lib.constraint import StartWith, Counterbalance, NoRepeat, InnerBlock, OuterBlock, Constraint, SetRank, SetPosition, AbsoluteRank
 from lib.designer import Designer
 from lib.candl import generate_conditions
 import math
@@ -18,8 +18,11 @@ import pandas as pd
 
 def eval(designs):
     for design in designs:
+        print("\ndes")
         if design.groups is None:
             design._determine_num_plans()
+        print("\n")
+        
         
 
 
@@ -104,6 +107,10 @@ def copy_nested_constraints(design1, design2):
                 constraints.append(
                     copy.copy(constraint)
                 )
+        elif isinstance(constraint, AbsoluteRank):
+                constraints.append(
+                    copy.copy(constraint)
+                )
 
         elif isinstance(constraint, SetRank):
                 constraints.append(
@@ -153,6 +160,15 @@ def can_nest(d1, d2):
 class RandomDesignError(Exception):
     pass
 
+def handle_empty_design(des):
+    des = copy.copy(des)
+    if des.is_empty:
+        var = ExperimentVariable("base", 1)
+        des._add_variable(var)
+        des.groups = Groups(1)
+        des.constraints.append(Counterbalance(var, width = des.trials, height = 1, stride = [1,1]))
+    return des
+
 def nest(*, outer, inner):
     """
     Nest two designs together to create a combined experimental design.
@@ -164,6 +180,11 @@ def nest(*, outer, inner):
     Returns:
         Combined design object
     """
+
+    # possibly FIXME?
+    outer = handle_empty_design(outer)
+    inner = handle_empty_design(inner)
+    
     
     # FIXME: problem with norepeat when recursive nest and nested design is
     # outer design of a new nested design
@@ -308,6 +329,11 @@ def cross(design1, design2):
         elif isinstance(constraint, StartWith):
                 combined_design.constraints.append(
                     StartWith(constraint.variable, constraint.condition)
+                )
+        
+        elif isinstance(constraint, AbsoluteRank):
+                combined_design.constraints.append(
+                    copy.copy(constraint)
                 )
         
         elif isinstance(constraint, NoRepeat):
