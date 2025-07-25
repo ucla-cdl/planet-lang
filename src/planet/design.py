@@ -1,19 +1,24 @@
-from z3 import *
-from lib.unit import Groups
-from lib.orders import Sequence
-from lib.candl import *
-from lib.variable import MultiFactVariable, multifact
-from .helpers import *
-from .narray import *
-from .candl import *
-from .unit import Groups
-from lib.constraint import StartWith, Counterbalance, NoRepeat, InnerBlock, OuterBlock, Constraint, SetRank, SetPosition, AbsoluteRank
-from lib.designer import Designer
-from lib.candl import generate_conditions
+# External dependencies
+from z3 import *  # requires `pip install z3-solver`
 import math
 import pandas as pd
-from lib.randomizer import Randomizer
-from lib.formatter import LatexExport
+
+# Internal modules (installed via `pip install -e .`)
+from planet.unit import Groups
+from planet.orders import Sequence
+from planet.variable import MultiFactVariable, multifact
+from planet.constraint import (
+    StartWith, Counterbalance, NoRepeat,
+    InnerBlock, OuterBlock, Constraint,
+    SetRank, SetPosition, AbsoluteRank
+)
+from planet.designer import Designer
+from planet.randomizer import Randomizer
+from planet.formatter import LatexExport
+from planet.candl import *
+from planet.candl import generate_conditions
+from planet.helpers import *
+from planet.narray import *
 
 class Plans:
     def __init__(self):

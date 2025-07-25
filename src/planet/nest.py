@@ -1,20 +1,27 @@
-from z3 import *
-from lib.unit import Groups
-from lib.orders import Sequence
-from lib.candl import *
-from lib.variable import MultiFactVariable, multifact
-from lib.replications import Replications
-from lib.design import Design, RandomPlan, Plans
-from .helpers import *
-from .narray import *
-from .candl import *
-from .unit import Groups
+# External libraries
+from z3 import *                 # Requires: pip install z3-solver
 import copy
-from lib.constraint import StartWith, Counterbalance, NoRepeat, InnerBlock, OuterBlock, Constraint, SetRank, SetPosition, AbsoluteRank
-from lib.designer import Designer
-from lib.candl import generate_conditions
 import math
 import pandas as pd
+
+# Planet system imports
+from planet.unit import Groups
+from planet.variable import  multifact, ExperimentVariable
+from planet.replications import Replications
+from planet.design import Design, RandomPlan, Plans
+from planet.constraint import (
+    StartWith, Counterbalance, NoRepeat, InnerBlock, OuterBlock,
+    SetRank, SetPosition, AbsoluteRank
+)
+from planet.designer import Designer
+from planet.candl import combine_lists
+# from planet.helpers import (
+#     build_matrix, some_helper_function  # ← Replace with actual names
+# )
+# from planet.narray import (
+#     make_array, flatten_array  # ← Replace with actual functions you use
+# )
+
 
 def eval(designs):
     for design in designs:

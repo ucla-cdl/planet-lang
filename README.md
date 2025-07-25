@@ -8,9 +8,8 @@ located in `src/examples` and `src/eval_examples`. Outputs from the program
 (such as the latex table or csv file) are located in `src/outputs`. 
 
 
-# Objects and Operators
+# Objects 
 ## Units
-
 ```python
 Units(n)
 ```
@@ -19,7 +18,7 @@ A sample of n units (often participants) selected to participate in an experimen
 
 Parameters:
 
- - `n: int` -- the number of units in the sample. For example, if we want to sample 25 participants, then n = 25. Each participant represents one unit. If left unspecified, n defaults to the minimum number of units necessary for a valid experimental design. 
+ - `n: int` -- the number of units in the sample. For example, if we want to sample 25 participants, then n = 25. Each participant represents one unit. If unspecified, n defaults to the minimum number of units necessary for a valid experimental design. 
   
 ## Experiment Variable
 An Experiment Variable is an independent variable or covariate the experimenter wants to use in an experiment. The experiment variables included in an experiment determine the conditions a unit sees. For example, treatment is an independent variable with two values: drug or placebo. 
@@ -31,19 +30,58 @@ Creates an experimental variable.
 
 Parameters:
 
- - `name: str` -- the name of the variable. 
- - `options: str[]` -- the possible discrete assignment values of the variable. 
+ - `name: str` -- name of the variable. 
+ - `options: str[]` -- list of possible discrete assignment values of the variable. 
 
 Returns: A `Variable` object
 
 ## Design
-A design consists of every possible experimental plan a unit can get assigned to, and the method of assigning these experimental plans to units. Experimental designs describe the plan for assignment in an experiment. 
+A design consists of every possible experimental plan a unit can get assigned
+to, and the method of assigning these experimental plans to units. Experimental
+designs describe the method of assigning conditions to units in an experiment. 
 
 ```python
 Design()
 ```
 Creates an experimental design object. 
 Returns: A `Design` object
+
+## Replications
+Replications are a special design that assign arbitrary or empty trials to units.
+Replications combined with Designs to form create designs with replicated
+conditions. For example, n replications results in n occurances of
+each condition of the experimental variables within each participant. 
+
+```python
+Replications(int)
+```
+Creates a replications object. 
+Returns: A `Replications` object
+
+### Example use case
+```python
+task = ExperimentVariable("task", options=["a", "b"])
+
+design = (Design()
+        .within_subjects(task)
+)
+
+nest(inner=Replications(2), outer=design)
+```
+
+### Example output
+| Participant | Trial | task |
+| ----------- | ----- | ---- |
+| P1          | T1    | a    |
+| P1          | T2    | a    |
+| P1          | T3    | b    |
+| P1          | T4    | b    |
+| P2          | T1    | b    |
+| P2          | T2    | b    |
+| P2          | T3    | a    |
+| P2          | T4    | a    |
+
+
 
 ## Methods
 ### between_subjects
@@ -194,6 +232,40 @@ The result is a fully-counterbalanced, within-subjects design, where each units
 gets observed twice. This means that not every unit sees every assignment value
 of the treatment variable. The number of plans 3!/1! = 6. 
 
+### set_rank
+Sets presedence of a variable's order accross all plans. Default rank is 0.
+Setting a higher rank to one condition results in this condition preceeding all
+other conditions. 
+
+```python
+( 
+    Design()
+    .set_rank(variable, condition, rank)
+)
+```
+
+Parameters:
+ - `variabe: ExperimentVariable` -- an experiment variable. 
+  - `condition: str` -- name of condition corresponding to experiment variable. 
+ - `n: int` -- integer indicating rank of condition in order. 
+
+Returns: A `Design` object
+
+### Example
+```python
+treatment = Variable("treatment", options=["a", "b"])
+
+design = (
+    Design()
+    .within_subjects(treatment)
+    .set_rank(treatment, "a", 1)
+)
+```
+
+This results in one viable order: [a, b] because a (rank: 1) must always appears
+before b (rank: 0) in any order. 
+
+
 ### to_latex()
 Creates a file called design.tex in an folder called outputs. The design.tex
 file contains latex code for displaying a table representing the design. 
@@ -231,8 +303,8 @@ nest(outer_design, inner_design)
 
 Parameters:
 
-- `outer_design: Design` -- a design used as the outer design in a new design. The trials of trials in the outer design expand to account for the trials of the plans in the inner design. 
--  `inner_design: Design` -- a design used as the inner design in a new design. All of the plans in the inner design are replicated by the number of trials in all of the plans in the outer design. 
+- `outer: Design` -- a design used as the outer design in a new design. The trials of trials in the outer design expand to account for the trials of the plans in the inner design. 
+-  `inner: Design` -- a design used as the inner design in a new design. All of the plans in the inner design are replicated by the number of trials in all of the plans in the outer design. 
 
 Returns: A `Design` object
 

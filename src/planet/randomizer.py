@@ -1,6 +1,6 @@
-from lib.candl import *
-from lib.constraint import InnerBlock, OuterBlock
-from lib.candl import generate_conditions
+from planet.candl import generate_conditions
+from planet.constraint import InnerBlock, OuterBlock
+
 
 
 class Randomizer:

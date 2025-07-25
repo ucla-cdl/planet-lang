@@ -1,4 +1,5 @@
 .Rproj.user
+planet.egg-info/
 lib/__pycache__/translate.cpython-311.pyc
 outputs
 .Rhistory

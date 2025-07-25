@@ -1,20 +1,13 @@
-from .variable import ExperimentVariable
-from .design import Design
-from z3 import *
-from lib.unit import Groups
-from lib.orders import Sequence
-from lib.candl import *
-from lib.variable import MultiFactVariable, multifact
-from .helpers import *
-from .narray import *
-from .candl import *
-from .unit import Groups
-from lib.constraint import StartWith, Counterbalance, NoRepeat, InnerBlock, OuterBlock, Constraint, SetRank, SetPosition
-from lib.designer import Designer
-from lib.design import Plans
-from lib.candl import generate_conditions
+# External libraries
+from z3 import *             # Requires: pip install z3-solver
 import math
-import pandas as pd
+# Planet core modules (installed via `pip install -e .`)
+from planet.variable import ExperimentVariable, MultiFactVariable, multifact
+from planet.design import Design, Plans
+from planet.unit import Groups
+from planet.constraint import (
+    Counterbalance
+)
 
 
 class Replications(Plans):

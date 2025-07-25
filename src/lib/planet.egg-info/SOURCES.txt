@@ -1,5 +1,0 @@
-setup.py
-lib/planet.egg-info/PKG-INFO
-lib/planet.egg-info/SOURCES.txt
-lib/planet.egg-info/dependency_links.txt
-lib/planet.egg-info/top_level.txt

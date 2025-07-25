@@ -1,14 +1,20 @@
-from z3 import *
-from lib.orders import Sequence
-from lib.candl import *
-from .helpers import *
-from .narray import *
+# External libraries
+from z3 import *                # Requires: pip install z3-solver
 import numpy as np
-from .candl import *
-from .solver import  BitVecSolver
-from lib.constraint import StartWith, Counterbalance, NoRepeat, InnerBlock, OuterBlock, Constraint, SetRank, SetPosition, AbsoluteRank
-from lib.variable import MultiFactVariable
-from lib.unit import Groups, Units
+
+# Core system modules (planet package)
+from planet.orders import Sequence
+from planet.candl import *          #
+from planet.helpers import *       
+from planet.narray import *
+from planet.solver import BitVecSolver
+from planet.constraint import (
+    StartWith, Counterbalance, NoRepeat,
+    InnerBlock, OuterBlock, Constraint,
+    SetRank, SetPosition, AbsoluteRank
+)
+from planet.variable import MultiFactVariable
+from planet.unit import Units
 
 # NOTE: combine this with des pls
 class Designer:
