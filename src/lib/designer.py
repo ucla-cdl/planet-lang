@@ -164,6 +164,8 @@ class Designer:
     
     def absolute_rank(self, variable, ranks):
         transformed_ranks = {variable.conditions.index(condition): rank for condition, rank in ranks.items()}
+        print(transformed_ranks)
+        print(self.variables)
         self.solver.absolute_rank(variable, transformed_ranks)
     
 

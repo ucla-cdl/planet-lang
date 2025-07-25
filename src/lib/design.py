@@ -69,6 +69,11 @@ class Design(Plans):
     def __init__(self):
         super().__init__()
         self.rank_constraints = {}
+
+        # FIXME
+        # var = ExperimentVariable("base", 1)
+        # self._add_variable(var)
+        # self.constraints.append(Counterbalance(var, width = 0, height = 1, stride = [1,1]))
   
     def to_latex(self):
         # FIXME: won't work with random plans
@@ -79,6 +84,17 @@ class Design(Plans):
     def num_trials(self, n):
         self.trials = n
         return self
+    
+    def _add_variable(self, variable):
+        assert isinstance(variable, ExperimentVariable)
+
+        if isinstance(variable, MultiFactVariable):
+            variables = variable.variables
+        else:
+            variables = [variable]
+
+        self.variables.extend(variables)
+        self.ws_variables.extend(variables)
     
     def add_variable(self, variable, l):
         assert isinstance(variable, ExperimentVariable)
@@ -147,8 +163,9 @@ class Design(Plans):
            
 
     def get_plans(self, n = None):
-        
-        if self.is_random():
+        if self.is_empty:
+            return []
+        elif self.is_random():
             assert n is not None
             return self.random(n)
         if self.plans is not None:
@@ -202,6 +219,8 @@ class Design(Plans):
         return self
     
     def _determine_num_plans(self):
+        for variable in self.variables:
+            print(variable)
         if not self.groups:
             counterbalanced_groups = []
             for constraint in self.constraints:
@@ -220,18 +239,20 @@ class Design(Plans):
     
             
             total_n_plans = 1
-
             for group in counterbalanced_groups:
                 num_trials = self.get_width()
-                if num_trials > group[1]:
+                if group[1] == 1:
+                    continue
+                elif num_trials > group[1]:
                     num_repeats = int(self.get_width()/group[1])
+
                     total_n_plans *= math.factorial(group[1]) / math.prod(math.factorial(num_repeats) for _ in group[0])
                 elif num_trials < group[1]:
                     total_n_plans *= math.factorial(group[1]) / math.factorial(group[1] - num_trials)
                 else: 
                     total_n_plans *= math.factorial(group[1])
 
-   
+       
             if counterbalanced_groups:
                 self.groups = Groups(int(total_n_plans))
             else:
@@ -274,6 +295,7 @@ class Design(Plans):
         
 
     def eval(self):
+        assert not self.is_empty
         self._eval()
         plans = self.designer.eval()
         self.plans = plans
@@ -282,7 +304,12 @@ class Design(Plans):
     def counterbalanced(self):
         # FIXME: not handled for replicated trials
         return any(isinstance(c, Counterbalance) or isinstance(c, AbsoluteRank) for c in self.constraints)
+    
 
+    @property
+    def is_empty(self):
+        # FIXME: not handled for replicated trials
+        return not self.variables 
 
         
     def counterbalance(self, variable, w = 0, h = 0, stride = [1, 1]):
