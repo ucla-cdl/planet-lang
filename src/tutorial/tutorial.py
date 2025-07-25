@@ -1,4 +1,4 @@
-from lib import *
+from planet import *
 
 """
 PLanet tutorial starter code
