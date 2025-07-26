@@ -1,13 +1,4 @@
-import sys
-sys.path.append("../")
-
-from z3 import *
-from lib.variable import ExperimentVariable
-from lib.design import Design
-from lib.nest import nest, cross
-from lib.assignment import assign, assign_counterbalance
-from lib.unit import Units
-
+from planet import * 
 
 task = ExperimentVariable(
     name = "task",

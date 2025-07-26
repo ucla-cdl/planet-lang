@@ -1,13 +1,4 @@
-from z3 import *
-
-import sys
-sys.path.append("../")
-from lib.variable import ExperimentVariable, multifact
-from lib.design import Design
-from lib.nest import nest
-from lib.assignment import assign
-from lib.unit import Units
-
+from planet import *
 
 # NOTE: need to make all different wrt. variables. Should this be under the hood though?
 # ie. handle with cross instead of reasoning about counterbalanced vars independently 
@@ -18,7 +9,7 @@ treatment = ExperimentVariable(
 
 task = ExperimentVariable(
     name = "task",
-    options = ["A", "B"]
+    options = ["A", "B", "C", "D"]
 )
 
 test = ExperimentVariable(
@@ -33,29 +24,23 @@ test2 = ExperimentVariable(
 
 units = Units(16)
 
-
-des = (
-    Design()
-        .within_subjects(multifact([treatment, task]))
+des1 = (Design()
+        .within_subjects(task)
         .counterbalance(task)
-        .counterbalance(treatment)
-        .num_trials(2)
-     
+        .limit_groups(4)
 )
 
 des3 = (Design()
         .within_subjects(test)
         .counterbalance(test)
-        .limit_groups(2)
 )
 
 des4 = (Design()
         .within_subjects(test2)
         .counterbalance(test2)
-        .limit_groups(2)
 )
 
-d2 = nest(outer=des3, inner=des)
-d5 = nest(outer=d2, inner=des4)
+d2 = nest(outer=des3, inner=des4)
+d5 = cross(d2, des1)
 
 print(assign(units, d5))

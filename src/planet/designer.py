@@ -112,6 +112,7 @@ class Designer:
                     )
 
                 case OuterBlock():
+                    print(constraint.variable, constraint.width, constraint.height, constraint.stride)
                     self.match_outer(
                         constraint.variable, 
                         constraint.width, 
@@ -133,11 +134,12 @@ class Designer:
 
     # NEED TO DECOUPLE THIS
     def match_inner(self, variable, width, height):
+        print("inner")
         # get number of block matrices per column
         n = int(self.shape[0] / height)
         # get number of block matrices per row
         m = int(self.shape[1] / width)
-
+       
         for i in range(n):
             for j in range(m):
                 self.solver.match_block(
@@ -148,7 +150,12 @@ class Designer:
                     ]
                 )
 
+        
+
+
+
     def match_outer(self, v, w, h):
+        print("outer", v, w, h)
         # NEEDS TO BE it's own func / constraint option. Don't treat these together 
         for i in range(h):
             for j in range(w):

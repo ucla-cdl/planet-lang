@@ -238,7 +238,8 @@ class Design(Plans):
                         counterbalanced_groups.append(([counterbalanced_variable], num_conditions))
                 # FIXME: ugly. how to handle startswith and counterbalancing
                 # together? 
-                if isinstance(constraint, StartWith):
+                if isinstance(constraint, AbsoluteRank):
+                    print("here")
                     self.groups = Groups(1)
                     return
     
