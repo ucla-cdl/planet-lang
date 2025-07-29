@@ -33,6 +33,7 @@ class Plans:
         self.plans = None
         # test
         self.random_var = []
+        self.previous_snapshot = None
 
     def is_random(self):
         return not self.counterbalanced
@@ -165,7 +166,13 @@ class Design(Plans):
         # self.apply_randomization(rand_vars, width, span, random_index, n)
         randomizer = Randomizer(rand, width, span, random_index, int(n*self.get_width()/width/span), n, self.plans)
         self.plans = randomizer.get_plans()
-           
+    
+    @property
+    def is_modified(self):
+        return self.snapshot() != self.previous_snapshot
+
+    def snapshot(self):
+        return str(hash(tuple(self.constraints))) + str(self.get_width()) + "_" + str(len(self.groups))
 
     def get_plans(self, n = None):
         if self.is_empty:
@@ -173,13 +180,13 @@ class Design(Plans):
         elif self.is_random():
             assert n is not None
             return self.random(n)
-        if self.plans is not None:
+        if self.plans is not None and not self.is_modified:
             return self.plans
         else:
             self.eval()
+            self.previous_snapshot = self.snapshot()
    
         if self.has_random_variable():
-          
             assert n is not None
             n = math.ceil(n/len(self.plans)) * len(self.plans)
             for rand in self.random_var:
@@ -223,49 +230,41 @@ class Design(Plans):
 
         return self
     
-    def _determine_num_plans(self):
-        for variable in self.variables:
-            print(variable)
-        if not self.groups:
-            counterbalanced_groups = []
-            for constraint in self.constraints:
-                if isinstance(constraint, Counterbalance):
-                    counterbalanced_variable = constraint.get_variable()
-                    num_conditions = len(counterbalanced_variable)
-                    if isinstance(counterbalanced_variable, MultiFactVariable):
-                        counterbalanced_groups.append((counterbalanced_variable.get_variables(), num_conditions))
-                    else:
-                        counterbalanced_groups.append(([counterbalanced_variable], num_conditions))
-                # FIXME: ugly. how to handle startswith and counterbalancing
-                # together? 
-                if isinstance(constraint, AbsoluteRank):
-                    print("here")
-                    self.groups = Groups(1)
-                    return
+    def extract_counterbalance_group(self, constraint):
+        """Extract variables and condition count from a Counterbalance constraint."""
+        var = constraint.get_variable()
+        num_conditions = len(var)
+        if isinstance(var, MultiFactVariable):
+            return (var.get_variables(), num_conditions)
+        return ([var], num_conditions)
     
-            
-            total_n_plans = 1
-            for group in counterbalanced_groups:
-                num_trials = self.get_width()
-                if group[1] == 1:
-                    continue
-                elif num_trials > group[1]:
-                    num_repeats = int(self.get_width()/group[1])
+    def _determine_num_plans(self):
+  
+        """Determine the number of experimental plans based on constraints and trial width."""
+        if self.groups:
+            return self.groups  # Assume already set
 
-                    total_n_plans *= math.factorial(group[1]) / math.prod(math.factorial(num_repeats) for _ in group[0])
-                elif num_trials < group[1]:
-                    total_n_plans *= math.factorial(group[1]) / math.factorial(group[1] - num_trials)
-                else: 
-                    total_n_plans *= math.factorial(group[1])
+        counterbalanced_groups = []
+        contains_ranked_var = False
+        total_n_plans = 1
 
-       
-            if counterbalanced_groups:
-                self.groups = Groups(int(total_n_plans))
-            else:
-                self.groups = Groups(0)
+        for constraint in self.constraints:
+            if isinstance(constraint, Counterbalance):
+                group = self.extract_counterbalance_group(constraint)
+                counterbalanced_groups.append(group)
 
-   
-            
+            elif isinstance(constraint, AbsoluteRank):
+                contains_ranked_var = True
+                rank_counts = count_values(constraint.ranks)
+                total_n_plans *= factorial_product_of_counts(rank_counts)
+
+        for variables, num_conditions in counterbalanced_groups:
+            num_trials = self.get_width()
+            total_n_plans *= calculate_plan_multiplier(num_conditions, len(variables), num_trials)
+
+        self.groups = Groups(int(total_n_plans) if (counterbalanced_groups or contains_ranked_var) else 0)
+    
+                
 
 
     def _eval(self):
@@ -274,7 +273,7 @@ class Design(Plans):
         sequence = Sequence(width)
         self._determine_num_plans()
         
-   
+
         self.designer.start(
             self.groups, 
             sequence, 

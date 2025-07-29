@@ -167,3 +167,30 @@ def as_list(variables):
         return variables
     else:
         return [variables]
+    
+
+
+def count_values(d: dict) -> dict:
+    """Count the frequency of values in a dictionary."""
+    counts = {}
+    for value in d.values():
+        counts[value] = counts.get(value, 0) + 1
+    return counts
+
+
+def factorial_product_of_counts(counts: dict) -> int:
+    """Return the product of factorials of all counts."""
+    return math.prod(math.factorial(count) for count in counts.values())
+
+def calculate_plan_multiplier(num_conditions: int, num_vars: int, num_trials: int) -> float:
+    """Compute the multiplier for total_n_plans based on design width and condition count."""
+    if num_conditions == 1:
+        return 1
+    if num_trials > num_conditions:
+        num_repeats = int(num_trials / num_conditions)
+        denom = math.prod(math.factorial(num_repeats) for _ in range(num_vars))
+        return math.factorial(num_conditions) / denom
+    elif num_trials < num_conditions:
+        return math.factorial(num_conditions) / math.factorial(num_conditions - num_trials)
+    else:
+        return math.factorial(num_conditions)

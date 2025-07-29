@@ -28,6 +28,7 @@ class Designer:
 
     def start(self, subjects, sequence, variables=[]):
         assert isinstance(sequence, Sequence)
+        print(subjects)
         assert isinstance(subjects, Units)
         assert len(variables) > 0
 
@@ -177,8 +178,6 @@ class Designer:
     
     def absolute_rank(self, variable, ranks):
         transformed_ranks = {variable.conditions.index(condition): rank for condition, rank in ranks.items()}
-        print(transformed_ranks)
-        print(self.variables)
         self.solver.absolute_rank(variable, transformed_ranks)
     
 
