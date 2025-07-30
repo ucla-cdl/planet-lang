@@ -1,11 +1,4 @@
-import sys
-sys.path.append("../")
-
-from z3 import *
-from lib.variable import ExperimentVariable, multifact
-from lib.design import Design
-from lib.assignment import assign
-from lib.unit import Units
+from planet import *
 
 
 treatment = ExperimentVariable(

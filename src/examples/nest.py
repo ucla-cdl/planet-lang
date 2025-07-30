@@ -1,12 +1,4 @@
-import sys
-sys.path.append("../")
-from lib.variable import ExperimentVariable, multifact
-from lib.unit import Units 
-from lib.assignment import assign 
-from z3 import *
-from lib.variable import ExperimentVariable
-from lib.design import Design
-from lib.nest import nest
+from planet import *
 
 
 # user creates two variables: task and treatment 

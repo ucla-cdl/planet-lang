@@ -5,12 +5,7 @@ from .helpers import *
 from functools import reduce
 from .bitvector import BitVectors
 import itertools
-import logging
 import warnings
-
-warnings.simplefilter('default')
-logging.basicConfig(level=logging.DEBUG)
-
 
 # NOTE: to decouple, should we have an ndarray class that 
 # has z3 vars as special type? not sure if this infrastructure is necessary?
@@ -32,8 +27,6 @@ class BitVecSolver:
 
         self.rank_functions = {}
         self.ranks = {}
-
-        self.logger = logging.getLogger(__name__)
  
 
     # you can come up with a better name
@@ -264,9 +257,6 @@ class BitVecSolver:
         block = self.block_array(plans, block)
 
         flat_block = np.array(block).flatten()
-
-        print(variable, block)
-
         for i in range(len(flat_block)):
             for j in range(i, len(flat_block)):
                 a1 = self.bitvectors.get_variable_assignment(variable, flat_block[i])

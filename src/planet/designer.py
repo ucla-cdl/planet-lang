@@ -28,7 +28,6 @@ class Designer:
 
     def start(self, subjects, sequence, variables=[]):
         assert isinstance(sequence, Sequence)
-        print(subjects)
         assert isinstance(subjects, Units)
         assert len(variables) > 0
 
@@ -113,7 +112,6 @@ class Designer:
                     )
 
                 case OuterBlock():
-                    print(constraint.variable, constraint.width, constraint.height, constraint.stride)
                     self.match_outer(
                         constraint.variable, 
                         constraint.width, 
@@ -135,7 +133,6 @@ class Designer:
 
     # NEED TO DECOUPLE THIS
     def match_inner(self, variable, width, height):
-        print("inner")
         # get number of block matrices per column
         n = int(self.shape[0] / height)
         # get number of block matrices per row
@@ -156,7 +153,6 @@ class Designer:
 
 
     def match_outer(self, v, w, h):
-        print("outer", v, w, h)
         # NEEDS TO BE it's own func / constraint option. Don't treat these together 
         for i in range(h):
             for j in range(w):
@@ -181,9 +177,9 @@ class Designer:
         self.solver.absolute_rank(variable, transformed_ranks)
     
 
-    def get_groups(self, model):
-        if not len(self.units):
-            self.units.n = len(model)
+    # def get_groups(self, model):
+    #     if not len(self.units):
+    #         self.units.n = len(model)
 
 
 
@@ -195,14 +191,19 @@ class Designer:
         # these should maybe be classes or something? 
         if len(self.units):
             model = self.solver.get_one_model()
-            assert len(model) > 0
-            model = np.array(model).reshape(self.shape).tolist()
-            return np.array(self.solver.encoding_to_name(model, self.variables))
+            return self.decode(model)
         else:
             model = self.solver.get_all_models()
-            self.get_groups(model)
+            # self.get_groups(model)
+            # FIXME
             return np.array(self.solver.encoding_to_name(model, self.variables))
-            
+    
+    def decode(self, model):
+        if not len(model):
+            return np.array([])
+        else:
+            reshaped_model = np.array(model).reshape(self.shape).tolist()
+            return np.array(self.solver.encoding_to_name(reshaped_model, self.variables))
   
     # NOTE: this is with a bitvec representation...
     # ensure that this works

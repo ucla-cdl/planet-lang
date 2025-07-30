@@ -1,14 +1,4 @@
-import sys
-sys.path.append("../")
-from lib.variable import ExperimentVariable, multifact
-from lib.design import Design
-from lib.nest import nest
-from lib.unit import Units 
-from lib.assignment import assign 
-
-
-
-
+from planet import *
 
 
 """

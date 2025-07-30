@@ -14,7 +14,7 @@ class LatexExport:
         trials = [f"trial{i+1}" for i in range(len(self.df[0]))]
         df = pd.DataFrame(self.df, columns=trials)
         try:
-            filepath = "../outputs/design.tex"
+            filepath = "outputs/design.tex"
             create_directory_for_file(filepath)
             with open(filepath, 'w', encoding='utf-8') as tex_file:
                 tex_file.write(df.to_latex())

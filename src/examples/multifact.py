@@ -1,11 +1,4 @@
-import sys
-sys.path.append("../")
-
-from z3 import *
-from lib.variable import ExperimentVariable, multifact
-from lib.design import Design
-from lib.assignment import assign
-from lib.unit import Units
+from planet import *
 
 
 treatment = ExperimentVariable(
@@ -19,12 +12,23 @@ task = ExperimentVariable(
 )
 
 
-des = (
-    Design()
-        .within_subjects(multifact([treatment, task]))
-        .counterbalance(multifact([treatment, task]))
-)
+# des = (
+#     Design()
+#         .within_subjects(multifact([treatment, task]))
+#         .counterbalance(multifact([treatment, task]))
+# )
 
 units = Units(12)
 
-print(assign(units, des))
+# print(assign(units, des))
+
+# fix width problems
+task_design = (
+    Design()
+    .within_subjects(task)
+    .within_subjects(treatment)
+    .counterbalance(task)
+    .counterbalance(treatment)
+    .num_trials(2)
+)
+print(assign(units, task_design))

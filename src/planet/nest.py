@@ -179,7 +179,7 @@ def nest(*, outer, inner):
     # Convert to RandomPlan if needed
     if not isinstance(inner, Replications) and (inner.has_random_variable() or inner.is_random()):
         inner = RandomPlan(inner.variables).num_trials(inner.get_width())
-    elif not isinstance(outer, Replications) and (outer.has_random_variable() or outer.is_random()):
+    if not isinstance(outer, Replications) and (outer.has_random_variable() or outer.is_random()):
         outer = RandomPlan(outer.variables)
 
     assert can_nest(outer, inner), "Designs cannot be nested due to incompatible structure."
@@ -204,6 +204,7 @@ def nest(*, outer, inner):
     # FIXME: The API should expose a way to add multifactor variables cleanly
     combined_design._add_variable(multifact(combined_variables))
 
+    # NOTE: ugly way of handling this
     combined_design.random_var.extend(inner.random_var)
     combined_design.random_var.extend(outer.random_var)
 
@@ -225,7 +226,6 @@ def cross_structure(d1, d2):
     # Match all variables from the outer design within each block matrix
     
     for i in range(len(d2.variables)):
-        print(d2.variables[i])
         constraints.append(InnerBlock(
             d2.variables[i],
             1,
@@ -267,14 +267,13 @@ def cross(design1, design2):
     if (not isinstance(design1, Replications)) and (design1.has_random_variable() or design1.is_random()):
         design1 = RandomPlan(design1.variables).num_trials(design1.get_width())
 
-    elif (not isinstance(design2, Replications)) and (design2.has_random_variable() or design2.is_random()):
+    if (not isinstance(design2, Replications)) and (design2.has_random_variable() or design2.is_random()):
         design2 = RandomPlan(design2.variables)
 
     eval([design1, design2])
 
     # Calculate the total number of groups in the combined design
     total_groups = len(design1.groups) * len(design2.groups)
-    print(len(design2.groups))
     # Combine variables from both designs
     combined_variables = combine_lists(design1.variables, design2.variables)
     

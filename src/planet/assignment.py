@@ -80,7 +80,7 @@ def construct_assignment_table(table, units, num_plans, num_participants):
     duckdb.sql("CREATE TABLE members (plan INT)")
 
    
-    required_participants = math.ceil(num_participants/num_plans) * num_plans
+    required_participants = math.ceil(num_participants/num_plans) * num_plans if num_participants else num_plans
     for i in range(num_participants, required_participants):
         duckdb.sql(f"insert into {units.table} values ({i+1}, 0)")
     
