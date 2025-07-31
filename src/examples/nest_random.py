@@ -23,12 +23,12 @@ des1 = (
 des2 = (
     Design()
         .within_subjects(task)
-        .counterbalance(task)
-        .absolute_rank(task, "a", 1)
+        # .counterbalance(task)
+        # .absolute_rank(task, "a", 1)
 )
 
-units = Units(0)
+units = Units(4)
 
 
-# des = nest(inner=des1, outer=des2)
-print(assign(units, des2))
+des = nest(inner=des2, outer=des1)
+print(assign(units, des))

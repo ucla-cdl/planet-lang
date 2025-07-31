@@ -3,32 +3,23 @@ from planet import *
 
 treatment = ExperimentVariable(
     name = "treatment",
-    options = ["a", "b"]
+    options = ["a", "b", "c"]
 )
 
 task = ExperimentVariable(
     name = "task",
-    options = ["1", "2"]
+    options = ["1", "2", "3"]
 )
 
+test = multifact([treatment, task])
 
-# des = (
-#     Design()
-#         .within_subjects(multifact([treatment, task]))
-#         .counterbalance(multifact([treatment, task]))
-# )
-
-units = Units(12)
-
-# print(assign(units, des))
-
-# fix width problems
-task_design = (
+des = (
     Design()
-    .within_subjects(task)
-    .within_subjects(treatment)
-    .counterbalance(task)
-    .counterbalance(treatment)
-    .num_trials(2)
+        .within_subjects(test)
+        # .counterbalance(test)
+        # .limit_groups(9)
 )
-print(assign(units, task_design))
+
+units = Units(1)
+
+print(assign(units, des))

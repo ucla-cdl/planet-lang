@@ -46,6 +46,7 @@ des3 = (Design()
 des4 = (Design()
         .within_subjects(test2)
         .counterbalance(test2)
+        .counterbalance(test2)
         .limit_groups(2)
 )
 

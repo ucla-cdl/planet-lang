@@ -36,9 +36,9 @@ def generate_conditions(participants, variable, n):
         conditions = variable.conditions
         for _ in range(participants):
             # FIXME: path for random multifactorial variables
-            rep = int(n/len(conditions))
-            experiment_data.append(random.sample(conditions * rep, n))
+            experiment_data.append(random.sample(conditions, n))
    
+
     return experiment_data
 
 

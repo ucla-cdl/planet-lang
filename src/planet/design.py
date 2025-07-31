@@ -235,8 +235,8 @@ class Design(Plans):
         # randomly generates plans for every block of random var. 
         # rand_vars = self._generate_random_variables(int(n*self.get_width()/width/span), self.random_var, width) 
         # self.apply_randomization(rand_vars, width, span, random_index, n)
-        randomizer = Randomizer(rand, width, span, n)
-        self.plans = randomizer.apply_randomization(width, span, random_index, int(n*self.get_width()/width/span), self.plans)
+        randomizer = Randomizer(rand, width, span, int(n*self.get_width()/width/span))
+        self.plans = randomizer.apply_randomization(width, span, random_index, n, self.plans)
 
 
     def is_random(self):

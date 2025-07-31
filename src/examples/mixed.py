@@ -9,7 +9,7 @@ count = ExperimentVariable(
     options = ["1", "2"]
 )
 
-units = Units(4)
+units = Units(1)
 
 des = (
     Design()

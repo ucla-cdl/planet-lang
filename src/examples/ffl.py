@@ -43,7 +43,7 @@ number_des = (
 cross_des = cross(interface_des, number_des)
 des = nest(outer=task_des, inner=cross_des)
 
-des.to_latex()
+# des.to_latex()
 assignment = assign(units, des)
 print(assignment)
 
