@@ -13,9 +13,7 @@ from planet.constraint import (
     StartWith, Counterbalance, NoRepeat, InnerBlock, OuterBlock,
     SetRank, SetPosition, AbsoluteRank
 )
-from planet.designer import Designer
 from planet.candl import combine_lists
-
 
 
 def eval(designs):

@@ -21,7 +21,7 @@ from planet.helpers import *
 from planet.narray import *
 from planet.constraint_manager import ConstraintManager
 import hashlib
-
+from planet.design_variable import DesignVariable
 
 
 class DesignWarning(UserWarning):
@@ -48,6 +48,10 @@ class DesignVariable:
 
     def has(self, constraint_name):
         return self.constraint_spec.get(constraint_name) is not None
+    
+    def get_ranks(self):
+                # count_values(constraint.ranks)
+        return self.constraint_spec.get("AbsoluteRank").ranks
 
     @property
     def is_counterbalanced(self):
@@ -231,10 +235,6 @@ class Design(Plans):
         variables = rand.variables if isinstance(rand, MultiFactVariable) else [rand]
 
         random_index = self.variables.index(variables[0])
-   
-        # randomly generates plans for every block of random var. 
-        # rand_vars = self._generate_random_variables(int(n*self.get_width()/width/span), self.random_var, width) 
-        # self.apply_randomization(rand_vars, width, span, random_index, n)
         randomizer = Randomizer(rand, width, span, int(n*self.get_width()/width/span))
         self.plans = randomizer.apply_randomization(width, span, random_index, n, self.plans)
 
@@ -248,7 +248,7 @@ class Design(Plans):
 
     def snapshot(self):
         groups = "None" if self.groups is None else len(self.groups)
-        constraint_ids = sorted(str(c) for c in self.constraints.constraints)
+        constraint_ids = self.constraints.stringified()
         signature = "_".join(constraint_ids) + f"_{self.get_width()}_{groups}"
         return hashlib.sha256(signature.encode()).hexdigest()
 
@@ -327,13 +327,15 @@ class Design(Plans):
     def absolute_rank(self, variable, condition, rank):
 
         assert isinstance(variable, ExperimentVariable)
-        self.constraints.add_absolute_rank(variable, condition, rank)
+    
+
+        constraint = self.constraints.add_absolute_rank(variable, condition, rank)
+        self.design_variables[variable].add_constraint(constraint)
 
         return self
     
-    def extract_counterbalance_group(self, constraint):
+    def extract_counterbalance_group(self, var):
         """Extract variables and condition count from a Counterbalance constraint."""
-        var = constraint.get_variable()
         num_conditions = len(var)
         if isinstance(var, MultiFactVariable):
             return (var.get_variables(), num_conditions)
@@ -349,17 +351,17 @@ class Design(Plans):
         contains_ranked_var = False
         total_n_plans = 1
 
-  
-
-        for constraint in self.constraints.constraints:
-            if isinstance(constraint, Counterbalance):
-                group = self.extract_counterbalance_group(constraint)
+        for variable in self.design_variables:
+            print(self.design_variables[variable].constraint_spec)
+            if self.design_variables[variable].is_counterbalanced:
+                group = self.extract_counterbalance_group(variable)
                 counterbalanced_groups.append(group)
-
-            elif isinstance(constraint, AbsoluteRank):
+            elif self.design_variables[variable].is_ranked:
                 contains_ranked_var = True
-                rank_counts = count_values(constraint.ranks)
+                rank_counts = count_values(self.design_variables[variable].get_ranks())
                 total_n_plans *= factorial_product_of_counts(rank_counts)
+
+   
 
         for variables, num_conditions in counterbalanced_groups:
             num_trials = self.get_width()
@@ -395,7 +397,7 @@ class Design(Plans):
         
         # NOTE: ensure no downstream effects :)
         # self.designer.solver.all_different()
-        self.designer.eval_constraints(self.constraints.constraints, self.groups, width)
+        self.designer.eval_constraints(self.constraints.get_constraints(), self.groups, width)
 
     def test_eval(self):
         self._eval()
@@ -404,7 +406,6 @@ class Design(Plans):
 
     def eval(self):
         assert not self.is_empty
-
         self._eval()
         plans = self.designer.eval()
         self.plans = plans
@@ -412,19 +413,22 @@ class Design(Plans):
     @property
     def counterbalanced(self):
         # FIXME: not handled for replicated trials
-        return any(isinstance(c, Counterbalance) or isinstance(c, AbsoluteRank) for c in self.constraints.constraints)
+        return self.constraints.check_property(lambda c: isinstance(c, (Counterbalance, AbsoluteRank)))
+   
      
     # NOTE: need to make this much faster. Hashmap with var -> constraints?
     def identify_random_vars(self):
-        for v in self.design_variables:
-            if not any((isinstance(c, Counterbalance) or isinstance(c, AbsoluteRank)) and c.variable == v for c in self.constraints.constraints):
-                self.random_var.append(v)
+        self.random_var.extend([
+            v for v, obj in self.design_variables.items()
+            if not (obj.is_counterbalanced or obj.is_ranked)
+        ])
             
-
     @property
     def is_constrained(self):
         # FIXME: not handled for replicated trials
-        return any(isinstance(c, OuterBlock) or isinstance(c, InnerBlock) for c in self.constraints.constraints)
+        return self.constraints.check_property(lambda c: isinstance(c, (OuterBlock, InnerBlock)))
+    
+    # any(isinstance(c, OuterBlock) or isinstance(c, InnerBlock) for c in self.constraints.constraints)
     
 
     @property
@@ -447,37 +451,3 @@ class Design(Plans):
             return variable
        
   
-
-    # def _new_bs_variables(self): 
-    #     if self.bs_variables:   
-    #         return self.bs_variables[0] if len(self.bs_variables) == 1 else multifact(self.bs_variables)
-    #     else:
-    #         return None
-        
-    # def _combined_conditions(self, bs_conditions, ws_conditions):
-    #     conditions = []
-    #     if self.ws_variables and self.bs_variables:
-    #         for i in range(len(bs_conditions)):
-    #             conditions.append([bs_conditions[i][0] + "-" + ws_conditions[i][j] for j in range(len(ws_conditions[0]))])
-    #     elif self.bs_variables:
-    #         conditions = bs_conditions
-    #     elif self.ws_variables:
-    #         conditions = ws_conditions
-    #     else:
-    #         raise RuntimeError("No variables defined to generate conditions.")
-        
-    #     return conditions
-        
-    # def random(self, n):
-    #     assert len(self.ws_variables) or len(self.bs_variables) 
-
-    #     ws_variable = self._new_ws_variables()
-    #     ws_conditions = generate_conditions(n, ws_variable,self.get_width())
-
-        
-    #     bs_variable = self._new_bs_variables()
-    #     bs_conditions = generate_conditions(n, bs_variable,1)
-            
-    #     return self._combined_conditions(bs_conditions, ws_conditions)
-    
-

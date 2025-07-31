@@ -1,4 +1,5 @@
 from planet.constraint import AbsoluteRank
+from typing import Callable
 
 class ConstraintManager:
     def __init__(self):
@@ -14,6 +15,8 @@ class ConstraintManager:
         else:
             constraint = self.rank_constraints[variable]
             constraint.add_rank(condition, rank)
+
+        return constraint
 
     def add_constraint(self, constraint):
         # Avoid duplicates
@@ -33,3 +36,12 @@ class ConstraintManager:
             isinstance(c, constraint_type) and c.variable == variable
             for c in self.constraints
         )
+    
+    def check_property(self, property:Callable):
+        return any(property(c) for c in self.constraints)
+    
+    def stringified(self):
+        return (str(c) for c in self.constraints)
+    
+    def get_constraints(self):
+        return self.constraints

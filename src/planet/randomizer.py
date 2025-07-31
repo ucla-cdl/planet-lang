@@ -36,7 +36,6 @@ class Randomizer:
         print(len(plans))
         for plan_idx, plan in enumerate(plans):
             blocks = self.get_blocks(plan, width, span)
-            print(len(blocks))
             reps_per_plan = int(n / len(plans))
             for rep_idx in range(reps_per_plan):
                 new_plan = []
@@ -45,7 +44,6 @@ class Randomizer:
                     # FIXME: does  not work when random variables are the outer design
                
                     rand_idx = rep_idx * len(blocks) + plan_idx * int(n/len(plans)) + block_idx
-                    print(self.rand_vars, rand_idx)
                     rand_var = self.rand_vars[rand_idx]
                     for cond_idx in range(width):
                         for within_block_idx in range(span):
@@ -56,6 +54,8 @@ class Randomizer:
                                 variables = self.variable.variables
                                 replacement = rand_var[cond_idx]
                                 replacement = replacement.split("-")
+
+                                #FIXME: ugly
                                 for i in range(len(variables)):
                                     var_replacement = replacement[i]
                                     new_condition = self.replace_condition(old_condition, var_replacement, random_index+i)
