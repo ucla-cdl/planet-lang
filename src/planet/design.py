@@ -121,11 +121,6 @@ class Plans:
             self.add_variable(v, True)
   
 
-
-     
-    
-  
-
 class RandomPlan(Plans):
     """This is like creating a vector of random variables."""
     def __init__(self, variables):
@@ -151,11 +146,6 @@ class Design(Plans):
     def __init__(self):
         super().__init__()
 
-        # FIXME
-        # var = ExperimentVariable("base", 1)
-        # self._add_variable(var)
-        # self.constraints.append(Counterbalance(var, width = 0, height = 1, stride = [1,1]))
-  
     def to_latex(self):
         # FIXME: won't work with random plans
         matrix = self.get_plans()
@@ -165,8 +155,6 @@ class Design(Plans):
     def num_trials(self, n):
         self.trials = n
         return self
-    
-
     
     def _add_variable(self, variable):
         assert isinstance(variable, ExperimentVariable)
@@ -238,17 +226,17 @@ class Design(Plans):
         """
         assert self.plans is not None
 
+        width = self._determine_random_width(rand)
+        span = self._determine_random_span(rand)
         variables = rand.variables if isinstance(rand, MultiFactVariable) else [rand]
-        for rand in variables:
-            random_index = self.variables.index(rand)
-            width = self._determine_random_width(rand)
-            span = self._determine_random_span(rand)
+
+        random_index = self.variables.index(variables[0])
    
-            # randomly generates plans for every block of random var. 
-            # rand_vars = self._generate_random_variables(int(n*self.get_width()/width/span), self.random_var, width) 
-            # self.apply_randomization(rand_vars, width, span, random_index, n)
-            randomizer = Randomizer(rand, width, span, random_index, int(n*self.get_width()/width/span), n, self.plans)
-            self.plans = randomizer.get_plans()
+        # randomly generates plans for every block of random var. 
+        # rand_vars = self._generate_random_variables(int(n*self.get_width()/width/span), self.random_var, width) 
+        # self.apply_randomization(rand_vars, width, span, random_index, n)
+        randomizer = Randomizer(rand, width, span, n)
+        self.plans = randomizer.apply_randomization(width, span, random_index, int(n*self.get_width()/width/span), self.plans)
 
 
     def is_random(self):
@@ -269,11 +257,10 @@ class Design(Plans):
         self.identify_random_vars()
         if self.is_empty:
             return []
+        
         elif self.is_random():
             self.groups = Groups(1)
-        #     self.plans = self.random(n)
      
-            
         self.eval()
         self.previous_snapshot = self.snapshot()
 
@@ -429,12 +416,8 @@ class Design(Plans):
      
     # NOTE: need to make this much faster. Hashmap with var -> constraints?
     def identify_random_vars(self):
-        var_compatability = lambda c, v: c.variable == v
-        multivar_compatibility = lambda c, v: c.variable.contains_variable(v)
-
         for v in self.design_variables:
-            compatible = lambda c, v: multivar_compatibility(c, v) if isinstance(c.variable, MultiFactVariable) else var_compatability(c, v)
-            if not any((isinstance(c, Counterbalance) or isinstance(c, AbsoluteRank)) and compatible(c, v) for c in self.constraints.constraints):
+            if not any((isinstance(c, Counterbalance) or isinstance(c, AbsoluteRank)) and c.variable == v for c in self.constraints.constraints):
                 self.random_var.append(v)
             
 
@@ -465,36 +448,36 @@ class Design(Plans):
        
   
 
-    def _new_bs_variables(self): 
-        if self.bs_variables:   
-            return self.bs_variables[0] if len(self.bs_variables) == 1 else multifact(self.bs_variables)
-        else:
-            return None
+    # def _new_bs_variables(self): 
+    #     if self.bs_variables:   
+    #         return self.bs_variables[0] if len(self.bs_variables) == 1 else multifact(self.bs_variables)
+    #     else:
+    #         return None
         
-    def _combined_conditions(self, bs_conditions, ws_conditions):
-        conditions = []
-        if self.ws_variables and self.bs_variables:
-            for i in range(len(bs_conditions)):
-                conditions.append([bs_conditions[i][0] + "-" + ws_conditions[i][j] for j in range(len(ws_conditions[0]))])
-        elif self.bs_variables:
-            conditions = bs_conditions
-        elif self.ws_variables:
-            conditions = ws_conditions
-        else:
-            raise RuntimeError("No variables defined to generate conditions.")
+    # def _combined_conditions(self, bs_conditions, ws_conditions):
+    #     conditions = []
+    #     if self.ws_variables and self.bs_variables:
+    #         for i in range(len(bs_conditions)):
+    #             conditions.append([bs_conditions[i][0] + "-" + ws_conditions[i][j] for j in range(len(ws_conditions[0]))])
+    #     elif self.bs_variables:
+    #         conditions = bs_conditions
+    #     elif self.ws_variables:
+    #         conditions = ws_conditions
+    #     else:
+    #         raise RuntimeError("No variables defined to generate conditions.")
         
-        return conditions
+    #     return conditions
         
-    def random(self, n):
-        assert len(self.ws_variables) or len(self.bs_variables) 
+    # def random(self, n):
+    #     assert len(self.ws_variables) or len(self.bs_variables) 
 
-        ws_variable = self._new_ws_variables()
-        ws_conditions = generate_conditions(n, ws_variable,self.get_width())
+    #     ws_variable = self._new_ws_variables()
+    #     ws_conditions = generate_conditions(n, ws_variable,self.get_width())
 
         
-        bs_variable = self._new_bs_variables()
-        bs_conditions = generate_conditions(n, bs_variable,1)
+    #     bs_variable = self._new_bs_variables()
+    #     bs_conditions = generate_conditions(n, bs_variable,1)
             
-        return self._combined_conditions(bs_conditions, ws_conditions)
+    #     return self._combined_conditions(bs_conditions, ws_conditions)
     
 
