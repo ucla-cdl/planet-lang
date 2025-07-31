@@ -2,6 +2,7 @@ from z3 import *
 from .blocks import BlockFactor
 import duckdb
 import time
+from planet.candl import *
 
 class Unit:
     """ a Unit represents a singular unit that participates in a study. Units
@@ -103,31 +104,33 @@ class Groups(Units):
 
     n: id of the unit
     """
-    def __init__(self, n):
-        Units.__init__(self, n)
-        self.groups = [Group(i) for i in range(n)]
-
-    def expand_groups(self, num_groups):
-  
-        assert num_groups % self.n == 0
-        
-        new_groups = Groups(num_groups)
-        for attr in self.attributes:
-
-            new_groups.add_attribute(attr)
-        return new_groups
-    
-
-
-class Group:
-    def __init__(self, n):
+    def __init__(self, n=0):
         self.n = n
-        self.labels = []
 
-    def add_label(self, label):
-        self.labels.append(label)
-
+    def set_num_plans(self, n):
+        self.n = n 
     
+    def __len__(self):
+        return self.n
+    
+    def extract_counterbalance_group(self, var):
+        """Extract variables and condition count"""
+        return (var.get_variables(), len(var))
+    
+    def calculate_num_plans(self, counterbalanced_groups, rankings, num_trials):
+  
+        """Determine the number of experimental plans based on constraints and trial width."""
+        total_n_plans = 1
+
+        for variables, num_conditions in counterbalanced_groups:
+                num_trials = num_trials
+                total_n_plans *= calculate_plan_multiplier(num_conditions, variables, num_trials)
+        for ranking in rankings:
+            total_n_plans *= factorial_product_of_counts(ranking)
+
+        self.set_num_plans((int(total_n_plans)))
+    
+
 
 
 

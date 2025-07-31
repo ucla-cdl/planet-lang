@@ -18,6 +18,7 @@ class ConstraintManager:
 
         return constraint
 
+
     def add_constraint(self, constraint):
         # Avoid duplicates
         if self.has_constraint(constraint.variable, type(constraint)):

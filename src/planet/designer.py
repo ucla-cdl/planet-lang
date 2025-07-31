@@ -105,6 +105,10 @@ class Designer:
                     )
 
                 case InnerBlock():
+
+                    constraint.width = (
+                        constraint.width if constraint.width else width
+                    )
                     self.match_inner(
                         constraint.variable, 
                         constraint.width, 
@@ -175,11 +179,6 @@ class Designer:
         transformed_ranks = {variable.conditions.index(condition): rank for condition, rank in ranks.items()}
         self.solver.absolute_rank(variable, transformed_ranks)
     
-
-    # def get_groups(self, model):
-    #     if not len(self.units):
-    #         self.units.n = len(model)
-
 
 
     # NOTE: this is with a bitvec representation...

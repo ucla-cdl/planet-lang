@@ -42,6 +42,9 @@ class ExperimentVariable:
     def get_condition(self, s):
         return self.conditions[self.condition_map[s]]
 
+    def get_variables(self):
+        return [self]
+
     def add_constraint(self, constraint):
         self.constraint = constraint
 
@@ -78,7 +81,6 @@ class MultiFactVariable(ExperimentVariable):
         combinations = ["-".join(combination) for combination in combinations]
 
         super().__init__("factorial", self.n, options = combinations)
-        all(isinstance(variable, ExperimentVariable) for variable in variables)
         self.variables = variables
 
     def _get_variables(self):
@@ -101,7 +103,10 @@ class MultiFactVariable(ExperimentVariable):
     def contains_variable(self, var):
         print(var, self.variables)
         return var in self.variables
-
+    
+    def get_variables(self):
+        return self.variables
+    
 
 def multifact(variables):
     return MultiFactVariable(variables)

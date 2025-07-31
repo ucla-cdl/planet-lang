@@ -179,11 +179,14 @@ def nest(*, outer, inner):
     outer = handle_empty_design(outer)
     inner = handle_empty_design(inner)
 
-    # Convert to RandomPlan if needed
-    if not isinstance(inner, Replications) and (inner.has_random_variable() or inner.is_random()):
+    # Convert to RandomPlan if needed...
+    # Sketch: instead, what if we copied the random design and then limit the
+    # groups? 
+    # removed replication check
+    if inner.has_random_variable or inner.is_random:
         inner = RandomPlan(inner.variables).num_trials(inner.get_width())
-    if not isinstance(outer, Replications) and (outer.has_random_variable() or outer.is_random()):
-        outer = RandomPlan(outer.variables)
+    if outer.has_random_variable or outer.is_random:
+        outer = RandomPlan(outer.variables).num_trials(outer.get_width())
 
     assert can_nest(outer, inner), "Incompatable"
 
@@ -196,7 +199,7 @@ def nest(*, outer, inner):
 
     total_groups = len(inner.groups) * num_outer_groups
     total_conditions = inner.get_width() * outer.get_width()
-
+  
 
     combined_variables = combine_lists(inner.variables, outer.variables)
     combined_design = (
@@ -270,11 +273,11 @@ def cross(design1, design2):
 
     # first, check if one design is random
     # if so, conver to a special replications type.
-    if (not isinstance(design1, Replications)) and (design1.has_random_variable() or design1.is_random()):
+    if (not isinstance(design1, Replications)) and (design1.has_random_variable or design1.is_random):
         design1 = RandomPlan(design1.variables).num_trials(design1.get_width())
 
-    if (not isinstance(design2, Replications)) and (design2.has_random_variable() or design2.is_random()):
-        design2 = RandomPlan(design2.variables)
+    if (not isinstance(design2, Replications)) and (design2.has_random_variable or design2.is_random):
+        design2 = RandomPlan(design2.variables).num_trials(design2.get_width())
 
     eval([design1, design2])
 
@@ -289,7 +292,7 @@ def cross(design1, design2):
     
     assert width1 == width2
     total_conditions = width2 
-
+    
     
     # Create a new design with the combined variables
     combined_design = ( Design()
