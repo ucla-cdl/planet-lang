@@ -25,15 +25,14 @@ class Randomizer:
 
     def _apply_randomization(self, rand_vars, width, span, random_index, n, plans):
         new_plans = []
-
+        
       
         for plan_idx, plan in enumerate(plans):
             blocks = self.get_blocks(plan, width, span)
             reps_per_plan = int(n / len(plans))
-
             for rep_idx in range(reps_per_plan):
                 new_plan = []
-
+            
                 for block_idx, block in enumerate(blocks):
                     # FIXME: does  not work when random variables are the outer design
                     rand_idx = rep_idx * len(blocks) + plan_idx * int(n/len(plans)) + block_idx
@@ -45,7 +44,7 @@ class Randomizer:
                             replacement = rand_var[cond_idx]
                             new_condition = self.replace_condition(old_condition, replacement, random_index)
                             new_plan.append(new_condition)
-
+           
                 new_plans.append(new_plan)
 
         return new_plans

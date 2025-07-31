@@ -90,6 +90,7 @@ class ConstraintCopyVisitor:
 
     def visit_NoRepeat(self, constraint, origin):
         if origin == 'design1':
+            print(self.width1)
             self.constraints.append(
                 NoRepeat(constraint.variable, width=self.width1, stride=constraint.stride)
             )
@@ -135,10 +136,10 @@ for cls in [Counterbalance, NoRepeat, StartWith, AbsoluteRank, SetRank, SetPosit
 def copy_nested_constraints(design1, design2):
     visitor = ConstraintCopyVisitor(design1, design2)
 
-    for constraint in design1.constraints:
+    for constraint in design1.constraints.constraints:
         constraint.accept(visitor, origin='design1')
 
-    for constraint in design2.constraints:
+    for constraint in design2.constraints.constraints:
         constraint.accept(visitor, origin='design2')
 
     return visitor.constraints
@@ -156,10 +157,14 @@ def handle_empty_design(des):
     des = copy.copy(des)
     if des.is_empty:
         var = ExperimentVariable("base", 1)
-        des._add_variable(var)
+        des.add_variable(var, True)
         des.groups = Groups(1)
-        des.constraints.append(Counterbalance(var, width = des.trials, height = 1, stride = [1,1]))
+        des.add_constraint(Counterbalance(var, width = des.trials, height = 1, stride = [1,1]))
     return des
+
+def add_design_variables(*, des, combined_des):
+    for v in des.design_variables:
+        combined_des.add_variable(v)
 
 def nest(*, outer, inner):
     """
@@ -182,7 +187,7 @@ def nest(*, outer, inner):
     if not isinstance(outer, Replications) and (outer.has_random_variable() or outer.is_random()):
         outer = RandomPlan(outer.variables)
 
-    assert can_nest(outer, inner), "Designs cannot be nested due to incompatible structure."
+    assert can_nest(outer, inner), "Incompatable"
 
     # Evaluate groups if necessary
     eval([inner, outer])
@@ -194,6 +199,7 @@ def nest(*, outer, inner):
     total_groups = len(inner.groups) * num_outer_groups
     total_conditions = inner.get_width() * outer.get_width()
 
+
     combined_variables = combine_lists(inner.variables, outer.variables)
     combined_design = (
         Design()
@@ -202,18 +208,20 @@ def nest(*, outer, inner):
     )
 
     # FIXME: The API should expose a way to add multifactor variables cleanly
-    combined_design._add_variable(multifact(combined_variables))
+    combined_design.add_variables(combined_variables)
+
 
     # NOTE: ugly way of handling this
     combined_design.random_var.extend(inner.random_var)
     combined_design.random_var.extend(outer.random_var)
 
     # Nest structural constraints and copy semantic ones
-    combined_design.constraints.extend(nest_structure(inner, outer))
+    combined_design.add_constraints(nest_structure(inner, outer))
 
     copied_constraints = copy_nested_constraints(inner, outer)
     if copied_constraints:
-        combined_design.constraints.extend(copied_constraints)
+        combined_design.add_constraints(copied_constraints)
+
 
     return combined_design
 
@@ -287,18 +295,18 @@ def cross(design1, design2):
     
     # Create a new design with the combined variables
     combined_design = ( Design()
-                       .within_subjects(multifact(combined_variables))
                        .limit_groups(total_groups)
                        .num_trials(total_conditions)
                     )
-   
+    
+    combined_design.variables.extend(combined_variables)
    
     # need to modify the inner constraints region
     # Add counterbalance constraints from design1
-    for constraint in design1.constraints:
+    for constraint in design1.constraints.constraints:
         if isinstance(constraint, Counterbalance):
             if constraint.width and constraint.height:
-                combined_design.constraints.append(
+                combined_design.add_constraint(
                     Counterbalance(
                         constraint.variable,
                         width=constraint.width,
@@ -307,7 +315,7 @@ def cross(design1, design2):
                     )
                 )
             else: 
-                combined_design.constraints.append(
+                combined_design.add_constraint(
                     Counterbalance(
                         constraint.variable,
                         width=width1,
@@ -318,7 +326,7 @@ def cross(design1, design2):
 
         
         elif isinstance(constraint, NoRepeat):
-            combined_design.constraints.append(
+            combined_design.add_constraint(
                 NoRepeat(
                     constraint.variable,
                     constraint.width,
@@ -327,29 +335,29 @@ def cross(design1, design2):
             )
 
         elif isinstance(constraint, AbsoluteRank):
-                combined_design.constraints.append(
+                combined_design.add_constraint(
                     copy.copy(constraint)
                 )
 
         elif isinstance(constraint, InnerBlock):
-            combined_design.constraints.append(
+            combined_design.add_constraint(
                 InnerBlock(constraint.variable, constraint.width, constraint.height, stride = [1, 1])
             )
 
         # # here I need to multiply stride by the number of conditions of the block variable
         elif isinstance(constraint, OuterBlock):
-            combined_design.constraints.append(
+            combined_design.add_constraint(
                 OuterBlock(constraint.variable, constraint.width, constraint.height, stride = [1, 1])
             )
 
     
     # need to modify out constraint region
-    for constraint in design2.constraints:
+    for constraint in design2.constraints.constraints:
         if isinstance(constraint, Counterbalance):
             stride_height = constraint.height if constraint.height else len(design1.groups)
             
             # Add counterbalance constraint for design2 variables
-            combined_design.constraints.append(
+            combined_design.add_constraint(
                 Counterbalance(
                     constraint.variable,
                     width=total_conditions,
@@ -359,18 +367,18 @@ def cross(design1, design2):
             )
 
         elif isinstance(constraint, StartWith):
-                combined_design.constraints.append(
+                combined_design.add_constraint(
                     StartWith(constraint.variable, constraint.condition)
                 )
         
         elif isinstance(constraint, AbsoluteRank):
-                combined_design.constraints.append(
+                combined_design.add_constraint(
                     copy.copy(constraint)
                 )
         
         elif isinstance(constraint, NoRepeat):
         
-              combined_design.constraints.append(
+              combined_design.add_constraint(
                 NoRepeat(
                     constraint.variable,
                     constraint.width,
@@ -380,18 +388,18 @@ def cross(design1, design2):
     
         elif isinstance(constraint, InnerBlock):
             stride_height = constraint.height if constraint.height else len(design1.groups)
-            combined_design.constraints.append(
+            combined_design.add_constraint(
                 InnerBlock(constraint.variable, constraint.width,constraint.height*len(design1.groups), stride = [1, 1])
             )
 
         # # here I need to multiply stride by the number of conditions of the block variable
         elif isinstance(constraint, OuterBlock):
             stride_height = constraint.height if constraint.height else len(design1.groups)
-            combined_design.constraints.append(
+            combined_design.add_constraint(
                 OuterBlock(constraint.variable, constraint.width, constraint.height*len(design1.groups), stride = [stride_height, 1])
             )
 
-    combined_design.constraints.extend(cross_structure(design1, design2))
+    combined_design.add_constraints(cross_structure(design1, design2))
     combined_design.random_var.extend(design1.random_var)
     combined_design.random_var.extend(design2.random_var)
     

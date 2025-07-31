@@ -19,6 +19,8 @@ from planet.candl import *
 from planet.candl import generate_conditions
 from planet.helpers import *
 from planet.narray import *
+from planet.constraint_manager import ConstraintManager
+import hashlib
 
 
 
@@ -41,17 +43,48 @@ class DesignVariable:
         }
 
     def add_constraint(self, constraint):
-        if self.constraint_spec[constraint.__name__] is None:
-            self.constraint_spec[constraint.__name__] = constraint
+        if self.constraint_spec[constraint.__class__.__name__] is None:
+            self.constraint_spec[constraint.__class__.__name__] = constraint
+
+    def has(self, constraint_name):
+        return self.constraint_spec.get(constraint_name) is not None
+
+    @property
+    def is_counterbalanced(self):
+        return self.has("Counterbalance")
+
+    @property
+    def is_repeated(self):
+        return self.has("NoRepeat")
+
+    @property
+    def is_ranked(self):
+        return self.has("AbsoluteRank")
+
+    @property
+    def is_blocked_outer(self):
+        return self.has("OuterBlock")
+
+    @property
+    def is_blocked_inner(self):
+        return self.has("InnerBlock")
+
+    @property
+    def is_random(self):
+        return not (
+            self.is_counterbalanced
+            or self.is_ranked
+        )
+        
 
 class Plans:
     def __init__(self):
         self.sequence = None
-        self.variables = [] # TODO: change to store multifact, then collapse in designer. 
+        self.variables = [] # 
         self.ws_variables = []
         self.bs_variables = []
         self.groups = None
-        self.constraints = []
+        self.constraints = ConstraintManager()
         self.trials = 0
         self.designer = Designer()
         self.plans = None
@@ -59,42 +92,50 @@ class Plans:
         self.random_var = []
         self.previous_snapshot = None
         
-        self.design_variables = dict()
+        self.design_variables = {}
 
-    def is_random(self):
-        return not self.counterbalanced and not self.is_constrained
     
     def _add_design_variable(self, variable):
-        if variable in self.design_variables:
+        if variable not in self.design_variables:
             self.design_variables[variable] = DesignVariable(variable)
 
-        
-     
-    
-    #FIXME: come back to this
-    def _add_variable(self, variable):
+    def add_variable(self, variable, within_subjects=False):
         assert isinstance(variable, ExperimentVariable)
+        l = self.ws_variables if within_subjects else self.bs_variables
 
+        # FIXME
         self._add_design_variable(variable)
 
         if isinstance(variable, MultiFactVariable):
             variables = variable.variables
         else:
             variables = [variable]
-
+   
         self.variables.extend(variables)
-        self.ws_variables.extend(variables)
+        l.extend(variables)
+
+
+
+    def add_variables(self, variables:list):
+        for v in variables:
+            self.add_variable(v, True)
+  
+
+
+     
+    
+  
 
 class RandomPlan(Plans):
     """This is like creating a vector of random variables."""
     def __init__(self, variables):
         super().__init__()
         for var in variables:
-            self._add_variable(var)
+            self.add_variable(var, True)
             self.random_var = [var]
             
         self.groups = Groups(1)
-        self.constraints.append(NoRepeat(self.random_var[0], self.get_width()))
+        self.constraints.add_constraint(NoRepeat(self.random_var[0], self.get_width()))
 
     def num_trials(self, n):
         self.trials = n
@@ -109,7 +150,6 @@ class Design(Plans):
     """Main class for creating experimental designs."""
     def __init__(self):
         super().__init__()
-        self.rank_constraints = {}
 
         # FIXME
         # var = ExperimentVariable("base", 1)
@@ -126,6 +166,8 @@ class Design(Plans):
         self.trials = n
         return self
     
+
+    
     def _add_variable(self, variable):
         assert isinstance(variable, ExperimentVariable)
 
@@ -137,33 +179,28 @@ class Design(Plans):
         self.variables.extend(variables)
         self.ws_variables.extend(variables)
     
-    def add_variable(self, variable, l):
-        assert isinstance(variable, ExperimentVariable)
-
-        # FIXME
-        self._add_design_variable(variable)
-
-        if isinstance(variable, MultiFactVariable):
-            variables = variable.variables
-        else:
-            variables = [variable]
-
-        self.variables.extend(variables)
-        l.extend(variables)
     
     def between_subjects(self, variable):
-        self.add_variable(variable, self.bs_variables)
+        self.add_variable(variable)
         return self
     
-    
+    def add_constraint(self, constraint):
+        self.constraints.add_constraint(constraint)
+                # FIXME
+        self._add_design_variable(constraint.variable)
+        self.design_variables[constraint.variable].add_constraint(constraint)
+
+    def add_constraints(self, constraints):
+        assert isinstance(constraints, list)
+        for c in constraints:
+            self.add_constraint(c)
 
     def within_subjects(self, variable):
-        self.add_variable(variable, self.ws_variables)
+        self.add_variable(variable, True)
         width = self.get_width()
         # FIXME: should probably decouble this constraint block concept?
-        constraint = NoRepeat(variable, width=width)
-        # self.design_variables[variable].add_constraint(constraint)
-        self.constraints.append(constraint)
+    
+        self.add_constraint(NoRepeat(variable, width=width))
         return self
     
     def limit_groups(self, n):
@@ -177,11 +214,11 @@ class Design(Plans):
     def _determine_random_width(self, rand):
         width = self.get_width()
         div = 1
-        for constraint in self.constraints:
-            if isinstance(constraint, OuterBlock) and constraint.variable == rand:
+        for constraint in self.constraints.get_constraints_for_variable(rand):
+            if isinstance(constraint, OuterBlock):
                 width = constraint.width
   
-            elif isinstance(constraint, InnerBlock) and constraint.variable == rand:
+            elif isinstance(constraint, InnerBlock):
                 div = constraint.width
         
         return int(width/div)
@@ -189,8 +226,8 @@ class Design(Plans):
 
     def _determine_random_span(self, rand):
         span = 1
-        for constraint in self.constraints:
-            if isinstance(constraint, InnerBlock) and constraint.variable == rand:
+        for constraint in self.constraints.get_constraints_for_variable(rand):
+            if isinstance(constraint, InnerBlock):
                span = constraint.width
         return span
     
@@ -200,49 +237,71 @@ class Design(Plans):
         Think about this like instantiating the elements of a matrix of random variables
         """
         assert self.plans is not None
-        random_index = self.variables.index(rand)
-        width = self._determine_random_width(rand)
-        span = self._determine_random_span(rand)
-        # randomly generates plans for every block of random var. 
-        # rand_vars = self._generate_random_variables(int(n*self.get_width()/width/span), self.random_var, width) 
-        # self.apply_randomization(rand_vars, width, span, random_index, n)
-        randomizer = Randomizer(rand, width, span, random_index, int(n*self.get_width()/width/span), n, self.plans)
-        self.plans = randomizer.get_plans()
+
+        variables = rand.variables if isinstance(rand, MultiFactVariable) else [rand]
+        for rand in variables:
+            random_index = self.variables.index(rand)
+            width = self._determine_random_width(rand)
+            span = self._determine_random_span(rand)
+   
+            # randomly generates plans for every block of random var. 
+            # rand_vars = self._generate_random_variables(int(n*self.get_width()/width/span), self.random_var, width) 
+            # self.apply_randomization(rand_vars, width, span, random_index, n)
+            randomizer = Randomizer(rand, width, span, random_index, int(n*self.get_width()/width/span), n, self.plans)
+            self.plans = randomizer.get_plans()
+
+
+    def is_random(self):
+        return not self.counterbalanced
     
     @property
     def is_modified(self):
         return self.snapshot() != self.previous_snapshot
 
     def snapshot(self):
-        return str(hash(tuple(self.constraints))) + str(self.get_width()) + "_" + str(len(self.groups))
+        groups = "None" if self.groups is None else len(self.groups)
+        constraint_ids = sorted(str(c) for c in self.constraints.constraints)
+        signature = "_".join(constraint_ids) + f"_{self.get_width()}_{groups}"
+        return hashlib.sha256(signature.encode()).hexdigest()
 
     def _eval_plans(self, n = None):
+    
         self.identify_random_vars()
-
         if self.is_empty:
             return []
         elif self.is_random():
-            self.random_var.extend(self.variables)
-        if self.plans is not None and not self.is_modified:
-            return self.plans
-        else:
-            self.eval()
-            self.previous_snapshot = self.snapshot()
-   
+            self.groups = Groups(1)
+        #     self.plans = self.random(n)
+     
+            
+        self.eval()
+        self.previous_snapshot = self.snapshot()
+
         if self.has_random_variable():
             assert n is not None
             n = math.ceil(n/len(self.plans)) * len(self.plans)
             for rand in self.random_var:
+                rand = self._construct_var(rand)
                 self._instantiate_random_variables(n, rand)
 
-    
+        if self.is_random():
+            self.groups = None
+
+            
+
+     
+
+
+
 
     def check_plans(self, plans):
         if len(self.plans) <= 0:
             raise DesignError("The constraints specified on this design are not compatible")
     
     def get_plans(self, n = None):
-        self._eval_plans(n)
+   
+        if self.plans is None or self.is_modified:
+           self._eval_plans(n)
 
         try:
             self.check_plans(self.plans)
@@ -270,23 +329,18 @@ class Design(Plans):
     
     def set_position(self, variable, condition, pos):
         assert isinstance(variable, ExperimentVariable)
-        self.constraints.append(SetPosition(variable, condition, pos))
+        self.add_constraint(SetPosition(variable, condition, pos))
         return self
     
     def set_rank(self, variable, condition, rank, condition2):
         assert isinstance(variable, ExperimentVariable)
-        self.constraints.append(SetRank(variable, condition, rank, condition2))
+        self.add_constraint(SetRank(variable, condition, rank, condition2))
         return self
     
     def absolute_rank(self, variable, condition, rank):
+
         assert isinstance(variable, ExperimentVariable)
-        if variable not in self.rank_constraints:
-            self.rank_constraints[variable] = len(self.constraints)
-            self.constraints.append(AbsoluteRank(variable, condition, rank))
-        else:
-            pos = self.rank_constraints[variable]
-            rank_constraint = self.constraints[pos]
-            rank_constraint.add_rank(condition, rank)
+        self.constraints.add_absolute_rank(variable, condition, rank)
 
         return self
     
@@ -308,7 +362,9 @@ class Design(Plans):
         contains_ranked_var = False
         total_n_plans = 1
 
-        for constraint in self.constraints:
+  
+
+        for constraint in self.constraints.constraints:
             if isinstance(constraint, Counterbalance):
                 group = self.extract_counterbalance_group(constraint)
                 counterbalanced_groups.append(group)
@@ -342,7 +398,7 @@ class Design(Plans):
 
         # Handle between-subjects constraints
         for variable in self.bs_variables:
-            self.constraints.append(
+            self.constraints.add_constraint(
                 InnerBlock(
                     variable,
                     width,
@@ -352,7 +408,7 @@ class Design(Plans):
         
         # NOTE: ensure no downstream effects :)
         # self.designer.solver.all_different()
-        self.designer.eval_constraints(self.constraints, self.groups, width)
+        self.designer.eval_constraints(self.constraints.constraints, self.groups, width)
 
     def test_eval(self):
         self._eval()
@@ -361,6 +417,7 @@ class Design(Plans):
 
     def eval(self):
         assert not self.is_empty
+
         self._eval()
         plans = self.designer.eval()
         self.plans = plans
@@ -368,18 +425,23 @@ class Design(Plans):
     @property
     def counterbalanced(self):
         # FIXME: not handled for replicated trials
-        return any(isinstance(c, Counterbalance) or isinstance(c, AbsoluteRank) for c in self.constraints)
+        return any(isinstance(c, Counterbalance) or isinstance(c, AbsoluteRank) for c in self.constraints.constraints)
      
     # NOTE: need to make this much faster. Hashmap with var -> constraints?
     def identify_random_vars(self):
-        for v in self.variables:
-            if not any((isinstance(c, Counterbalance) or isinstance(c, AbsoluteRank)) and c.variable == v for c in self.constraints):
+        var_compatability = lambda c, v: c.variable == v
+        multivar_compatibility = lambda c, v: c.variable.contains_variable(v)
+
+        for v in self.design_variables:
+            compatible = lambda c, v: multivar_compatibility(c, v) if isinstance(c.variable, MultiFactVariable) else var_compatability(c, v)
+            if not any((isinstance(c, Counterbalance) or isinstance(c, AbsoluteRank)) and compatible(c, v) for c in self.constraints.constraints):
                 self.random_var.append(v)
+            
 
     @property
     def is_constrained(self):
         # FIXME: not handled for replicated trials
-        return any(isinstance(c, OuterBlock) or isinstance(c, InnerBlock) for c in self.constraints)
+        return any(isinstance(c, OuterBlock) or isinstance(c, InnerBlock) for c in self.constraints.constraints)
     
 
     @property
@@ -390,15 +452,18 @@ class Design(Plans):
         
     def counterbalance(self, variable, w = 0, h = 0, stride = [1, 1]):
         assert isinstance(variable, ExperimentVariable)
-
-        self.constraints.append(Counterbalance(variable, width = w, height = h, stride = stride))
+        print(variable)
+        self.add_constraint(Counterbalance(variable, width = w, height = h, stride = stride))
         return self
     
-    def _new_ws_variables(self):
-        if self.ws_variables:
-            return self.ws_variables[0] if len(self.ws_variables) == 1 else multifact(self.ws_variables)
+    def _construct_var(self, variable):
+        if isinstance(variable, MultiFactVariable):
+            variables = variable.variables
+            return variables[0] if len(variables) == 1 else multifact(variables)
         else:
-            return None
+            return variable
+       
+  
 
     def _new_bs_variables(self): 
         if self.bs_variables:   

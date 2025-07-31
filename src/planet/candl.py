@@ -1,11 +1,13 @@
 import itertools
-from .variable import ExperimentVariable
+from .variable import ExperimentVariable, MultiFactVariable
 from.condition import ExperimentCondition
 import numpy as np
 from itertools import product
 import math
 from z3 import *
 import random
+
+
 
 def distinct_or(variables):
     ret = []
@@ -28,12 +30,14 @@ def generate_conditions(participants, variable, n):
     :param trials_per_condition: Number of times each condition should appear
     :return: Dictionary mapping participant IDs to their condition sequences
     """
-    
+   
     experiment_data = []
     if variable: 
         conditions = variable.conditions
         for _ in range(participants):
-            experiment_data.append(random.sample(conditions, n))
+            # FIXME: path for random multifactorial variables
+            rep = int(n/len(conditions))
+            experiment_data.append(random.sample(conditions * rep, n))
    
     return experiment_data
 

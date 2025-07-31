@@ -70,7 +70,7 @@ class Designer:
                     )
 
                 case NoRepeat():
-            
+                      
                         self.solver.all_different(
                             variable, 
                             constraint.width, 
@@ -117,8 +117,7 @@ class Designer:
                         constraint.width, 
                         constraint.height
                     )
-                case _:
-                    raise ValueError("Could not identify proper constraint")
+ 
         
     def determine_shape(self):
         if len(self.units): 
@@ -203,7 +202,9 @@ class Designer:
             return np.array([])
         else:
             reshaped_model = np.array(model).reshape(self.shape).tolist()
+            print(reshaped_model)
             return np.array(self.solver.encoding_to_name(reshaped_model, self.variables))
+        
   
     # NOTE: this is with a bitvec representation...
     # ensure that this works

@@ -81,8 +81,26 @@ class MultiFactVariable(ExperimentVariable):
         all(isinstance(variable, ExperimentVariable) for variable in variables)
         self.variables = variables
 
-    def get_variables(self):
+    def _get_variables(self):
         return self.variables
+
+    def _unpack_variables(self, variables):
+        if len(variables) == 1:
+            return variables[0]._get_variables() if isinstance(variables[0], MultiFactVariable) else variables
+
+        else:
+            curr = variables[0]
+            arr = curr._get_variables() if isinstance(curr, MultiFactVariable) else [curr]
+            tail = self._unpack_variables(variables[1:])
+            arr.extend(self._unpack_variables(variables[1:]))
+            return arr
+
+    def get_variables(self):
+        return self._unpack_variables(self.variables)
+    
+    def contains_variable(self, var):
+        print(var, self.variables)
+        return var in self.variables
 
 
 def multifact(variables):
