@@ -11,10 +11,14 @@ import math
 import time
 
 import duckdb
+from planet.plans import PlanGenerator
+
 
 def determine_plans(units, design):
-  
-    return design.get_plans(n=len(units))
+    n = len(units)
+    plans = PlanGenerator(design, n)
+    return plans.generate()
+
 
 class Assignment:
     def __init__(self, units, plans):

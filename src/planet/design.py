@@ -161,64 +161,26 @@ class Design:
                span = constraint.width
         return span
     
-    def _instantiate_random_variables(self, n, rand):
+    def instantiate_random_variables(self, n, rand, plans):
         # NOTE to self: this will only work if there is one random variable :)
         """
         Think about this like instantiating the elements of a matrix of random variables
         """
-        assert self.plans is not None
+        assert plans is not None
         width = self._determine_random_width(rand)
         span = self._determine_random_span(rand)
         variables = rand.variables if isinstance(rand, MultiFactVariable) else [rand]
 
         random_index = self.variables.index(variables[0])
         randomizer = Randomizer(rand, width, span, int(n*self.get_width()/width/span))
-        self.plans = randomizer.apply_randomization(width, span, random_index, n, self.plans)
-
+        return randomizer.apply_randomization(width, span, random_index, n, plans)
+     
 
     def snapshot(self):
         groups = len(self.groups)
         constraint_ids = self.constraints.stringified()
         signature = "_".join(constraint_ids) + f"_{self.get_width()}_{groups}"
         return hashlib.sha256(signature.encode()).hexdigest()
-
-    def _eval_plans(self, n = None):
-    
-        if self.is_empty:
-            return []
-        
-        elif self.is_random:
-            prev = len(self.groups)
-            self.groups.set_num_plans(1)
-     
-        self.eval()
-        self.previous_snapshot = self.snapshot()
-
-        random_variables = self.identify_random_vars()
-        if len(random_variables):
-            assert n is not None
-            n = math.ceil(n/len(self.plans)) * len(self.plans)
-            for rand in random_variables:
-                self._instantiate_random_variables(n, rand)
-
-        if self.is_random:
-            self.groups.set_num_plans(prev)
-
-    def check_plans(self):
-        if len(self.plans) <= 0:
-            raise DesignError("The constraints specified on this design are not compatible")
-    
-    def get_plans(self, n = None):
-   
-        if self.plans is None or self.is_modified:
-           self._eval_plans(n)
-
-        try:
-            self.check_plans()
-        except DesignError as e:
-            logger.warning("Design results in no viable plans. Consider a different experiment.")
-            
-        return self.plans
     
     def get_width(self):
         return self.trials 
@@ -244,35 +206,11 @@ class Design:
                 rankings.append(count_values(self.design_variables[variable].get_ranks()))
 
         self.groups.calculate_num_plans(counterbalance_info, rankings, self.trials)
-    
-
-    def _eval(self):
-        # Get the width of the design
-        width = self.get_width()
-        self._determine_num_plans()
-        
-
-        self.designer.start(
-            self.groups, 
-            self.trials, 
-            self.variables
-        )
-
-        
-        # NOTE: ensure no downstream effects :)
-        # self.designer.solver.all_different()
-        self.designer.eval_constraints(self.constraints.get_constraints(), self.groups, width)
 
     def test_eval(self):
-        self._eval()
+        self.designer.start(self)
         return self.designer.eval_all()
         
-
-    def eval(self):
-        assert not self.is_empty
-        self._eval()
-        plans = self.designer.eval()
-        self.plans = plans
 
 
     def identify_random_vars(self):
@@ -281,7 +219,6 @@ class Design:
             if not (obj.is_counterbalanced or obj.is_ranked)
         ]
             
-
     def _add_design_variable(self, variable):
         if variable not in self.design_variables:
             self.design_variables[variable] = DesignVariable(variable)
@@ -296,10 +233,13 @@ class Design:
             variables = variable.variables
         else:
             variables = [variable]
-   
+    
         self.variables.extend(variables)
 
     def add_variables(self, variables:list):
         for v in variables:
             self.add_variable(v)
+
+    def get_constraints(self):
+        return self.constraints.get_constraints()
     

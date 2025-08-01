@@ -25,13 +25,11 @@ class Designer:
     def __init__(self):
         self.constraints = []
 
-    def start(self, subjects, num_trials, variables=[]):
-        assert isinstance(subjects, Units)
-        assert len(variables) > 0
-
-        self.units = subjects
-        self.num_trials = num_trials
-        self.variables = variables
+    def start(self, design):
+        self.design = design
+        self.num_plans = design.num_plans()
+        self.num_trials = design.get_width()
+        self.variables = design.variables
         self.shape = self.determine_shape()
         self.solver = BitVecSolver(self.shape, self.variables)
 
@@ -101,7 +99,6 @@ class Designer:
                     )
 
                 case InnerBlock():
-                    print("test")
                     constraint.width = (
                         constraint.width if constraint.width else width
                     )
@@ -112,17 +109,16 @@ class Designer:
                     )
 
                 case OuterBlock():
-                    print("test")
                     self.match_outer(
                         constraint.variable, 
                         constraint.width, 
                         constraint.height
                     )
  
-        
+    
     def determine_shape(self):
-        if len(self.units): 
-            n = len(self.units)
+        if self.num_plans: 
+            n = self.num_plans
         else: 
             n = 1
 
@@ -181,10 +177,11 @@ class Designer:
     # NOTE: this is with a bitvec representation...
     # ensure that this works
     def eval(self):
+        self.eval_constraints(self.design.get_constraints(), self.num_plans, self.num_trials)
         # perhaps this is where we create a different class?
         # we have so many new instance vars
         # these should maybe be classes or something? 
-        if len(self.units):
+        if self.num_plans:
             model = self.solver.get_one_model()
             return self.decode(model)
         else:
@@ -208,7 +205,7 @@ class Designer:
         # perhaps this is where we create a different class?
         # we have so many new instance vars
         # these should maybe be classes or something? 
-        if len(self.units):
+        if self.num_plans:
             models = self.solver.get_all_models()
 
             ret = []
@@ -223,3 +220,5 @@ class Designer:
             self.get_groups(model)
             return np.array(self.solver.encoding_to_name(model, self.variables))
             
+
+    
