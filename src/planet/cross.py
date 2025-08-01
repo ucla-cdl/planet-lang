@@ -134,7 +134,5 @@ def cross(design1, design2):
     combined_design.variables.extend(combined_variables)
     combined_design.add_constraints(copy_crossed_constraints(design1, design2, total_conditions, total_groups))
     combined_design.add_constraints(cross_structure(design1, design2))
-    combined_design.random_var.extend(design1.random_var)
-    combined_design.random_var.extend(design2.random_var)
     
     return combined_design

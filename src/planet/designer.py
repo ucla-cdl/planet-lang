@@ -3,7 +3,6 @@ from z3 import *                # Requires: pip install z3-solver
 import numpy as np
 
 # Core system modules (planet package)
-from planet.orders import Sequence
 from planet.candl import *          #
 from planet.helpers import *       
 from planet.narray import *
@@ -26,14 +25,12 @@ class Designer:
     def __init__(self):
         self.constraints = []
 
-    def start(self, subjects, sequence, variables=[]):
-        assert isinstance(sequence, Sequence)
+    def start(self, subjects, num_trials, variables=[]):
         assert isinstance(subjects, Units)
         assert len(variables) > 0
 
         self.units = subjects
-        self.seq = sequence
-        self.num_trials = len(sequence)
+        self.num_trials = num_trials
         self.variables = variables
         self.shape = self.determine_shape()
         self.solver = BitVecSolver(self.shape, self.variables)

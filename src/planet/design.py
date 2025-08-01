@@ -5,7 +5,6 @@ import pandas as pd
 from planet.logger import logger
 # Internal modules (installed via `pip install -e .`)
 from planet.unit import Groups
-from planet.orders import Sequence
 from planet.variable import MultiFactVariable, multifact
 from planet.constraint import (
     StartWith, Counterbalance, NoRepeat,
@@ -25,6 +24,10 @@ from planet.design_variable import DesignVariable
 from planet.design_exceptions import *
 
   
+# # TODO: 
+#     1. better handling of rand_variables
+#     2. separate constraintspec from the actual constraint
+#     3. identify patter when copying constraints (in nest and cross)
 
 class Design:
     """Main class for creating experimental designs."""
@@ -35,12 +38,8 @@ class Design:
         self.trials = 0
         self.designer = Designer()
         self.plans = None
-        self.random_var = []
         self.previous_snapshot = None
         self.design_variables = {}
-
-    
-
 
     @property
     def is_constrained(self):
@@ -62,10 +61,6 @@ class Design:
         return self.snapshot() != self.previous_snapshot
     
     @property
-    def has_random_variable(self):
-        return bool(self.random_var)
-    
-    @property
     def is_random(self):
         return not self.counterbalanced and not self.is_empty
     
@@ -74,8 +69,6 @@ class Design:
         self._determine_num_plans()
         return 1 if self.is_empty or self.is_random else len(self.groups)
     
-
-
     def to_latex(self):
         # FIXME: won't work with random plans
         matrix = self.get_plans()
@@ -191,7 +184,6 @@ class Design:
 
     def _eval_plans(self, n = None):
     
-        self.identify_random_vars()
         if self.is_empty:
             return []
         
@@ -202,10 +194,11 @@ class Design:
         self.eval()
         self.previous_snapshot = self.snapshot()
 
-        if self.has_random_variable:
+        random_variables = self.identify_random_vars()
+        if len(random_variables):
             assert n is not None
             n = math.ceil(n/len(self.plans)) * len(self.plans)
-            for rand in self.random_var:
+            for rand in random_variables:
                 self._instantiate_random_variables(n, rand)
 
         if self.is_random:
@@ -256,13 +249,12 @@ class Design:
     def _eval(self):
         # Get the width of the design
         width = self.get_width()
-        sequence = Sequence(width)
         self._determine_num_plans()
         
 
         self.designer.start(
             self.groups, 
-            sequence, 
+            self.trials, 
             self.variables
         )
 
@@ -284,10 +276,10 @@ class Design:
 
 
     def identify_random_vars(self):
-        self.random_var.extend([
+        return [
             v for v, obj in self.design_variables.items()
             if not (obj.is_counterbalanced or obj.is_ranked)
-        ])
+        ]
             
 
     def _add_design_variable(self, variable):

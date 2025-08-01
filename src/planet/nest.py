@@ -146,10 +146,6 @@ def nest(*, outer:Design, inner:Design):
     )
 
     combined_design.add_variables(combined_variables)
-    # NOTE: ugly way of handling this
-    combined_design.random_var.extend(inner.random_var)
-    combined_design.random_var.extend(outer.random_var)
-
     # Nest structural constraints and copy semantic ones
     combined_design.add_constraints(nest_structure(inner, outer))
     copied_constraints = copy_nested_constraints(inner, outer)
