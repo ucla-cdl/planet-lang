@@ -111,7 +111,7 @@ class Design(Plans):
     
     @property
     def is_random(self):
-        return not self.counterbalanced
+        return not self.counterbalanced and not self.is_empty
     
 
 
@@ -297,6 +297,8 @@ class Design(Plans):
 
             elif self.design_variables[variable].is_ranked:
                 rankings.append(count_values(self.design_variables[variable].get_ranks()))
+
+        print(counterbalance_info, rankings)
                
         self.groups.calculate_num_plans(counterbalance_info, rankings, self.trials)
     

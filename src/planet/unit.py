@@ -124,11 +124,14 @@ class Groups(Units):
 
         for variables, num_conditions in counterbalanced_groups:
                 num_trials = num_trials
+                print(variables, num_conditions, num_trials)
                 total_n_plans *= calculate_plan_multiplier(num_conditions, variables, num_trials)
+                print(total_n_plans)
         for ranking in rankings:
             total_n_plans *= factorial_product_of_counts(ranking)
 
         self.set_num_plans((int(total_n_plans)))
+        print("groups", self.n)
     
 
 

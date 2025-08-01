@@ -18,7 +18,7 @@ from planet.candl import combine_lists
 
 def eval(designs):
     for design in designs:
-        if design.groups is None:
+        if len(design.groups) == 0:
             design._determine_num_plans()
         
         
@@ -182,16 +182,16 @@ def nest(*, outer, inner):
     # Convert to RandomPlan if needed...
     # Sketch: instead, what if we copied the random design and then limit the
     # groups? 
-    # removed replication check
-    if inner.has_random_variable or inner.is_random:
+    if not isinstance(inner, Replications) and (inner.has_random_variable or inner.is_random):
         inner = RandomPlan(inner.variables).num_trials(inner.get_width())
-    if outer.has_random_variable or outer.is_random:
+    if not isinstance(outer, Replications) and (outer.has_random_variable or outer.is_random):
         outer = RandomPlan(outer.variables).num_trials(outer.get_width())
 
     assert can_nest(outer, inner), "Incompatable"
 
     # Evaluate groups if necessary
     eval([inner, outer])
+    print("leaving design")
     num_outer_groups = len(outer.groups)
     if num_outer_groups == 0:
         outer.eval()
@@ -199,7 +199,8 @@ def nest(*, outer, inner):
 
     total_groups = len(inner.groups) * num_outer_groups
     total_conditions = inner.get_width() * outer.get_width()
-  
+    print(len(inner.groups))
+    print(total_conditions, total_groups)
 
     combined_variables = combine_lists(inner.variables, outer.variables)
     combined_design = (
@@ -210,7 +211,7 @@ def nest(*, outer, inner):
 
     # FIXME: The API should expose a way to add multifactor variables cleanly
     combined_design.add_variables(combined_variables)
-
+    print("test", len(combined_design.groups))
 
     # NOTE: ugly way of handling this
     combined_design.random_var.extend(inner.random_var)
