@@ -70,7 +70,6 @@ class Designer:
                     )
 
                 case NoRepeat():
-                      
                         self.solver.all_different(
                             variable, 
                             constraint.width, 
@@ -105,7 +104,7 @@ class Designer:
                     )
 
                 case InnerBlock():
-
+                    print("test")
                     constraint.width = (
                         constraint.width if constraint.width else width
                     )
@@ -116,6 +115,7 @@ class Designer:
                     )
 
                 case OuterBlock():
+                    print("test")
                     self.match_outer(
                         constraint.variable, 
                         constraint.width, 
