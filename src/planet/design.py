@@ -37,7 +37,6 @@ class Design:
         self.constraints = ConstraintManager()
         self.trials = 0
         self.designer = Designer()
-        self.plans = None
         self.previous_snapshot = None
         self.design_variables = {}
 
@@ -67,7 +66,7 @@ class Design:
 
     def num_plans(self):
         self._determine_num_plans()
-        return 1 if self.is_empty or self.is_random else len(self.groups)
+        return 1 if self.is_empty or self.is_random else self._determine_num_plans()
     
     def to_latex(self):
         # FIXME: won't work with random plans
@@ -137,47 +136,9 @@ class Design:
     def limit_groups(self, n):
         self.groups.set_num_plans(n)
         return self
-    
-    """
-    Deals with random variables. Opportunity to decouple? 
-    """
-    def _determine_random_width(self, rand):
-        width = self.get_width()
-        div = 1
-        for constraint in self.constraints.get_constraints_for_variable(rand):
-            if isinstance(constraint, OuterBlock):
-                width = constraint.width
-  
-            elif isinstance(constraint, InnerBlock):
-                div = constraint.width
-        
-        return int(width/div)
-    
-
-    def _determine_random_span(self, rand):
-        span = 1
-        for constraint in self.constraints.get_constraints_for_variable(rand):
-            if isinstance(constraint, InnerBlock):
-               span = constraint.width
-        return span
-    
-    def instantiate_random_variables(self, n, rand, plans):
-        # NOTE to self: this will only work if there is one random variable :)
-        """
-        Think about this like instantiating the elements of a matrix of random variables
-        """
-        assert plans is not None
-        width = self._determine_random_width(rand)
-        span = self._determine_random_span(rand)
-        variables = rand.variables if isinstance(rand, MultiFactVariable) else [rand]
-
-        random_index = self.variables.index(variables[0])
-        randomizer = Randomizer(rand, width, span, int(n*self.get_width()/width/span))
-        return randomizer.apply_randomization(width, span, random_index, n, plans)
-     
 
     def snapshot(self):
-        groups = len(self.groups)
+        groups = self.num_plans()
         constraint_ids = self.constraints.stringified()
         signature = "_".join(constraint_ids) + f"_{self.get_width()}_{groups}"
         return hashlib.sha256(signature.encode()).hexdigest()
@@ -189,10 +150,22 @@ class Design:
         """Extract variables and condition count"""
         return (len(var.get_variables()), len(var))
     
+    def calculate_num_plans(self, counterbalanced_groups, rankings, num_trials):
+        """Determine the number of experimental plans based on constraints and trial width."""
+        total_n_plans = 1
+
+        for variables, num_conditions in counterbalanced_groups:
+                num_trials = num_trials
+                total_n_plans *= calculate_plan_multiplier(num_conditions, variables, num_trials)
+        for ranking in rankings:
+            total_n_plans *= factorial_product_of_counts(ranking)
+
+        return int(total_n_plans)
+    
     def _determine_num_plans(self):
         """Determine the number of experimental plans based on constraints and trial width."""
         if len(self.groups) > 0:
-            return self.groups  # already specified by user
+            return len(self.groups)  # already specified by user
 
         counterbalance_info = []
         rankings = []
@@ -205,13 +178,12 @@ class Design:
             elif self.design_variables[variable].is_ranked:
                 rankings.append(count_values(self.design_variables[variable].get_ranks()))
 
-        self.groups.calculate_num_plans(counterbalance_info, rankings, self.trials)
+        return self.calculate_num_plans(counterbalance_info, rankings, self.trials)
 
     def test_eval(self):
         self.designer.start(self)
         return self.designer.eval_all()
         
-
 
     def identify_random_vars(self):
         return [

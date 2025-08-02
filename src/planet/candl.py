@@ -2,24 +2,21 @@ import itertools
 from .variable import ExperimentVariable, MultiFactVariable
 from.condition import ExperimentCondition
 import numpy as np
-from itertools import product
+from itertools import product, combinations
 import math
 from z3 import *
 import random
 
 
 
-def distinct_or(variables):
-    ret = []
-    for i in range(len(variables)):
-        for j in range(i + 1, len(variables)):
-            temp = []
-            for k in range(len(variables[i])):
-                temp.append(variables[i][k] != variables[j][k])
-            ret.append(Or(temp))
-
-    return ret
-
+def at_least_one_diff(variables):
+    """Generate constraints that enforce every pair of variable assignments
+    differ in at least one position."""
+    constraints = []
+    for var1, var2 in combinations(variables, 2):
+        # For each pair, at least one element differs
+        constraints.append(Or([a != b for a, b in zip(var1, var2)]))
+    return constraints
 
 def generate_conditions(participants, variable, n):
     """
@@ -132,7 +129,6 @@ def all_ones(n):
     return (1 << n) - 1
 
 
-# FIXME: incorrect processing if there is a factor. See how majority does this. We probably want to decouple 
 def get_dim_variables(arr, shape, dim, factor = None, level = None):
     if factor != None:
         dim_indexings = create_indexing_2(factor, shape)
@@ -152,7 +148,8 @@ def get_dim_variables(arr, shape, dim, factor = None, level = None):
     return dim_variables
 
 
-
+def shape_array(arr, shape):
+    return np.array(arr).reshape(shape)
 
 def combine_lists(l1, l2):
     combined_variables = l1.copy()
@@ -200,3 +197,7 @@ def calculate_plan_multiplier(num_conditions: int, num_vars: int, num_trials: in
         return math.factorial(num_conditions) / math.factorial(num_conditions - num_trials)
     else:
         return math.factorial(num_conditions)
+
+
+def partition_matrix_by_columns(matrix, width, step=1):
+    return np.array(matrix)[:, 0:width:step]

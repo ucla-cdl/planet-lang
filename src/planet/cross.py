@@ -16,7 +16,7 @@ def cross_structure(d1, d2):
         constraints.append(InnerBlock(
             d2.variables[i],
             1,
-            len(d1.groups),
+            d1.num_plans(),
             stride = [1, 1]
         ))
 
@@ -26,7 +26,7 @@ def cross_structure(d1, d2):
         constraints.append(OuterBlock(
             d1.variables[i],
             d1.get_width(),
-            len(d1.groups),
+            d1.num_plans(),
             stride = [1, 1]
         ))
     return constraints
@@ -52,7 +52,7 @@ def copy_crossed_constraints(design1, design2, total_conditions, total_groups):
                     Counterbalance(
                         constraint.variable,
                         width=design1.get_width(),
-                        height=len(design1.groups),
+                        height=design1.num_plans(),
                         stride=constraint.stride
                     )
                 )
@@ -65,7 +65,7 @@ def copy_crossed_constraints(design1, design2, total_conditions, total_groups):
     # need to modify out constraint region
     for constraint in design2.constraints.constraints:
         if isinstance(constraint, Counterbalance):
-            stride_height = constraint.height if constraint.height else len(design1.groups)
+            stride_height = constraint.height if constraint.height else design1.num_plans()
             # Add counterbalance constraint for design2 variables
             constraints.append(
                 Counterbalance(
@@ -77,16 +77,16 @@ def copy_crossed_constraints(design1, design2, total_conditions, total_groups):
             )
     
         elif isinstance(constraint, InnerBlock):
-            stride_height = constraint.height if constraint.height else len(design1.groups)
+            stride_height = constraint.height if constraint.height else design1.num_plans()
             constraints.append(
-                InnerBlock(constraint.variable, constraint.width,constraint.height*len(design1.groups), stride = [1, 1])
+                InnerBlock(constraint.variable, constraint.width,constraint.height*design1.num_plans(), stride = [1, 1])
             )
 
         # # here I need to multiply stride by the number of conditions of the block variable
         elif isinstance(constraint, OuterBlock):
-            stride_height = constraint.height if constraint.height else len(design1.groups)
+            stride_height = constraint.height if constraint.height else design1.num_plans()
             constraints.append(
-                OuterBlock(constraint.variable, constraint.width, constraint.height*len(design1.groups), stride = [stride_height, 1])
+                OuterBlock(constraint.variable, constraint.width, constraint.height*design1.num_plans(), stride = [stride_height, 1])
             )
 
         else:

@@ -70,6 +70,13 @@ class DesignVariable:
     def counterbalance(self, flag = True):
         self.counterbalanced = flag
 
+   
+
+
+
+
+
+
 class Replications(ExperimentVariable):
     def __init__(self, n):
         self.__init__("replications", n)

@@ -16,7 +16,7 @@ from planet.candl import combine_lists
 
 def eval(designs):
     for design in designs:
-        if len(design.groups) == 0:
+        if design.num_plans() == 0:
             design._determine_num_plans()
         
 def is_counterbalanced(d1, d2):
@@ -30,7 +30,7 @@ def nest_structure(d1, d2):
         constraints.append(InnerBlock(
             variable,
             d1.get_width(),
-            len(d1.groups),
+            d1.num_plans(),
             stride = [1, 1]
         ))
 
@@ -40,7 +40,7 @@ def nest_structure(d1, d2):
         constraints.append(OuterBlock(
             variable,
             d1.get_width(),
-            len(d1.groups),
+            d1.num_plans(),
             stride = [1, 1]
         ))
 
@@ -50,7 +50,7 @@ def nest_structure(d1, d2):
 
 def copy_nested_constraints(design1, design2):
     width1, width2 = design1.get_width(), design2.get_width()
-    total_groups = len(design1.groups) * len(design2.groups)
+    total_groups = design1.num_plans() * design2.num_plans()
     total_conditions = width1 * width2
     constraints = []
     # need to modify the inner constraints region
@@ -61,7 +61,7 @@ def copy_nested_constraints(design1, design2):
                 Counterbalance(
                     constraint.variable,
                     width=constraint.width or design1.get_width(),
-                    height=constraint.height or len(design1.groups),
+                    height=constraint.height or design1.num_plans(),
                     stride=constraint.stride
                 )
             )
@@ -73,7 +73,7 @@ def copy_nested_constraints(design1, design2):
     for constraint in design2.constraints.get_constraints():
         # FIXME FIXME, I think this is a ratio problem
         if isinstance(constraint, Counterbalance):
-            stride = [len(design1.groups), width1 * constraint.stride[1]]
+            stride = [design1.num_plans(), width1 * constraint.stride[1]]
             # Add counterbalance constraint for design2 variables
             constraints.append(
                 Counterbalance(
@@ -98,7 +98,7 @@ def copy_nested_constraints(design1, design2):
                 InnerBlock(
                     constraint.variable, 
                     constraint.width*width1, 
-                    constraint.height*len(design1.groups), 
+                    constraint.height*design1.num_plans(), 
                     stride = [1, 1])
             )
 
@@ -108,7 +108,7 @@ def copy_nested_constraints(design1, design2):
                 OuterBlock(
                     constraint.variable, 
                     constraint.width*width1, 
-                    constraint.height*len(design1.groups), 
+                    constraint.height*design1.num_plans(), 
                     stride = [1, 1])
             )
             

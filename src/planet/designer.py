@@ -24,6 +24,8 @@ class Designer:
     """
     def __init__(self):
         self.constraints = []
+        self.previous_snapshot = None
+        self.previous_model = []
 
     def start(self, design):
         self.design = design
@@ -32,6 +34,11 @@ class Designer:
         self.variables = design.variables
         self.shape = self.determine_shape()
         self.solver = BitVecSolver(self.shape, self.variables)
+
+    @property
+    def design_has_changed(self):
+        return self.design.snapshot() != self.previous_snapshot
+
 
     def _get_experiment_variables(self, constraint):
         if isinstance(constraint.variable, MultiFactVariable):
@@ -121,7 +128,6 @@ class Designer:
             n = self.num_plans
         else: 
             n = 1
-
         return tuple([n, self.num_trials])
     
     # FIXME: creating block matrix for specific test case 
@@ -143,9 +149,6 @@ class Designer:
                         , (j*width + 0, j * width + width, 1)
                     ]
                 )
-
-        
-
 
 
     def match_outer(self, v, w, h):
@@ -177,18 +180,25 @@ class Designer:
     # NOTE: this is with a bitvec representation...
     # ensure that this works
     def eval(self):
-        self.eval_constraints(self.design.get_constraints(), self.num_plans, self.num_trials)
+        if not self.design_has_changed:
+            model = self.previous_model
+
+        else:
+            self.eval_constraints(self.design.get_constraints(), self.num_plans, self.num_trials)
         # perhaps this is where we create a different class?
         # we have so many new instance vars
         # these should maybe be classes or something? 
-        if self.num_plans:
+   
             model = self.solver.get_one_model()
-            return self.decode(model)
-        else:
-            model = self.solver.get_all_models()
-            # self.get_groups(model)
-            # FIXME
-            return np.array(self.solver.encoding_to_name(model, self.variables))
+            self.previous_snapshot = self.design.snapshot()
+            self.previous_model = model
+        return self.decode(model)
+        # else:
+        #     model = self.solver.get_all_models()
+        #     # self.get_groups(model)
+        #     # FIXME
+        #     
+        #     return np.array(self.solver.encoding_to_name(model, self.variables))
     
     def decode(self, model):
         if not len(model):

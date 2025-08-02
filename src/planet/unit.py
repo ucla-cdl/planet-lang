@@ -113,25 +113,8 @@ class Groups(Units):
     def __len__(self):
         return self.n
     
-    def extract_counterbalance_group(self, var):
-        """Extract variables and condition count"""
-        return (var.get_variables(), len(var))
-    
-    def calculate_num_plans(self, counterbalanced_groups, rankings, num_trials):
-  
-        """Determine the number of experimental plans based on constraints and trial width."""
-        total_n_plans = 1
 
-        for variables, num_conditions in counterbalanced_groups:
-                num_trials = num_trials
-                print(variables, num_conditions, num_trials)
-                total_n_plans *= calculate_plan_multiplier(num_conditions, variables, num_trials)
-                print(total_n_plans)
-        for ranking in rankings:
-            total_n_plans *= factorial_product_of_counts(ranking)
-
-        self.set_num_plans((int(total_n_plans)))
-        print("groups", self.n)
+ 
     
 
 

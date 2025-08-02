@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 import hashlib
 from planet.designer import Designer
 import math
+from planet.randomizer import Randomizer
 
 
 class PlanGenerator:
@@ -10,95 +11,64 @@ class PlanGenerator:
         self.random_variables = design.identify_random_vars()
         self.num_units = num_units
 
+    def instantiate_random_variables(self, n, rand, plans):
+        # NOTE to self: this will only work if there is one random variable :)
+        """
+        Think about this like instantiating the elements of a matrix of random variables
+        """
+        assert plans is not None
+        width = self.design.design_variables[rand].get_width()
+        span = self.design.design_variables[rand].get_span()
+        variables = rand.get_variables()
+
+        random_index = self.design.variables.index(variables[0])
+        randomizer = Randomizer(rand, width, span, int(n*self.design.get_width()/width/span))
+        return randomizer.apply_randomization(width, span, random_index, n, plans)
+
     def generate(self):
         self.design.designer.start(self.design)
         plans = self.design.designer.eval()
-        self.design.previous_snapshot = self.design.snapshot()
 
         if not plans.any():
             return []
 
         n = math.ceil(self.num_units / len(plans)) * len(plans)
         for rand in self.random_variables:
-            plans = self.design.instantiate_random_variables(n, rand, plans)
+            plans = self.instantiate_random_variables(n, rand, plans)
 
         return plans
-
-# class Plans:
-#     def __init__(self, plan_matrix, constraints, trials, groups, variable_ids):
-#         self.plan_matrix = plan_matrix
-#         self.constraints = constraints  # tuple of stringified constraint IDs
-#         self.trials = trials
-#         self.groups = groups
-#         self.variable_ids = variable_ids  # tuple of variable IDs or names
-
-
-#     # @classmethod
-#     # def from_design(cls, design):
-#     #     # 1. Run the solver on the design
-#     #     plan_matrix = Designer().solve(design
-#     #     # 2. Instantiate a Plans object with results
-#     #     return cls(plan_matrix, design)
-
-#     def snapshot(self):
-#         groups = len(self.groups)
-#         constraint_ids = self.constraints.stringified()
-#         signature = "_".join(constraint_ids) + f"_{self.get_width()}_{groups}"
-#         return hashlib.sha256(signature.encode()).hexdigest()
-
-#     def _eval_plans(self, n = None):
     
-#         if self.is_empty:
-#             return []
+    # def _determine_random_width(self, rand):
+    #     width = self.get_width()
+    #     div = 1
+    #     for constraint in self.constraints.get_constraints_for_variable(rand):
+    #         if isinstance(constraint, OuterBlock):
+    #             width = constraint.width
+  
+    #         elif isinstance(constraint, InnerBlock):
+    #             div = constraint.width
         
-#         elif self.is_random:
-#             prev = len(self.groups)
-#             self.groups.set_num_plans(1)
+    #     return int(width/div)
+    
+
+    # def _determine_random_span(self, rand):
+    #     span = 1
+    #     for constraint in self.constraints.get_constraints_for_variable(rand):
+    #         if isinstance(constraint, InnerBlock):
+    #            span = constraint.width
+    #     return span
+    
+    # def instantiate_random_variables(self, n, rand, plans):
+    #     # NOTE to self: this will only work if there is one random variable :)
+    #     """
+    #     Think about this like instantiating the elements of a matrix of random variables
+    #     """
+    #     assert plans is not None
+    #     width = self._determine_random_width(rand)
+    #     span = self._determine_random_span(rand)
+    #     variables = rand.variables if isinstance(rand, MultiFactVariable) else [rand]
+
+    #     random_index = self.variables.index(variables[0])
+    #     randomizer = Randomizer(rand, width, span, int(n*self.get_width()/width/span))
+    #     return randomizer.apply_randomization(width, span, random_index, n, plans)
      
-#         self.eval()
-#         self.previous_snapshot = self.snapshot()
-
-#         random_variables = self.identify_random_vars()
-#         if len(random_variables):
-#             assert n is not None
-#             n = math.ceil(n/len(self.plans)) * len(self.plans)
-#             for rand in random_variables:
-#                 self._instantiate_random_variables(n, rand)
-
-#         if self.is_random:
-#             self.groups.set_num_plans(prev)
-
-
-#     def extract_counterbalance_info(self, var):
-#         """Extract variables and condition count"""
-#         return (len(var.get_variables()), len(var))
-    
- 
-#     def _eval(self):
-#         # Get the width of the design
-#         width = self.get_width()
-#         sequence = Sequence(width)
-#         self._determine_num_plans()
-        
-
-#         self.designer.start(
-#             self.groups, 
-#             sequence, 
-#             self.variables
-#         )
-
-        
-#         # NOTE: ensure no downstream effects :)
-#         # self.designer.solver.all_different()
-#         self.designer.eval_constraints(self.constraints.get_constraints(), self.groups, width)
-
-#     def test_eval(self):
-#         self._eval()
-#         return self.designer.eval_all()
-        
-
-#     def eval(self):
-#         assert not self.is_empty
-#         self._eval()
-#         plans = self.designer.eval()
-#         self.plans = plans
