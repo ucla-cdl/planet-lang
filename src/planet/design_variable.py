@@ -48,23 +48,23 @@ class DesignVariable:
             or self.is_ranked
         )
     
-    def get_width(self):
-        width = self.constraint_spec["NoRepeat"].width if not self.is_repeated else 1
+    def get_width(self, width):
         div = 1
 
         outer_block = self.constraint_spec["OuterBlock"]
         if outer_block is not None:
             width = outer_block.width
-        elif self.is_blocked_inner:
+        if self.is_blocked_inner:
             div = self.constraint_spec["InnerBlock"].width
-        
+  
         return int(width/div)
     
 
     def get_span(self):
         span = 1
         if self.is_blocked_inner:
-               span = self.constraint_spec["InnerBlock"].width
-
+            span = self.constraint_spec["InnerBlock"].width
+               
+        print(span)
         return span
         

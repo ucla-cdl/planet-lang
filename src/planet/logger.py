@@ -1,6 +1,5 @@
 import logging
 
-print("logger")
 class ColorFormatter(logging.Formatter):
     BRIGHT_PINK = "\033[95m"  # bright magenta (pink)
     WHITE = "\033[97m"

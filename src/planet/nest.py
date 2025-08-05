@@ -6,7 +6,7 @@ import pandas as pd
 
 # Planet system imports
 from planet.unit import Groups
-from planet.variable import  multifact, ExperimentVariable
+from planet.variable import  multifact, ExperimentVariable, MultiFactVariable
 from planet.design import Design
 from planet.constraint import (
     StartWith, Counterbalance, NoRepeat, InnerBlock, OuterBlock,
@@ -26,7 +26,7 @@ def nest_structure(d1, d2):
     constraints = []
     # Match all variables from the outer design within each block matrix
     
-    for variable in d2.variables:
+    for variable in d2.design_variables:
         constraints.append(InnerBlock(
             variable,
             d1.get_width(),
@@ -36,7 +36,7 @@ def nest_structure(d1, d2):
 
      # Match all variables from the inner design across every block
 
-    for variable in d1.variables:
+    for variable in d1.design_variables:
         constraints.append(OuterBlock(
             variable,
             d1.get_width(),
@@ -65,6 +65,7 @@ def copy_nested_constraints(design1, design2):
                     stride=constraint.stride
                 )
             )
+
         else:
             constraints.append(copy.copy(constraint))
 
@@ -145,12 +146,19 @@ def nest(*, outer:Design, inner:Design):
         .num_trials(total_conditions)
     )
 
-    combined_design.add_variables(combined_variables)
+
+    # NOTE: ORDER MATTERS HERE... The design variable spec stores one outermatch
+    # constraint. Prioritze existing constraints, as they will always have a
+    # width equal to or smaller. Make this more elegant later?
+    # combined_design.add_variables(combined_variables)
+    add_design_variables(des = inner, combined_des = combined_design)
+    add_design_variables(des = outer, combined_des = combined_design)
     # Nest structural constraints and copy semantic ones
-    combined_design.add_constraints(nest_structure(inner, outer))
     copied_constraints = copy_nested_constraints(inner, outer)
     if copied_constraints:
         combined_design.add_constraints(copied_constraints)
+
+    combined_design.add_constraints(nest_structure(inner, outer))
 
 
     return combined_design

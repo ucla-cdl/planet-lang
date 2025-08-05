@@ -70,8 +70,6 @@ class Randomizer:
 
     def apply_randomization(self, width, span, random_index, n, plans):
         new_plans = []
-
-        print(len(plans))
         for plan_idx, plan in enumerate(plans):
             blocks = self.get_blocks(plan, width, span)
             reps_per_plan = int(n / len(plans))

@@ -188,10 +188,8 @@ def calculate_plan_multiplier(num_conditions: int, num_vars: int, num_trials: in
     if num_conditions == 1:
         return 1
     if num_trials > num_conditions:
-        print("here")
         num_repeats = int(num_trials / num_conditions)
         denom = math.prod(math.factorial(num_repeats) for _ in range(num_vars))
-        print(num_repeats, denom)
         return math.factorial(num_conditions) / denom
     elif num_trials < num_conditions:
         return math.factorial(num_conditions) / math.factorial(num_conditions - num_trials)

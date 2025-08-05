@@ -108,7 +108,6 @@ class MultiFactVariable(ExperimentVariable):
         return self._unpack_variables(self.variables)
     
     def contains_variable(self, var):
-        print(var, self.variables)
         return var in self.variables
     
     def get_variables(self):

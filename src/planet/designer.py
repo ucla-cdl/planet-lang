@@ -35,6 +35,8 @@ class Designer:
         self.shape = self.determine_shape()
         self.solver = BitVecSolver(self.shape, self.variables)
 
+
+
     @property
     def design_has_changed(self):
         return self.design.snapshot() != self.previous_snapshot
@@ -61,7 +63,7 @@ class Designer:
                             constraint.width if constraint.width else width
                         )
                         constraint.height = (
-                            constraint.height if constraint.height else len(groups)
+                            constraint.height if constraint.height else groups
                         )
 
                     self.counterbalance(
@@ -139,24 +141,30 @@ class Designer:
         n = int(self.shape[0] / height)
         # get number of block matrices per row
         m = int(self.shape[1] / width)
-       
-        for i in range(n):
-            for j in range(m):
-                self.solver.match_block(
-                    variable, 
-                    [
-                        (i*height + 0, i * height  + height, 1)
-                        , (j*width + 0, j * width + width, 1)
-                    ]
-                )
+
+        composed_variables = variable.get_variables()
+        for variable in composed_variables:
+            for i in range(n):
+                for j in range(m):
+                    self.solver.match_block(
+                        variable, 
+                        [
+                            (i*height + 0, i * height  + height, 1)
+                            , (j*width + 0, j * width + width, 1)
+                        ]
+                    )
 
 
     def match_outer(self, v, w, h):
-        # NEEDS TO BE it's own func / constraint option. Don't treat these together 
-        for i in range(h):
-            for j in range(w):
-                
-                self.solver.match_block(v, [(i, self.shape[0], h), (j, self.shape[1], w)])
+        # NEEDS TO BE it's own func / constraint option. Don't treat these
+        # together 
+        
+        composed_variables = v.get_variables()
+        for v in composed_variables:
+            for i in range(h):
+                for j in range(w):
+                    
+                    self.solver.match_block(v, [(i, self.shape[0], h), (j, self.shape[1], w)])
 
     def counterbalance(self, v, w, h, stride = [1, 1]):
         block = [(0, h, stride[0]), (0, w, stride[1])]
@@ -205,7 +213,6 @@ class Designer:
             return np.array([])
         else:
             reshaped_model = np.array(model).reshape(self.shape).tolist()
-            print(reshaped_model)
             return np.array(self.solver.encoding_to_name(reshaped_model, self.variables))
         
   

@@ -83,11 +83,12 @@ class Design:
         self.trials = 1 if not self.trials else self.trials
 
         # enforces repeating trials when specified with within subjects variables
-        self.constraints.add_constraint(
+        self.add_constraint(
             InnerBlock(
                 variable,
                 0,
-                1
+                1,
+                [1,1]
                 )
             )
         return self
