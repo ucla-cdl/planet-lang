@@ -1,21 +1,18 @@
-import os
-import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
-from lib.variable import ExperimentVariable
-from lib.design import Design
-from lib.nest import nest
-from lib.unit import Units 
-from lib.assignment import assign 
-from lib.replications import Replications
-
+from planet import *
 
 """
 https://dl.acm.org/doi/pdf/10.1145/3613904.3642225
 """
 
 input_method = ExperimentVariable("input", options=["touchpad", "airmouse", "mouseringdouble", "mouseringsingle"])
-round = Replications(5)
-repeat = Replications(10)
+round = (
+    Design()
+    .num_trials(5)
+)
+repeat = (
+    Design()
+    .num_trials(10)
+)
 
 
 design = (

@@ -1,13 +1,4 @@
-import os
-import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
-
-from lib.variable import ExperimentVariable, multifact
-from lib.design import Design
-from lib.nest import cross, nest
-from lib.unit import Units 
-from lib.assignment import assign 
-from lib.replications import Replications
+from planet import *
 
 
 """
@@ -24,7 +15,10 @@ subtask = ExperimentVariable(
     options = ["S1", "S2", "S3", "S4", "S5"]
 )
 
-repeat = Replications(3)
+repeat = (
+    Design()
+    .num_trials(3)
+)
 
 task_des = (
     Design()
