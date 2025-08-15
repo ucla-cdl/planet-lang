@@ -1,6 +1,8 @@
 # PLanet
-Welcome to the PLanet repository. PLanet is a high-level, declaritive
-programming language to help researchers author verifiable experimental designs. 
+Welcome to the PLanet repository. PLanet is a high-level, declarative
+programming language to help researchers author verifiable experimental designs.
+(For more information, see our technical paper: **[PLanet: Formalizing Experimental Design](https://arxiv.org/abs/2505.09094)**).
+
 
 To set up the environment, install the requirements using `pip3 install -r requirements.txt`. 
 Source files are located in `src/lib`. Example programs are
