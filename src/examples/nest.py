@@ -27,14 +27,14 @@ des1 = (
     Design()
         .within_subjects(treatment)
         .counterbalance(treatment)
-        # .limit_groups(2)
+        # .limit_plans(2)
 )
 
 des2 = (
     Design()
         .within_subjects(task)
         .counterbalance(task)
-        # .limit_groups(2)
+        # .limit_plans(2)
 )
 
 des3 = (Design()
@@ -47,7 +47,7 @@ des4 = (Design()
         .within_subjects(test2)
         .counterbalance(test2)
         .counterbalance(test2)
-        .limit_groups(2)
+        .limit_plans(2)
 )
 
 units = Units(48)

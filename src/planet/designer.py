@@ -34,8 +34,16 @@ class Designer:
         self.variables = design.variables
         self.shape = self.determine_shape()
         self.solver = BitVecSolver(self.shape, self.variables)
+        self.check_trial_compatibility()
 
-
+    
+    def check_trial_compatibility(self):
+        if self.num_trials > self.design.maximum_trials:
+            raise ValueError(
+                f"Design specifies {self.num_trials} trials, "
+                f"but there are only {self.design.maximum_trials} possible conditions. "
+                "Reduce trials or use nesting for to repeat conditions."
+            )
 
     @property
     def design_has_changed(self):
@@ -72,6 +80,7 @@ class Designer:
                         h=constraint.height,
                         stride=constraint.stride,
                     )
+
 
                 case NoRepeat():
                         self.solver.all_different(
@@ -156,9 +165,6 @@ class Designer:
 
 
     def match_outer(self, v, w, h):
-        # NEEDS TO BE it's own func / constraint option. Don't treat these
-        # together 
-        
         composed_variables = v.get_variables()
         for v in composed_variables:
             for i in range(h):
@@ -185,6 +191,10 @@ class Designer:
     
 
 
+    
+
+
+
     # NOTE: this is with a bitvec representation...
     # ensure that this works
     def eval(self):
@@ -193,21 +203,15 @@ class Designer:
 
         else:
             self.eval_constraints(self.design.get_constraints(), self.num_plans, self.num_trials)
-        # perhaps this is where we create a different class?
-        # we have so many new instance vars
-        # these should maybe be classes or something? 
+            # perhaps this is where we create a different class?
+            # we have so many new instance vars
+            # these should maybe be classes or something? 
    
             model = self.solver.get_one_model()
             self.previous_snapshot = self.design.snapshot()
             self.previous_model = model
         return self.decode(model)
-        # else:
-        #     model = self.solver.get_all_models()
-        #     # self.get_groups(model)
-        #     # FIXME
-        #     
-        #     return np.array(self.solver.encoding_to_name(model, self.variables))
-    
+  
     def decode(self, model):
         if not len(model):
             return np.array([])

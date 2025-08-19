@@ -24,13 +24,13 @@ task_des = (
     Design()
         .within_subjects(condition)
         .counterbalance(condition)
-        .limit_groups(5)
+        .limit_plans(5)
 )
 condition_des = (
     Design()
         .within_subjects(subtask)
         .counterbalance(subtask)
-        .limit_groups(5)
+        .limit_plans(5)
       
 )
 cross_des = cross(task_des, condition_des)

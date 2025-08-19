@@ -19,7 +19,7 @@ design = (
     Design()
     .within_subjects(input_method)
     .counterbalance(input_method)
-    .limit_groups(12)
+    .limit_plans(12)
 )
 
 

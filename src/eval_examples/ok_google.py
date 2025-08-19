@@ -25,7 +25,7 @@ mode_des = (
     Design()
         .within_subjects(mode)
         .counterbalance(mode)
-        .limit_groups(3)
+        .limit_plans(3)
 )
 mode_des = nest(inner=block, outer=mode_des)
 

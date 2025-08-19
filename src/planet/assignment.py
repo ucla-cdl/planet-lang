@@ -1,14 +1,10 @@
 from z3 import *
 from .helpers import *
-from .orders import Sequence
 from .narray import *
-import numpy as np
 from .candl import *
-from .solver import  BitVecSolver
-from .unit import Units, Groups, Clusters
+from .unit import Clusters
 import pandas as pd
 import math
-import time
 
 import duckdb
 from planet.plans import PlanGenerator
@@ -85,15 +81,28 @@ def construct_assignment_table(table, units, num_plans, num_participants):
 
    
     required_participants = math.ceil(num_participants/num_plans) * num_plans if num_participants else num_plans
-    for i in range(num_participants, required_participants):
-        duckdb.sql(f"insert into {units.table} values ({i+1}, 0)")
+
+    num_new = required_participants - num_participants
+    if num_new > 0:
+        duckdb.sql(f"""
+            INSERT INTO {units.table}
+            SELECT i + {num_participants + 1}, 0 FROM range({num_new}) AS t(i)
+        """)
     
     num_per_group = required_participants // num_plans  # Number of participants per plan
     
     # Insert plan assignments into the temporary table
-    for i in range(num_plans):
-        for _ in range(num_per_group):
-            duckdb.sql(f"INSERT INTO members VALUES ({i})")
+    duckdb.sql(f"""
+        INSERT INTO members
+        SELECT plan 
+        FROM (
+            SELECT i AS plan 
+            FROM range({num_plans}) AS t(i)
+        ) plans
+        CROSS JOIN (
+            SELECT i AS repeat FROM range({num_per_group}) AS r(i)
+        ) repeats
+    """ )
     
     # Randomly distribute the plan assignments to the participants
     duckdb.sql(f"""
@@ -110,9 +119,7 @@ def construct_assignment_table(table, units, num_plans, num_participants):
         WHERE assignment.id = {table}.pid
     """)
     duckdb.sql("DROP TABLE members")
-
-    for i in range(num_participants, required_participants):
-        duckdb.sql(f"update {units.table} set pid = -1 where pid > {num_participants}")
+    duckdb.sql(f"UPDATE {units.table} SET pid = -1 WHERE pid > {num_participants}")
 
 
 

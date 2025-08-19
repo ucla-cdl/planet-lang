@@ -66,6 +66,26 @@ def copy_nested_constraints(design1, design2):
                 )
             )
 
+        elif isinstance(constraint, NoRepeat):
+            constraints.append(
+                NoRepeat(
+                    constraint.variable,
+                    width=constraint.width if constraint.width < design1.get_width() else design1.get_width(),
+                    stride=constraint.stride
+                )
+            )
+
+        elif isinstance(constraint, InnerBlock):
+            
+            constraints.append(
+                InnerBlock(
+                    constraint.variable,
+                    width=constraint.width or design1.get_width(),
+                    height=constraint.height,
+                    stride=constraint.stride
+                )
+            )
+
         else:
             constraints.append(copy.copy(constraint))
 
@@ -86,10 +106,11 @@ def copy_nested_constraints(design1, design2):
             )
 
         elif isinstance(constraint, NoRepeat):
+            width = constraint.width if constraint.width < width2 else width2
             constraints.append(
                 NoRepeat(
                     constraint.variable,
-                    constraint.width*width1,
+                    width*width1,
                     constraint.stride*width1
                 )
             )
@@ -135,14 +156,12 @@ def nest(*, outer:Design, inner:Design):
     Returns:
         A new Design object representing the nested experimental design.
     """
-  
     total_groups = inner.num_plans() * outer.num_plans()
     total_conditions = inner.get_width() * outer.get_width()
-    combined_variables = combine_lists(inner.variables, outer.variables)
 
     combined_design = (
         Design()
-        .limit_groups(total_groups)
+        .limit_plans(total_groups)
         .num_trials(total_conditions)
     )
 

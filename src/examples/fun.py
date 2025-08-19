@@ -26,7 +26,7 @@ des = (
         .within_subjects(treatment)
         .within_subjects(task)
         .counterbalance(combine)
-        .limit_groups(4)
+        .limit_plans(4)
 )
 
 units = Units(12)

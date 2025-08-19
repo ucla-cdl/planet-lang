@@ -2,7 +2,7 @@ from planet import *
 
 x = ExperimentVariable(
     name = "x",
-    options = ["a", "b"] 
+    options = ["a", "b", "c"] 
 )
 replications = (
     Design()

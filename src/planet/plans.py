@@ -28,10 +28,10 @@ class PlanGenerator:
     def generate(self):
         self.design.designer.start(self.design)
         plans = self.design.designer.eval()
-   
-        if not plans.any():
-            return []
 
+        if not plans.any():
+            raise ValueError("This design results in no viable plans. Consider a new design.")
+     
         # problem identifying random vars
         n = math.ceil(self.num_units / len(plans)) * len(plans)
 

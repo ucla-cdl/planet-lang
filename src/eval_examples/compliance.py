@@ -18,7 +18,7 @@ design = (
     Design()
     .within_subjects(multi)
     .counterbalance(multi)
-    .limit_groups(len(number_of_grains) * len(electrode_conditions))
+    .limit_plans(len(number_of_grains) * len(electrode_conditions))
 )
  
 final = nest(outer=repititions, inner=design)

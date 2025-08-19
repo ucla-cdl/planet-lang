@@ -29,14 +29,14 @@ interface_des = (
     Design()
         .within_subjects(interface)
         .counterbalance(interface)
-        .limit_groups(2)
+        .limit_plans(2)
 )
 
 number_des = (
     Design()
         .within_subjects(number)
         .counterbalance(number)
-        .limit_groups(2)
+        .limit_plans(2)
       
 )
 

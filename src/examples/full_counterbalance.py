@@ -1,12 +1,4 @@
-
-import sys
-sys.path.append("../")
-from z3 import *
-from lib.variable import ExperimentVariable
-from lib.design import Design
-from lib.unit import Units
-from lib.assignment import assign
-
+from planet import *
 
 treatment = ExperimentVariable(
     name = "treatment",
@@ -20,6 +12,7 @@ des = (
     Design()
         .within_subjects(treatment)
         .counterbalance(treatment)
+        .num_trials(3)
     
 )
 

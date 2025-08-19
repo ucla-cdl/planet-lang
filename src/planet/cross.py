@@ -127,7 +127,7 @@ def cross(design1, design2):
     
     # Create a new design with the combined variables
     combined_design = ( Design()
-                       .limit_groups(total_groups)
+                       .limit_plans(total_groups)
                        .num_trials(total_conditions)
                     )
     

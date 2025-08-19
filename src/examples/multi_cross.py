@@ -33,7 +33,7 @@ des = (
         .counterbalance(task, treatment)
         .counterbalance(test, test2)
         .num_trials(4)
-        .limit_groups(8)
+        .limit_plans(8)
 )
 
 des.eval()

@@ -26,13 +26,18 @@ class Units:
         assert isinstance(attr, BlockFactor)
         self.attributes.append(attr)
 
-    
-    def eval(self):
-        if not self.evaled:
+    def _create_new_table(self):
+        if self.evaled:
+            duckdb.sql(f"TRUNCATE TABLE {self.table}")
+        else:
             duckdb.sql(f"create table {self.table} ( pid int, plan int )")
-            for i in range(self.n):
-                duckdb.sql(f"insert into {self.table} values ({i+1}, 0)")
-            self.evaled = True
+
+    # FIXME: ugly workaround when assigning units multiple times
+    def eval(self):
+        self._create_new_table()
+        duckdb.sql(f"INSERT INTO {self.table} SELECT i + 1, 0 FROM range({self.n}) AS t(i)")
+        self.evaled = True
+
 
     def get_table(self):
         self.eval()

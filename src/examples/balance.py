@@ -19,7 +19,7 @@ des = (
     Design()
         .within_subjects(count)
         .counterbalance(count)
-        .limit_groups(len(count) * 2)
+        .limit_plans(len(count) * 2)
 )
 
 

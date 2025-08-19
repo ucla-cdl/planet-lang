@@ -17,7 +17,7 @@ des = (
     Design()
         .within_subjects(test)
         # .counterbalance(test)
-        # .limit_groups(9)
+        # .limit_plans(9)
 )
 
 units = Units(1)

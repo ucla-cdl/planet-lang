@@ -27,7 +27,7 @@ task_des = (
 number_des = (
     Design()
         .within_subjects(number)
-        .limit_groups(4)
+        .limit_plans(4)
       
 )
 

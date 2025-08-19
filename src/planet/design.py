@@ -2,7 +2,6 @@
 from z3 import *  # requires `pip install z3-solver`
 import math
 import pandas as pd
-from planet.logger import logger
 # Internal modules (installed via `pip install -e .`)
 from planet.unit import Groups
 from planet.variable import MultiFactVariable, multifact
@@ -39,6 +38,17 @@ class Design:
         self.designer = Designer()
         self.previous_snapshot = None
         self.design_variables = {}
+
+    @property
+    def maximum_trials(self):
+        max_width = max(spec.max_width() for spec in self.design_variables.values())
+        return self.trials if max_width == -1 else max_width
+
+    # FIXME: this is slow
+    @property
+    def within_subjects_variables(self):
+        return [var for var in self.design_variables if not self.design_variables[var].is_repeated]
+
 
     @property
     def is_constrained(self):
@@ -80,7 +90,7 @@ class Design:
     
     def between_subjects(self, variable):
         self.add_variable(variable)
-        self.trials = 1 if not self.trials else self.trials
+        self.trials = 1 if self.trials == 0 else self.trials
 
         # enforces repeating trials when specified with within subjects variables
         self.add_constraint(
@@ -134,7 +144,7 @@ class Design:
         self.add_constraint(NoRepeat(variable, width=self.trials))
         return self
     
-    def limit_groups(self, n):
+    def limit_plans(self, n):
         self.groups.set_num_plans(n)
         return self
 
@@ -200,6 +210,9 @@ class Design:
         assert isinstance(variable, ExperimentVariable)
 
         # FIXME
+        if variable in self.design_variables: 
+            raise ValueError(f"Cannot add variable '{variable}' — it already exists in design.")
+        
         self._add_design_variable(variable)
 
         if isinstance(variable, MultiFactVariable):
@@ -208,6 +221,8 @@ class Design:
             variables = [variable]
     
         self.variables.extend(variables)
+        # ensures no duplicates and preserves order 
+        self.variables = list(dict.fromkeys(self.variables))
 
     def add_variables(self, variables:list):
         for v in variables:

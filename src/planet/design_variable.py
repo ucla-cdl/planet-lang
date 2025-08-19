@@ -48,6 +48,20 @@ class DesignVariable:
             or self.is_ranked
         )
     
+    def max_width(self):
+        width = 1
+        outer_block = self.constraint_spec["OuterBlock"]
+        inner_block = self.constraint_spec["InnerBlock"]
+        repeat_block = self.constraint_spec["NoRepeat"]
+
+     
+        if not self.is_repeated and repeat_block.width > width:
+            width = repeat_block.width
+        if outer_block is not None or inner_block is not None:
+            width = -1
+    
+        return width
+    
     def get_width(self, width):
         div = 1
 
@@ -65,6 +79,5 @@ class DesignVariable:
         if self.is_blocked_inner:
             span = self.constraint_spec["InnerBlock"].width
                
-        print(span)
         return span
         

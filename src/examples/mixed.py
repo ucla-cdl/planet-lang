@@ -15,8 +15,8 @@ des = (
     Design()
         .within_subjects(count)
         .between_subjects(treatment)
-        .counterbalance(count)
-        # .limit_groups(4)
+        # .counterbalance(count)
+        # .limit_plans(4)
 )
 
 print(assign(units, des))

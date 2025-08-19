@@ -11,14 +11,14 @@ emotion_design = (
     Design()
     .within_subjects(emotion_ve)
     .counterbalance(emotion_ve)  
-    .limit_groups(len(emotion_ve))
+    .limit_plans(len(emotion_ve))
 )
 
 exercise_design = (
     Design()
     .within_subjects(exercise_intensity)
     .counterbalance(exercise_intensity)
-    .limit_groups(len(exercise_intensity))
+    .limit_plans(len(exercise_intensity))
 )
 
 design = nest(inner = emotion_design, outer = exercise_design)

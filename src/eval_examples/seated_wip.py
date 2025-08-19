@@ -21,7 +21,7 @@ des = (
     Design()
         .within_subjects(multi)
         .counterbalance(multi)
-        .limit_groups(len(multi))
+        .limit_plans(len(multi))
 )
 
 assignment = assign(units, des)

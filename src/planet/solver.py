@@ -9,9 +9,6 @@ from itertools import combinations
 
 class Solver: 
     def __init__(self, shape, variables):
-        
-        # how can we use translate without circular dependencies? 
-        # some of these vars are related and should be stored together as a struct 
         self.shape = shape
         self.variables = variables
         self.solver = z3.Optimize()
@@ -23,7 +20,7 @@ class BitVecSolver(Solver):
         # NOTE: z3 vectors is stored as a flattened array
         self.z3_variables = self.bitvectors.get_variables()
         self.constrain_z3_values()
-        self.distinguish_rows()
+        # self.distinguish_rows()
 
     # you can come up with a better name
     def constrain_z3_values(self):
@@ -59,12 +56,12 @@ class BitVecSolver(Solver):
     def n_trials(self):
         return self.shape[1]
 
-    # NOTE: no rows can repeat in a given matrix 
-    def distinguish_rows(self):
-        plans = shape_array(self.z3_variables, self.shape)
-        for i, j in combinations(range(len(plans)), 2):
-            # At least one assignment must differ
-            self.solver.add(Or([a != b for a, b in zip(plans[i], plans[j])]))
+    # # NOTE: no rows can repeat in a given matrix 
+    # def distinguish_rows(self):
+    #     plans = shape_array(self.z3_variables, self.shape)
+    #     for i, j in combinations(range(len(plans)), 2):
+    #         # At least one assignment must differ
+    #         self.solver.add(Or([a != b for a, b in zip(plans[i], plans[j])]))
 
 
 

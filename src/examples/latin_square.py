@@ -24,7 +24,8 @@ design = (
     Design()
         .within_subjects(multifact([interface, task]))
         .counterbalance(multifact([interface, task]))
-        .limit_groups(len(multifact([interface, task])))
+        .limit_plans(len(multifact([interface, task])))
+        .num_trials(6)
 )
 
 print(assign(units, design))

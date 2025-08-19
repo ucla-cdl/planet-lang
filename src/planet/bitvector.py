@@ -77,7 +77,6 @@ class BitVectors:
 
     
     def get_variable_assignments(self, var, z3s):
-        
         assignments = []
 
         for z3 in z3s:
@@ -86,5 +85,6 @@ class BitVectors:
         return assignments
     
     def new_bitvector(self):
+        # FIXME: hacky
         return BitVec("x", self.len)
 

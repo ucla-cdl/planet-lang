@@ -27,7 +27,7 @@ units = Units(16)
 des1 = (Design()
         .within_subjects(task)
         .counterbalance(task)
-        .limit_groups(4)
+        .limit_plans(4)
 )
 
 des3 = (Design()
