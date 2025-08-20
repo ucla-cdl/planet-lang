@@ -59,7 +59,7 @@ class DesignVariable:
             width = repeat_block.width
         if outer_block is not None or inner_block is not None:
             width = -1
-    
+
         return width
     
     def get_width(self, width):

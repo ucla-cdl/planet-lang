@@ -35,10 +35,10 @@ class Designer:
         self.shape = self.determine_shape()
         self.solver = BitVecSolver(self.shape, self.variables)
         self.check_trial_compatibility()
-
+    
     
     def check_trial_compatibility(self):
-        if self.num_trials > self.design.maximum_trials:
+        if self.design.maximum_trials > -1 and self.num_trials > self.design.maximum_trials:
             raise ValueError(
                 f"Design specifies {self.num_trials} trials, "
                 f"but there are only {self.design.maximum_trials} possible conditions. "
@@ -191,7 +191,7 @@ class Designer:
     
 
 
-    
+
 
 
 

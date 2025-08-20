@@ -15,18 +15,22 @@ class Solver:
 
 class BitVecSolver(Solver):
     def __init__(self, shape, variables):
+        """
+        Solver using Z3 BitVectors for combinatorial designs.
+        Automatically sets up BitVectors and enforces row uniqueness.
+        """
         super().__init__(shape, variables)
         self.bitvectors = BitVectors(np.prod(self.shape), self.variables)
-        # NOTE: z3 vectors is stored as a flattened array
         self.z3_variables = self.bitvectors.get_variables()
         self.constrain_z3_values()
-        # self.distinguish_rows()
+        self.distinguish_rows()
 
     # you can come up with a better name
     def constrain_z3_values(self):
-        """ for all of the z3 variables relating to a specific variable, 
-         ensure that it can only be assigned to one of the levels
-         of the specific variable """
+        """
+        Enforce that each Z3 variable can only take a valid level
+        based on its corresponding experimental variable.
+        """
         for variable in self.variables:
             for index in range(np.prod(self.shape)):
                 lo = 0
@@ -40,37 +44,58 @@ class BitVecSolver(Solver):
                 )
   
     def get_partition(self, width, stride):
+        """
+        Partition the design matrix by columns if width is specified.
+
+        Args:
+            width (int): Number of columns per partition.
+            stride (int): Step size between partitions.
+
+        Returns:
+            np.ndarray: Partitioned design matrix.
+        """
         dim_variables = shape_array(self.z3_variables, self.shape)
         if width is not None:
             dim_variables = partition_matrix_by_columns(dim_variables, width, stride)
         return dim_variables
 
     def all_different(self, variables=None, width = None, stride = 1):
+        """
+        Enforce that for each row in the partitioned matrix, 
+        all combinations of the selected variables differ in at least one position.
+        """
         matrix = self.get_partition(width, stride)
-        # This is necessary when the combinations of variables are unique, but
-        # not the individual variables
-        variable_assignment = lambda row: [self.bitvectors.get_variable_assignment(v, row) for v in variables]
+        
         for row in matrix:
-            self.solver.add(at_least_one_diff(list(map(variable_assignment, row))))
+            row_assignments = [
+                [self.bitvectors.get_variable_assignment(v, r) for v in variables] 
+                for r in row
+            ]
+            self.solver.add(at_least_one_diff(row_assignments))
         
     def n_trials(self):
         return self.shape[1]
 
-    # # NOTE: no rows can repeat in a given matrix 
-    # def distinguish_rows(self):
-    #     plans = shape_array(self.z3_variables, self.shape)
-    #     for i, j in combinations(range(len(plans)), 2):
-    #         # At least one assignment must differ
-    #         self.solver.add(Or([a != b for a, b in zip(plans[i], plans[j])]))
+    # NOTE: no rows can repeat in a given matrix 
+    def distinguish_rows(self):
+        plans = shape_array(self.z3_variables, self.shape)
+        plan_encodings = []
 
+        for plan in plans:
+            # Concatenate all variables in the row into one BitVec
+            plan_bits = plan[0]
+            for var in plan[1:]:
+                plan_bits = Concat(plan_bits, var)
+            plan_encodings.append(plan_bits)
+
+        # Enforce that all rows are distinct
+        self.solver.add(Distinct(*plan_encodings))
 
 
     def slice_matrix(self, arr, block = []):
-        def get_spec(block_data):
-            return block_data[0], block_data[1], block_data[2]
-        start_column, end_column, column_step = get_spec(block[0])
-        start_row, end_row, row_step = get_spec(block[1])
-        return np.array(arr)[start_column:end_column:column_step, start_row:end_row:row_step]
+        # Unpack block and slice matrix
+        (start_col, end_col, col_step), (start_row, end_row, row_step) = block
+        return np.array(arr)[start_col:end_col:col_step, start_row:end_row:row_step]
 
 
     def absolute_rank(self, var, ranks):

@@ -41,8 +41,8 @@ class Design:
 
     @property
     def maximum_trials(self):
-        max_width = max(spec.max_width() for spec in self.design_variables.values())
-        return self.trials if max_width == -1 else max_width
+        max_width = min(spec.max_width() for spec in self.design_variables.values())
+        return max_width
 
     # FIXME: this is slow
     @property
@@ -85,6 +85,10 @@ class Design:
         formatter.to_latex()
 
     def num_trials(self, n):
+        if self.trials:
+            print(self.trials)
+            raise ValueError("It appears num_trials was already specified for this design. You can only set the number of trials once.")
+
         self.trials = n
         return self
     
@@ -140,8 +144,7 @@ class Design:
 
     def within_subjects(self, variable):
         self.add_variable(variable)
-        self.trials = len(variable)
-        self.add_constraint(NoRepeat(variable, width=self.trials))
+        self.add_constraint(NoRepeat(variable, width=len(variable)))
         return self
     
     def limit_plans(self, n):
@@ -155,7 +158,7 @@ class Design:
         return hashlib.sha256(signature.encode()).hexdigest()
     
     def get_width(self):
-        return self.trials 
+        return self.trials if self.trials else len(next(iter(self.design_variables)))
     
     def extract_counterbalance_info(self, var):
         """Extract variables and condition count"""
@@ -189,7 +192,7 @@ class Design:
             elif self.design_variables[variable].is_ranked:
                 rankings.append(count_values(self.design_variables[variable].get_ranks()))
 
-        return self.calculate_num_plans(counterbalance_info, rankings, self.trials)
+        return self.calculate_num_plans(counterbalance_info, rankings, self.get_width())
 
     def test_eval(self):
         self.designer.start(self)
