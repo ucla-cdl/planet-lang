@@ -1,14 +1,4 @@
-import sys
-sys.path.append("../")
-from lib.variable import ExperimentVariable, multifact
-from lib.design import Design
-from lib.nest import nest
-from lib.unit import Units 
-from lib.assignment import assign 
-
-
-
-
+from planet import *
 
 
 """
@@ -30,11 +20,14 @@ task = ExperimentVariable(
 
 units = Units(8)
 
+multi = multifact([interface, task])
+
 design = (
     Design()
-        .within_subjects(multifact([interface, task]))
-        .counterbalance(multifact([interface, task]))
-        .limit_groups(len(multifact([interface, task])))
+        .within_subjects(multi)
+        .counterbalance(multi)
+        .limit_plans(len(multi))
+        .num_trials(6)
 )
 
 print(assign(units, design))

@@ -1,4 +1,7 @@
 .Rproj.user
+pyproject.toml
+src/planet_dsl.egg-info/
+dist/
 planet.egg-info/
 lib/__pycache__/translate.cpython-311.pyc
 outputs
@@ -13,3 +16,4 @@ outputs
 *pycache*
 notes
 venv
+LICENSE

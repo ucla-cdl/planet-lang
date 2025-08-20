@@ -1,23 +1,22 @@
 import itertools
-from .variable import ExperimentVariable
+from .variable import ExperimentVariable, MultiFactVariable
 from.condition import ExperimentCondition
 import numpy as np
-from itertools import product
+from itertools import product, combinations
 import math
 from z3 import *
 import random
 
-def distinct_or(variables):
-    ret = []
-    for i in range(len(variables)):
-        for j in range(i + 1, len(variables)):
-            temp = []
-            for k in range(len(variables[i])):
-                temp.append(variables[i][k] != variables[j][k])
-            ret.append(Or(temp))
 
-    return ret
 
+def at_least_one_diff(variables):
+    """Generate constraints that enforce every pair of variable assignments
+    differ in at least one position."""
+    constraints = []
+    for var1, var2 in combinations(variables, 2):
+        # For each pair, at least one element differs
+        constraints.append(Or([a != b for a, b in zip(var1, var2)]))
+    return constraints
 
 def generate_conditions(participants, variable, n):
     """
@@ -28,13 +27,15 @@ def generate_conditions(participants, variable, n):
     :param trials_per_condition: Number of times each condition should appear
     :return: Dictionary mapping participant IDs to their condition sequences
     """
-    
+   
     experiment_data = []
     if variable: 
         conditions = variable.conditions
         for _ in range(participants):
+            # FIXME: path for random multifactorial variables
             experiment_data.append(random.sample(conditions, n))
    
+
     return experiment_data
 
 
@@ -128,7 +129,6 @@ def all_ones(n):
     return (1 << n) - 1
 
 
-# FIXME: incorrect processing if there is a factor. See how majority does this. We probably want to decouple 
 def get_dim_variables(arr, shape, dim, factor = None, level = None):
     if factor != None:
         dim_indexings = create_indexing_2(factor, shape)
@@ -148,7 +148,8 @@ def get_dim_variables(arr, shape, dim, factor = None, level = None):
     return dim_variables
 
 
-
+def shape_array(arr, shape):
+    return np.array(arr).reshape(shape)
 
 def combine_lists(l1, l2):
     combined_variables = l1.copy()
@@ -167,3 +168,34 @@ def as_list(variables):
         return variables
     else:
         return [variables]
+    
+
+
+def count_values(d: dict) -> dict:
+    """Count the frequency of values in a dictionary."""
+    counts = {}
+    for value in d.values():
+        counts[value] = counts.get(value, 0) + 1
+    return counts
+
+
+def factorial_product_of_counts(counts: dict) -> int:
+    """Return the product of factorials of all counts."""
+    return math.prod(math.factorial(count) for count in counts.values())
+
+def calculate_plan_multiplier(num_conditions: int, num_vars: int, num_trials: int) -> float:
+    """Compute the multiplier for total_n_plans based on design width and condition count."""
+    if num_conditions == 1:
+        return 1
+    if num_trials > num_conditions:
+        num_repeats = int(num_trials / num_conditions)
+        denom = math.prod(math.factorial(num_repeats) for _ in range(num_vars))
+        return math.factorial(num_conditions) / denom
+    elif num_trials < num_conditions:
+        return math.factorial(num_conditions) / math.factorial(num_conditions - num_trials)
+    else:
+        return math.factorial(num_conditions)
+
+
+def partition_matrix_by_columns(matrix, width, step=1):
+    return np.array(matrix)[:, 0:width:step]

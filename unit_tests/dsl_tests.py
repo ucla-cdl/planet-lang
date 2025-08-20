@@ -1,11 +1,7 @@
 import sys
 sys.path.append("../src")
 
-from z3 import *
-from lib.variable import ExperimentVariable, multifact
-from lib.design import Design
-from lib.nest import nest, cross
-from lib.unit import Units
+from planet import *
 import unittest
 
 
@@ -117,7 +113,7 @@ class TestDesigns(unittest.TestCase):
             Design()
                 .within_subjects(factorial)
                 .counterbalance(factorial)
-                .limit_groups(len(factorial))
+                .limit_plans(len(factorial))
         )
         
         
@@ -185,7 +181,7 @@ class TestDesigns(unittest.TestCase):
     #         Design()
     #             .within_subjects(treatment)
     #             .counterbalance(treatment)
-    #             .limit_groups(len(treatment))
+    #             .limit_plans(len(treatment))
     #     )
 
     #     output = des.test_eval(test=True)

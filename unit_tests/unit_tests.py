@@ -2,12 +2,13 @@ import sys
 sys.path.append("../src")
 
 from z3 import *
-from lib.variable import ExperimentVariable, multifact
-from lib.design import Design, nest, cross
-from lib.unit import Units
-from lib.assignment import assign
-from lib.solver import BitVecSolver
-import numpy as np
+from planet.variable import ExperimentVariable, multifact
+from planet.design import Design
+from planet.nest import nest
+from planet.cross import cross
+from planet.unit import Units
+from planet.assignment import assign
+from planet.solver import BitVecSolver
 import unittest
 
 
@@ -70,7 +71,7 @@ class TestDSL(unittest.TestCase):
         )
 
         cross_des = cross(interface_des, number_des)
-        des = nest(cross_des, task_des)
+        des = nest(inner=cross_des, outer=task_des)
         output = des.eval(test=True)
 
         expected_results = [
@@ -113,7 +114,7 @@ class TestDSL(unittest.TestCase):
                 .counterbalance(task)
         )
 
-        des = nest(des1, des2)
+        des = nest(inner=des1, outer=des2)
 
         factorial = multifact([treatment, task])
 
@@ -121,7 +122,7 @@ class TestDSL(unittest.TestCase):
             Design()
                 .within_subjects(factorial)
                 .counterbalance(factorial)
-                .limit_groups(len(factorial))
+                .limit_plans(len(factorial))
         )
         
         
@@ -189,7 +190,7 @@ class TestDSL(unittest.TestCase):
             Design()
                 .within_subjects(treatment)
                 .counterbalance(treatment)
-                .limit_groups(len(treatment))
+                .limit_plans(len(treatment))
         )
 
         output = des.eval(test=True)
@@ -267,7 +268,7 @@ class TestDSL(unittest.TestCase):
                 .counterbalance(task)
         )
 
-        des = nest(des1, des2)
+        des = nest(inner=des1, outer=des2)
         
         output = des.eval(test=True)
       

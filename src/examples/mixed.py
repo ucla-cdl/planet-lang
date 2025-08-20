@@ -1,12 +1,4 @@
-from z3 import *
-import sys
-
-sys.path.append("../")
-from lib.assignment import assign
-from lib.unit import Units
-from lib.variable import ExperimentVariable
-from lib.design import Design
-
+from planet import *
 
 treatment = ExperimentVariable(
     name = "treatment",
@@ -17,14 +9,14 @@ count = ExperimentVariable(
     options = ["1", "2"]
 )
 
-units = Units(4)
+units = Units(1)
 
 des = (
     Design()
-        .within_subjects(treatment)
-        .between_subjects(count)
-        .counterbalance(treatment)
-        .limit_groups(4)
+        .within_subjects(count)
+        .between_subjects(treatment)
+        # .counterbalance(count)
+        # .limit_plans(4)
 )
 
 print(assign(units, des))

@@ -23,7 +23,7 @@ des = (
     Design()
         .within_subjects(treatment)
         .counterbalance(treatment)
-        .limit_groups(len(treatment))
+        .limit_plans(len(treatment))
 )
 
 print(assign(clusters, des))

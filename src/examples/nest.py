@@ -1,12 +1,4 @@
-import sys
-sys.path.append("../")
-from lib.variable import ExperimentVariable, multifact
-from lib.unit import Units 
-from lib.assignment import assign 
-from z3 import *
-from lib.variable import ExperimentVariable
-from lib.design import Design
-from lib.nest import nest
+from planet import *
 
 
 # user creates two variables: task and treatment 
@@ -35,14 +27,14 @@ des1 = (
     Design()
         .within_subjects(treatment)
         .counterbalance(treatment)
-        # .limit_groups(2)
+        # .limit_plans(2)
 )
 
 des2 = (
     Design()
         .within_subjects(task)
         .counterbalance(task)
-        # .limit_groups(2)
+        # .limit_plans(2)
 )
 
 des3 = (Design()
@@ -54,7 +46,8 @@ des3 = (Design()
 des4 = (Design()
         .within_subjects(test2)
         .counterbalance(test2)
-        .limit_groups(2)
+        .counterbalance(test2)
+        .limit_plans(2)
 )
 
 units = Units(48)

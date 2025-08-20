@@ -1,22 +1,13 @@
-import sys
-
-sys.path.append("../")
-
-from z3 import *
-from lib.replications import Replications
-from lib.variable import ExperimentVariable, multifact
-from lib.nest import nest
-from lib.design import Design
-from lib.assignment import assign, assign_counterbalance
-from lib.unit import Units
-
-
+from planet import *
 
 x = ExperimentVariable(
     name = "x",
-    options = ["a", "b"] 
+    options = ["a", "b", "c"] 
 )
-replications = Replications(2)
+replications = (
+    Design()
+        .num_trials(2)
+)
 
 units = Units(24)
 

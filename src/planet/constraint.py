@@ -7,6 +7,7 @@ class Constraint:
 
     def get_variable(self):
         return self.variable
+    
 
 class BlockConstraint(Constraint):
     def __init__(self, variable, width, height, stride):
@@ -82,6 +83,3 @@ class SetPosition(Constraint):
         self.position = pos
 
 
-
-
- 

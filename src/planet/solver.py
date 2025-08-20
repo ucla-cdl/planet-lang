@@ -2,266 +2,166 @@ from z3 import *
 import numpy as np
 from .candl import *
 from .helpers import *
-from functools import reduce
 from .bitvector import BitVectors
 import itertools
-import logging
 import warnings
+from itertools import combinations
 
-warnings.simplefilter('default')
-logging.basicConfig(level=logging.DEBUG)
-
-
-# NOTE: to decouple, should we have an ndarray class that 
-# has z3 vars as special type? not sure if this infrastructure is necessary?
-
-class BitVecSolver:
+class Solver: 
     def __init__(self, shape, variables):
-        
-        # how can we use translate without circular dependencies? 
-        # some of these vars are related and should be stored together as a struct 
         self.shape = shape
         self.variables = variables
-        self.num_z3_vars = np.prod(self.shape)
         self.solver = z3.Optimize()
-        self.bitvectors = []
-       
-        self.create_z3_variables()
+
+class BitVecSolver(Solver):
+    def __init__(self, shape, variables):
+        """
+        Solver using Z3 BitVectors for combinatorial designs.
+        Automatically sets up BitVectors and enforces row uniqueness.
+        """
+        super().__init__(shape, variables)
+        self.bitvectors = BitVectors(np.prod(self.shape), self.variables)
+        self.z3_variables = self.bitvectors.get_variables()
         self.constrain_z3_values()
         self.distinguish_rows()
 
-        self.rank_functions = {}
-        self.ranks = {}
-
-        self.logger = logging.getLogger(__name__)
- 
-
     # you can come up with a better name
     def constrain_z3_values(self):
-        """ for all of the z3 variables relating to a specific variable, 
-         ensure that it can only be assigned to one of the levels
-         of the specific variable """
-        lower_bit = 0
-   
+        """
+        Enforce that each Z3 variable can only take a valid level
+        based on its corresponding experimental variable.
+        """
         for variable in self.variables:
-            # NOTE: z3 vectors is stored as a flattened array
-            for index in range(self.num_z3_vars):
-                # NOTE: range(lo, hi) should give all levels of variable as int
+            for index in range(np.prod(self.shape)):
                 lo = 0
                 hi = len(variable) - 1
-                # required number of bits to encode a given value
-                required_bits = int(math.ceil(math.log(variable.n, 2))) 
+                masked_bits = self.bitvectors.get_variable_assignment(variable, self.z3_variables[index])
                 self.solver.add(
                         And(
-                            lo <= Extract(
-                                    lower_bit+required_bits, 
-                                    lower_bit, 
-                                    self.z3_conditions[index]
-                                ), 
-                            hi >= Extract(
-                                lower_bit+required_bits, 
-                                lower_bit, 
-                                self.z3_conditions[index]
-                            )
+                            lo <= masked_bits, 
+                            hi >= masked_bits
                         )  
                 )
+  
+    def get_partition(self, width, stride):
+        """
+        Partition the design matrix by columns if width is specified.
 
-            # gives us index of the lower bit of the next variable
-            lower_bit += required_bits + 1
+        Args:
+            width (int): Number of columns per partition.
+            stride (int): Step size between partitions.
 
-        
-    # FIXME: function that merges these
-    # z3 variable for the overal condition assigned to a unit. 
-    # for example, an n by n lating square has n*n z3 variables 
-    # for each cell of the square. represented by the flattened array
-    def create_z3_variables(self):
-        self.bitvectors = BitVectors(self.num_z3_vars, self.variables)
-        self.z3_conditions = self.bitvectors.get_variables()
-    
-    def block_columns(self, arr, width, stride=1):
-        return np.array(arr)[:, 0:width:stride]
-
-    def all_different(self, v=None, width = None, stride = 1):
-        if v is None: 
-            return
-        # could you prettify this?
-        dim_variables = get_dim_variables(self.z3_conditions, self.shape, 1)
-
+        Returns:
+            np.ndarray: Partitioned design matrix.
+        """
+        dim_variables = shape_array(self.z3_variables, self.shape)
         if width is not None:
-            dim_variables = list(self.block_columns(dim_variables, width, stride))
+            dim_variables = partition_matrix_by_columns(dim_variables, width, stride)
+        return dim_variables
 
-        test = lambda x: [self.bitvectors.get_variable_assignment(z, x) for z in v]
-
-        for arr in dim_variables:
-            # FIXME (fixed but I'm not convinced)
-            if v is not None:
-                self.solver.add(distinct_or(list(map(test, arr))))
-            else:
-                self.solver.add(Distinct(arr))
-
+    def all_different(self, variables=None, width = None, stride = 1):
+        """
+        Enforce that for each row in the partitioned matrix, 
+        all combinations of the selected variables differ in at least one position.
+        """
+        matrix = self.get_partition(width, stride)
+        
+        for row in matrix:
+            row_assignments = [
+                [self.bitvectors.get_variable_assignment(v, r) for v in variables] 
+                for r in row
+            ]
+            self.solver.add(at_least_one_diff(row_assignments))
+        
     def n_trials(self):
         return self.shape[1]
 
     # NOTE: no rows can repeat in a given matrix 
     def distinguish_rows(self):
-        plans = get_dim_variables(self.z3_conditions, self.shape, 1)
-        for i in range(len(plans)):
-            for j in range(len(plans)):
-                if i != j:
-                    assignment = []
-                    for n in range(len(plans[j])):
-                        assignment.append(plans[i][n] != plans[j][n])
-                    self.solver.add(Or(assignment))
+        plans = shape_array(self.z3_variables, self.shape)
+        plan_encodings = []
+
+        for plan in plans:
+            # Concatenate all variables in the row into one BitVec
+            plan_bits = plan[0]
+            for var in plan[1:]:
+                plan_bits = Concat(plan_bits, var)
+            plan_encodings.append(plan_bits)
+
+        # Enforce that all rows are distinct
+        self.solver.add(Distinct(*plan_encodings))
 
 
+    def slice_matrix(self, arr, block = []):
+        # Unpack block and slice matrix
+        (start_col, end_col, col_step), (start_row, end_row, row_step) = block
+        return np.array(arr)[start_col:end_col:col_step, start_row:end_row:row_step]
 
-    def establish_ranking(self, var):
-        orders = get_dim_variables(self.z3_conditions, self.shape, 1)
-        n = self.n_trials()
-
-        for var in self.rank_functions:
-            rank = self.rank_functions[var]
-            for order in orders:
-                self.solver.add([rank(order[i]) >= rank(order[i+1]) for i in range(n-1)])
-
-
-
-    def count(self, l, x, f):
-        test = []
-        for e in l:
-            test.append(If(f(e, x), 1, 0))
-        return sum(test)
-    
-
-    def block_array(self, arr, block = []):
-        return np.array(arr)[block[0][0]:block[0][1]:block[0][2], block[1][0]:block[1][1]:block[1][2]]
-    
-    def start_with(self, variable, condition):
-        plans = np.array(get_dim_variables(self.z3_conditions, self.shape, 1))
-
-        arr = plans[:, 0]
-        for z3 in arr:
-            self.solver.add(self.bitvectors.get_variable_assignment(variable, z3) == condition)
-
-
-    def set_position(self, variable, condition, pos):
-        plans = np.array(get_dim_variables(self.z3_conditions, self.shape, 1))
-
-        arr = plans[:, pos]
-        for z3 in arr:
-            self.solver.add(self.bitvectors.get_variable_assignment(variable, z3) == condition)
-
-
-    def set_rank(self, var, condition, rank, condition2):
-        x = BitVec("x", self.bitvectors.len)
-        y = BitVec("y", self.bitvectors.len)
-
-        if var not in self.rank_functions:
-            self.rank_functions[var] = Function(f'rank_{str(var)}', BitVecSort(self.bitvectors.determine_num_bits()), IntSort())
-            self.establish_ranking(var)
-
-        rank = self.rank_functions[var]
-        self.solver.add(
-            ForAll([x,y],
-                Implies(
-                    And(self.bitvectors.get_variable_assignment(var, x) == condition, 
-                        self.bitvectors.get_variable_assignment(var, y) == condition2),
-                    rank(x) > rank(y)
-                )
-            )
-        )
 
     def absolute_rank(self, var, ranks):
-        x = BitVec("x", self.bitvectors.len)
-
-        orders = get_dim_variables(self.z3_conditions, self.shape, 1)
+        design_matrix = shape_array(self.z3_variables, self.shape)
         n = self.n_trials()
 
-        rank = Function(f'rank_{str(var)}', BitVecSort(self.bitvectors.determine_num_bits()), IntSort())
-        for order in orders:
-            self.solver.add([rank(order[i]) >= rank(order[i+1]) for i in range(n-1)])
+        rank_fn = Function(f'rank_{str(var)}', BitVecSort(self.bitvectors.determine_num_bits()), IntSort())
+        self.solver.add([rank_fn(plan[i]) >= rank_fn(plan[i+1]) for i in range(n-1) for plan in design_matrix])
 
-        for condition in ranks:
+        # for use in quantified expression
+        x = self.bitvectors.new_bitvector()
+        for condition, rank in ranks.items():
+            # set the rank for every condition of the respective variable
             self.solver.add(
                 ForAll([x],
                     Implies(
                         self.bitvectors.get_variable_assignment(var, x) == condition,
-                        rank(x) == ranks[condition]
+                        rank_fn(x) == rank
                     )
                 )
             )
             
+    def count(self, variables, condition, f):
+        """
+        if f returns true increase count by one for all variables
+        """
+        counts = [If(f(var, condition), 1, 0) for var in variables]
+        return sum(counts)
 
     def counterbalance(self, block=[], variables=None):
         """
         Apply counterbalancing to ensure equal occurrence of variable combinations.
-        
-        Args:
-            block: List of blocks to apply (default empty list)
-            variables: The variables to counterbalance (required)
             
         Returns:
             None: Modifies the solver in-place
         """
+        design_matrix = shape_array(self.z3_variables, self.shape)
+        design_matrix = self.slice_matrix(design_matrix, block)
+        design_matrix = np.transpose(design_matrix)
       
-        # Get dimensional variables from z3 conditions
-        plans = get_dim_variables(self.z3_conditions, self.shape, 1)
-
-        # Apply blocks if provided
-        if len(block):
-            plans = self.block_array(plans, block)
-        
-        # Transpose the plans for processing
-        plans = np.transpose(plans)
-
-        # Initialize counts for tracking variable combinations
-        counts = []
-        
-        # Define helper functions for value processing
-        def get_possible_values(variable):
-            """Return set of possible values for a variable (0 to len-1)"""
-            return set(range(len(variable)))
-        
-        def test_assignment(variable, position):
-            """Get variable assignment at the given position"""
-            return self.bitvectors.get_variable_assignment(variable, position)
-        
         # Generate all possible combinations of variable values
-        value_combinations = list(itertools.product(
-            *[get_possible_values(variable) for variable in variables]
+        possible_conditions = list(itertools.product(
+            *[set(range(len(variable))) for variable in variables]
         ))
         
-        # Process each plan
-
-        for plan_idx in range(len(plans)):
-            # Map variables to their assignments in the current plan
-            assignments = list(zip(*[
-                list(map(lambda p: test_assignment(variable, p), plans[plan_idx])) 
+        counts = []
+        for trials in design_matrix:
+            masked_variables = list(zip(*[
+                list(map(lambda z3_variable: self.bitvectors.get_variable_assignment(variable, z3_variable), trials)) 
                 for variable in variables
             ]))
             
-            # Count occurrences of each value combination
-            for value_combo in value_combinations:
-                # Define equality constraint function
-                def check_equality(x, expected):
-                    """Check if x equals expected for all indices"""
-                    return And([expected[i] == x[i] for i in range(len(x))])
-                
-                # Count occurrences and store
-                counts.append(self.count(assignments, value_combo, check_equality))
+            check_equality = lambda variables, assignments: And([variables[i] == assignments[i] for i in range(len(variables))])
+            counts.extend([self.count(masked_variables, condition, check_equality) for condition in possible_conditions])
         
         # Add constraints to ensure equal counts for all combinations
         for i in range(len(counts)):
             for j in range(i+1, len(counts)):
                 self.solver.add(counts[i] == counts[j])
-                
+
+   
     def match_block(self, variable, block = []):
-        plans = get_dim_variables(self.z3_conditions, self.shape, 1)
-        block = self.block_array(plans, block)
+        plans = shape_array(self.z3_variables, self.shape)
+        block = self.slice_matrix(plans, block)
 
-        
         flat_block = np.array(block).flatten()
-
         for i in range(len(flat_block)):
             for j in range(i, len(flat_block)):
                 a1 = self.bitvectors.get_variable_assignment(variable, flat_block[i])
@@ -276,11 +176,9 @@ class BitVecSolver:
             all_assignments = []
             model = self.solver.model()
       
-            for var in self.z3_conditions:
+            for var in self.z3_variables:
                 all_assignments.append(model.evaluate(model[var]))
  
-
-        
         return all_assignments
     
     # works when z3 rep iterates through many arrays
@@ -294,7 +192,7 @@ class BitVecSolver:
             model = self.solver.model()
             block = []
             order = []
-            for var in self.z3_conditions:
+            for var in self.z3_variables:
                 block.append(var != model[var])
                 order.append(model.evaluate(model[var]))
 
@@ -369,7 +267,7 @@ class BitVecSolver:
                 # get the ith variable's assignment
                 variable_assignment = assignment[j]
                 condition = self.variables[j].condition_map[variable_assignment]
-                __z3__ = self.bitvectors.get_variable_assignment(self.variables[j], self.z3_conditions[i])
+                __z3__ = self.bitvectors.get_variable_assignment(self.variables[j], self.z3_variables[i])
                 self.solver.add(__z3__ == condition)
 
     def check_model(self, model):

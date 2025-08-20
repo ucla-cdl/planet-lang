@@ -5,7 +5,7 @@ class BitVectors:
     def __init__(self, n, variables):
         self.variables = variables
         self.len = self.determine_num_bits()
-        self.z3_representation =  [BitVec(f"C_{index + 1}", self.len) for index in range(n)]
+        self.z3_variables =  [BitVec(f"C_{index + 1}", self.len) for index in range(n)]
 
     def get_possible_values(self):
         values = []
@@ -32,8 +32,8 @@ class BitVectors:
                 values.extend([x for x in range(n)])
 
         return set(values)
-
-    def determine_num_bits(self):
+    
+    def determine_num_bits_total(self):
         bitvec_length = 0
         for variable in self.variables:
             bits = int(math.ceil(math.log(variable.n, 2)))
@@ -42,6 +42,17 @@ class BitVectors:
         # necessary for two's compliment bit
         bitvec_length += len(self.variables)
         return bitvec_length
+    
+    def determine_num_variable_bits(self, variable):
+        return int(math.ceil(math.log(variable.n, 2)))
+
+    def determine_num_bits(self, variable=None):
+
+        if variable is None:
+            return self.determine_num_bits_total()
+        else:
+            return self.determine_num_variable_bits(variable)
+
     
 
     def get_lower_bits(self, var):
@@ -57,19 +68,23 @@ class BitVectors:
         return bit_index
     
     def get_variables(self):
-        return self.z3_representation
+        return self.z3_variables
     
     def get_variable_assignment(self, var, z3):
         lo = self.get_lower_bits(var)
         length = get_num_bits(len(var))
         return Extract(lo+length, lo, z3)
+
     
     def get_variable_assignments(self, var, z3s):
-        
         assignments = []
 
         for z3 in z3s:
             assignments.append(self.get_variable_assignment(var, z3))
 
         return assignments
+    
+    def new_bitvector(self):
+        # FIXME: hacky
+        return BitVec("x", self.len)
 
