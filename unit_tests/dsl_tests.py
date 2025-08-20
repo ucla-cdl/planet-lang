@@ -113,7 +113,7 @@ class TestDesigns(unittest.TestCase):
             Design()
                 .within_subjects(factorial)
                 .counterbalance(factorial)
-                .limit_groups(len(factorial))
+                .limit_plans(len(factorial))
         )
         
         
@@ -181,7 +181,7 @@ class TestDesigns(unittest.TestCase):
     #         Design()
     #             .within_subjects(treatment)
     #             .counterbalance(treatment)
-    #             .limit_groups(len(treatment))
+    #             .limit_plans(len(treatment))
     #     )
 
     #     output = des.test_eval(test=True)

@@ -20,11 +20,13 @@ task = ExperimentVariable(
 
 units = Units(8)
 
+multi = multifact([interface, task])
+
 design = (
     Design()
-        .within_subjects(multifact([interface, task]))
-        .counterbalance(multifact([interface, task]))
-        .limit_plans(len(multifact([interface, task])))
+        .within_subjects(multi)
+        .counterbalance(multi)
+        .limit_plans(len(multi))
         .num_trials(6)
 )
 
