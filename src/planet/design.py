@@ -94,7 +94,7 @@ class Design:
     
     def between_subjects(self, variable):
         self.add_variable(variable)
-        self.trials = 1 if self.trials == 0 else self.trials
+        # self.trials = 1 if self.trials == 0 else self.trials
 
         # enforces repeating trials when specified with within subjects variables
         self.add_constraint(
