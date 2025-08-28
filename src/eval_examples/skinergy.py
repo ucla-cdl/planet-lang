@@ -1,10 +1,4 @@
-import sys
-sys.path.append("../")
-
-from lib.variable import ExperimentVariable, multifact
-from lib.design import Design
-from lib.unit import Units 
-from lib.assignment import assign 
+from planet import *
 
 gesture = ExperimentVariable("Gesture", options=[
     "Tap", "Double Tap", "Swipe Left", "Swipe Right",  "Swipe Up", "Swipe Down", 

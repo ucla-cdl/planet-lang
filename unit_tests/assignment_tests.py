@@ -1,13 +1,5 @@
-import sys
-sys.path.append("../src")
-
 from z3 import *
-from lib.variable import ExperimentVariable, multifact
-from lib.design import Design, nest, cross
-from lib.unit import Units
-from lib.assignment import assign
-from lib.solver import BitVecSolver
-import numpy as np
+from planet import *
 import unittest
 import duckdb
 
@@ -28,7 +20,7 @@ class TestSolver(unittest.TestCase):
             Design()
                 .within_subjects(count)
                 .counterbalance(count)
-                .limit_groups(len(count))
+                .limit_plans(len(count))
         )
 
 

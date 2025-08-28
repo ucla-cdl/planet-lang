@@ -2,6 +2,7 @@ from z3 import *
 from .blocks import BlockFactor
 import duckdb
 import time
+from planet.candl import *
 
 class Unit:
     """ a Unit represents a singular unit that participates in a study. Units
@@ -25,13 +26,18 @@ class Units:
         assert isinstance(attr, BlockFactor)
         self.attributes.append(attr)
 
-    
-    def eval(self):
-        if not self.evaled:
+    def _create_new_table(self):
+        if self.evaled:
+            duckdb.sql(f"TRUNCATE TABLE {self.table}")
+        else:
             duckdb.sql(f"create table {self.table} ( pid int, plan int )")
-            for i in range(self.n):
-                duckdb.sql(f"insert into {self.table} values ({i+1}, 0)")
-            self.evaled = True
+
+    # FIXME: ugly workaround when assigning units multiple times
+    def eval(self):
+        self._create_new_table()
+        duckdb.sql(f"INSERT INTO {self.table} SELECT i + 1, 0 FROM range({self.n}) AS t(i)")
+        self.evaled = True
+
 
     def get_table(self):
         self.eval()
@@ -103,31 +109,19 @@ class Groups(Units):
 
     n: id of the unit
     """
-    def __init__(self, n):
-        Units.__init__(self, n)
-        self.groups = [Group(i) for i in range(n)]
-
-    def expand_groups(self, num_groups):
-  
-        assert num_groups % self.n == 0
-        
-        new_groups = Groups(num_groups)
-        for attr in self.attributes:
-
-            new_groups.add_attribute(attr)
-        return new_groups
-    
-
-
-class Group:
-    def __init__(self, n):
+    def __init__(self, n=0):
         self.n = n
-        self.labels = []
 
-    def add_label(self, label):
-        self.labels.append(label)
-
+    def set_num_plans(self, n):
+        self.n = n 
     
+    def __len__(self):
+        return self.n
+    
+
+ 
+    
+
 
 
 

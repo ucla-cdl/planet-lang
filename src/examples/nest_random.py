@@ -1,13 +1,4 @@
-import sys
-sys.path.append("../")
-from lib.variable import ExperimentVariable, multifact
-from lib.unit import Units 
-from lib.assignment import assign 
-from z3 import *
-from lib.variable import ExperimentVariable
-from lib.design import Design
-from lib.nest import nest
-from lib.replications import Replications
+from planet import *
 
 # user creates two variables: task and treatment 
 # the user provides the variable name, and an array 
@@ -21,7 +12,6 @@ task = ExperimentVariable(
     options = ["a", "b"]
 )
 
-rep = Replications(2)
 
 
 des1 = (
@@ -33,13 +23,12 @@ des1 = (
 des2 = (
     Design()
         .within_subjects(task)
+        # .counterbalance(task)
+        # .absolute_rank(task, "a", 1)
 )
 
-units = Units(10)
+units = Units(4)
 
 
-
-
-des = nest(inner=des1, outer=des2)
-final = assign(units, des)
-print(final)
+des = nest(inner=des2, outer=des1)
+print(assign(units, des))

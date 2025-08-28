@@ -3,7 +3,6 @@ from z3 import *                # Requires: pip install z3-solver
 import numpy as np
 
 # Core system modules (planet package)
-from planet.orders import Sequence
 from planet.candl import *          #
 from planet.helpers import *       
 from planet.narray import *
@@ -25,18 +24,31 @@ class Designer:
     """
     def __init__(self):
         self.constraints = []
+        self.previous_snapshot = None
+        self.previous_model = []
 
-    def start(self, subjects, sequence, variables=[]):
-        assert isinstance(sequence, Sequence)
-        assert isinstance(subjects, Units)
-        assert len(variables) > 0
-
-        self.units = subjects
-        self.seq = sequence
-        self.num_trials = len(sequence)
-        self.variables = variables
+    def start(self, design):
+        self.design = design
+        self.num_plans = design.num_plans()
+        self.num_trials = design.get_width()
+        self.variables = design.variables
         self.shape = self.determine_shape()
         self.solver = BitVecSolver(self.shape, self.variables)
+        self.check_trial_compatibility()
+    
+    
+    def check_trial_compatibility(self):
+        if self.design.maximum_trials > -1 and self.num_trials > self.design.maximum_trials:
+            raise ValueError(
+                f"Design specifies {self.num_trials} trials, "
+                f"but there are only {self.design.maximum_trials} possible conditions. "
+                "Reduce trials or use nesting for to repeat conditions."
+            )
+
+    @property
+    def design_has_changed(self):
+        return self.design.snapshot() != self.previous_snapshot
+
 
     def _get_experiment_variables(self, constraint):
         if isinstance(constraint.variable, MultiFactVariable):
@@ -59,7 +71,7 @@ class Designer:
                             constraint.width if constraint.width else width
                         )
                         constraint.height = (
-                            constraint.height if constraint.height else len(groups)
+                            constraint.height if constraint.height else groups
                         )
 
                     self.counterbalance(
@@ -69,8 +81,8 @@ class Designer:
                         stride=constraint.stride,
                     )
 
+
                 case NoRepeat():
-            
                         self.solver.all_different(
                             variable, 
                             constraint.width, 
@@ -105,6 +117,9 @@ class Designer:
                     )
 
                 case InnerBlock():
+                    constraint.width = (
+                        constraint.width if constraint.width else width
+                    )
                     self.match_inner(
                         constraint.variable, 
                         constraint.width, 
@@ -117,15 +132,13 @@ class Designer:
                         constraint.width, 
                         constraint.height
                     )
-                case _:
-                    raise ValueError("Could not identify proper constraint")
-        
+ 
+    
     def determine_shape(self):
-        if len(self.units): 
-            n = len(self.units)
+        if self.num_plans: 
+            n = self.num_plans
         else: 
             n = 1
-
         return tuple([n, self.num_trials])
     
     # FIXME: creating block matrix for specific test case 
@@ -138,22 +151,26 @@ class Designer:
         # get number of block matrices per row
         m = int(self.shape[1] / width)
 
-        for i in range(n):
-            for j in range(m):
-                self.solver.match_block(
-                    variable, 
-                    [
-                        (i*height + 0, i * height  + height, 1)
-                        , (j*width + 0, j * width + width, 1)
-                    ]
-                )
+        composed_variables = variable.get_variables()
+        for variable in composed_variables:
+            for i in range(n):
+                for j in range(m):
+                    self.solver.match_block(
+                        variable, 
+                        [
+                            (i*height + 0, i * height  + height, 1)
+                            , (j*width + 0, j * width + width, 1)
+                        ]
+                    )
+
 
     def match_outer(self, v, w, h):
-        # NEEDS TO BE it's own func / constraint option. Don't treat these together 
-        for i in range(h):
-            for j in range(w):
-                
-                self.solver.match_block(v, [(i, self.shape[0], h), (j, self.shape[1], w)])
+        composed_variables = v.get_variables()
+        for v in composed_variables:
+            for i in range(h):
+                for j in range(w):
+                    
+                    self.solver.match_block(v, [(i, self.shape[0], h), (j, self.shape[1], w)])
 
     def counterbalance(self, v, w, h, stride = [1, 1]):
         block = [(0, h, stride[0]), (0, w, stride[1])]
@@ -170,33 +187,38 @@ class Designer:
     
     def absolute_rank(self, variable, ranks):
         transformed_ranks = {variable.conditions.index(condition): rank for condition, rank in ranks.items()}
-        print(transformed_ranks)
-        print(self.variables)
         self.solver.absolute_rank(variable, transformed_ranks)
     
 
-    def get_groups(self, model):
-        if not len(self.units):
-            self.units.n = len(model)
+
+
 
 
 
     # NOTE: this is with a bitvec representation...
     # ensure that this works
     def eval(self):
-        # perhaps this is where we create a different class?
-        # we have so many new instance vars
-        # these should maybe be classes or something? 
-        if len(self.units):
-            model = self.solver.get_one_model()
-            assert len(model) > 0
-            model = np.array(model).reshape(self.shape).tolist()
-            return np.array(self.solver.encoding_to_name(model, self.variables))
+        if not self.design_has_changed:
+            model = self.previous_model
+
         else:
-            model = self.solver.get_all_models()
-            self.get_groups(model)
-            return np.array(self.solver.encoding_to_name(model, self.variables))
-            
+            self.eval_constraints(self.design.get_constraints(), self.num_plans, self.num_trials)
+            # perhaps this is where we create a different class?
+            # we have so many new instance vars
+            # these should maybe be classes or something? 
+   
+            model = self.solver.get_one_model()
+            self.previous_snapshot = self.design.snapshot()
+            self.previous_model = model
+        return self.decode(model)
+  
+    def decode(self, model):
+        if not len(model):
+            return np.array([])
+        else:
+            reshaped_model = np.array(model).reshape(self.shape).tolist()
+            return np.array(self.solver.encoding_to_name(reshaped_model, self.variables))
+        
   
     # NOTE: this is with a bitvec representation...
     # ensure that this works
@@ -204,7 +226,7 @@ class Designer:
         # perhaps this is where we create a different class?
         # we have so many new instance vars
         # these should maybe be classes or something? 
-        if len(self.units):
+        if self.num_plans:
             models = self.solver.get_all_models()
 
             ret = []
@@ -219,3 +241,5 @@ class Designer:
             self.get_groups(model)
             return np.array(self.solver.encoding_to_name(model, self.variables))
             
+
+    

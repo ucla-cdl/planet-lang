@@ -42,6 +42,9 @@ class ExperimentVariable:
     def get_condition(self, s):
         return self.conditions[self.condition_map[s]]
 
+    def get_variables(self):
+        return [self]
+
     def add_constraint(self, constraint):
         self.constraint = constraint
 
@@ -67,6 +70,13 @@ class DesignVariable:
     def counterbalance(self, flag = True):
         self.counterbalanced = flag
 
+   
+
+
+
+
+
+
 class Replications(ExperimentVariable):
     def __init__(self, n):
         self.__init__("replications", n)
@@ -78,12 +88,31 @@ class MultiFactVariable(ExperimentVariable):
         combinations = ["-".join(combination) for combination in combinations]
 
         super().__init__("factorial", self.n, options = combinations)
-        all(isinstance(variable, ExperimentVariable) for variable in variables)
         self.variables = variables
 
-    def get_variables(self):
+    def _get_variables(self):
         return self.variables
 
+    def _unpack_variables(self, variables):
+        if len(variables) == 1:
+            return variables[0]._get_variables() if isinstance(variables[0], MultiFactVariable) else variables
+
+        else:
+            curr = variables[0]
+            arr = curr._get_variables() if isinstance(curr, MultiFactVariable) else [curr]
+            tail = self._unpack_variables(variables[1:])
+            arr.extend(self._unpack_variables(variables[1:]))
+            return arr
+
+    def get_variables(self):
+        return self._unpack_variables(self.variables)
+    
+    def contains_variable(self, var):
+        return var in self.variables
+    
+    def get_variables(self):
+        return self.variables
+    
 
 def multifact(variables):
     return MultiFactVariable(variables)

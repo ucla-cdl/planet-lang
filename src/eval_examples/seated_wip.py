@@ -1,11 +1,4 @@
-import os
-import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
-
-from lib.variable import ExperimentVariable, multifact
-from lib.design import Design
-from lib.unit import Units 
-from lib.assignment import assign 
+from planet import *
 
 """
 https://dl.acm.org/doi/pdf/10.1145/3613904.3642395
@@ -28,7 +21,7 @@ des = (
     Design()
         .within_subjects(multi)
         .counterbalance(multi)
-        .limit_groups(len(multi))
+        .limit_plans(len(multi))
 )
 
 assignment = assign(units, des)

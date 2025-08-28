@@ -1,6 +1,4 @@
-from z3 import *
-from lib.variable import ExperimentVariable
-from lib.design import Design
+from planet import *
 
 
 # NOTE: need to make all different wrt. variables. Should this be under the hood though?
@@ -15,15 +13,21 @@ task = ExperimentVariable(
     options = ["A", "B"]
 )
 
+units = Units(12)
 
-# # note: set / argv because no order
-des = (
+des1 = (
     Design()
-        .within_subjects(treatment, task)
-        .counterbalance(task)
+        .within_subjects(treatment)
         .counterbalance(treatment)
-        .num_trials(2)
+        # .start_with(treatment, "a", 1)
+     
+)
+# # note: set / argv because no order
+des2 = (
+    Design()
+        .within_subjects(task)
+        .counterbalance(task)
      
 )
 
-print(des)
+print(assign(units, cross(des1, des2)))
