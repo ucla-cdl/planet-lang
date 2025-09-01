@@ -41,7 +41,13 @@ class Design:
 
     @property
     def maximum_trials(self):
-        max_width = min(spec.max_width() for spec in self.design_variables.values())
+        # FIXME: make this more explicit and ensure this always works.
+        # the idea is that between subjects variables have an inner block, and a
+        # within subjects variable should repeat. If it is not within or
+        # between, and the user counterbalanced the variable, then it should be
+        # part of a multifact variable
+        is_not_in_multifact = lambda spec: not (spec.is_repeated and spec.is_counterbalanced and not spec.is_blocked_inner)
+        max_width = min(spec.max_width() for spec in self.design_variables.values() if is_not_in_multifact(spec))
         return max_width
 
     # FIXME: this is slow
@@ -86,7 +92,6 @@ class Design:
 
     def num_trials(self, n):
         if self.trials:
-            print(self.trials)
             raise ValueError("It appears num_trials was already specified for this design. You can only set the number of trials once.")
 
         self.trials = n

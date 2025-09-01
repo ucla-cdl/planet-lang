@@ -26,6 +26,7 @@ class PlanGenerator:
         return randomizer.apply_randomization(width, span, random_index, n, plans)
 
     def generate(self):
+        # FIXME: move designer out of design
         self.design.designer.start(self.design)
         plans = self.design.designer.eval()
 

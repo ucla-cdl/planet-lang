@@ -87,4 +87,7 @@ class BitVectors:
     def new_bitvector(self):
         # FIXME: hacky
         return BitVec("x", self.len)
+    
+    def int_as_bitvec(self, val, size):
+        return BitVecVal(val, size)
 
