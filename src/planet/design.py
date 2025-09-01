@@ -83,12 +83,6 @@ class Design:
     def num_plans(self):
         self._determine_num_plans()
         return 1 if self.is_empty or self.is_random else self._determine_num_plans()
-    
-    def to_latex(self):
-        # FIXME: won't work with random plans
-        matrix = self.get_plans()
-        formatter = LatexExport(matrix)
-        formatter.to_latex()
 
     def num_trials(self, n):
         if self.trials:
