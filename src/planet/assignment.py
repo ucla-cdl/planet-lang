@@ -5,9 +5,10 @@ from .candl import *
 from .unit import Clusters
 import pandas as pd
 import math
-
+from pathlib import Path
 import duckdb
 from planet.plans import PlanGenerator
+from planet.formatter import LatexExport
 
 
 def determine_plans(units, design):
@@ -21,9 +22,10 @@ class Assignment:
         assign_counterbalance(units, plans)
         self.units = units
         self.plans = plans
+        self.computed_plans = determine_plans(units, plans)
     
     def format_plans(self):
-        matrix = determine_plans(self.units, self.plans)
+        matrix = self.computed_plans
         ret = ""
 
         for i in range(len(matrix)):
@@ -40,15 +42,26 @@ class Assignment:
     
    
     def to_csv(self):
-        plans = self.plans.eval()
+        plans = self.computed_plans
+
         trials = [f"trial{i+1}" for i in range(len(plans[0]))]
         df = pd.DataFrame(plans, columns=trials)
         units_df = self.format_assignment()
+
+        OUTPUT_PATH = Path("outputs") / "assignment.csv"
+        OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)  # create folder if needed
+
         df = df.reset_index()
         df = df.rename(columns={'index': 'row_number'})
         df = units_df.merge(df, how='inner', left_on='plan', right_on='row_number')
         df = df.drop("row_number", axis=1)
-        df.to_csv('../outputs/assignment.csv', index=False)
+        df.to_csv(OUTPUT_PATH, index=False)
+
+    def to_latex(self):
+        # FIXME: won't work with random plans
+        matrix = self.computed_plans
+        formatter = LatexExport(matrix)
+        formatter.to_latex()
     
     def format_assignment(self):
         return duckdb.sql(f"select * from {self.units.table}").to_df()
