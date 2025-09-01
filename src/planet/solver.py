@@ -5,7 +5,7 @@ from .helpers import *
 from .bitvector import BitVectors
 import itertools
 import warnings
-from itertools import combinations
+set_param('parallel.enable', True)
 
 class Solver: 
     def __init__(self, shape, variables):
@@ -122,8 +122,25 @@ class BitVecSolver(Solver):
         """
         if f returns true increase count by one for all variables
         """
-        counts = [If(f(var, condition), 1, 0) for var in variables]
+        counts = [If(f(var, condition), BitVecVal(1, 1), BitVecVal(0, 1)) for var in variables]
         return sum(counts)
+    
+    
+    def precompute_complete_counterbalancing(self, conditions, plans, variables):
+        '''THis is an optimization because there is only one canonical solution
+        for fully-counterbalanced designs. There are many symmetrical solutions
+        that z3 needs to explore. Using this, we precompute the single
+        solution.'''
+  
+        is_complete = lambda conds, rows: len(rows) == math.factorial(len(conds))
+        if is_complete(conditions, plans):
+            permutations = list(itertools.permutations(conditions))
+            for i in range(len(plans)):
+                for j in range(len(plans[i])):
+                    # Need to set conditions of all counterbalanced variables
+                    for k in range(len(variables)):
+                        self.solver.add(self.bitvectors.get_variable_assignment(variables[k], plans[i][j]) == permutations[i][j][k])
+    
 
     def counterbalance(self, block=[], variables=None):
         """
@@ -132,17 +149,15 @@ class BitVecSolver(Solver):
         Returns:
             None: Modifies the solver in-place
         """
-        design_matrix = shape_array(self.z3_variables, self.shape)
-        design_matrix = self.slice_matrix(design_matrix, block)
-        design_matrix = np.transpose(design_matrix)
-      
-        # Generate all possible combinations of variable values
         possible_conditions = list(itertools.product(
             *[set(range(len(variable))) for variable in variables]
         ))
-        
+        design_matrix = shape_array(self.z3_variables, self.shape)
+        design_matrix = self.slice_matrix(design_matrix, block)
+        design_matrix_transposed = np.transpose(design_matrix)
+
         counts = []
-        for trials in design_matrix:
+        for trials in design_matrix_transposed:
             masked_variables = list(zip(*[
                 list(map(lambda z3_variable: self.bitvectors.get_variable_assignment(variable, z3_variable), trials)) 
                 for variable in variables
@@ -151,10 +166,12 @@ class BitVecSolver(Solver):
             check_equality = lambda variables, assignments: And([variables[i] == assignments[i] for i in range(len(variables))])
             counts.extend([self.count(masked_variables, condition, check_equality) for condition in possible_conditions])
         
-        # Add constraints to ensure equal counts for all combinations
+        # # Add constraints to ensure equal counts for all combinations
         for i in range(len(counts)):
-            for j in range(i+1, len(counts)):
-                self.solver.add(counts[i] == counts[j])
+            self.solver.add(counts[i] == counts[0])
+
+        self.precompute_complete_counterbalancing(possible_conditions, design_matrix, variables) 
+    
 
    
     def match_block(self, variable, block = []):
