@@ -1,6 +1,7 @@
 # PLanet
 Welcome to the PLanet repository. PLanet is a high-level, declarative
-programming language to help researchers author verifiable experimental designs.
+programming language to help researchers author verifiable experimental designs. 
+(For more information, see our technical paper: **[PLanet: Formalizing Experimental Design](https://arxiv.org/abs/2505.09094)**).
 
 You can install PLanet via pip using `pip3 install planet-dsl`. If installing from source, install the requirements using `pip3 install -r
 requirements.txt` to setup the environment.
