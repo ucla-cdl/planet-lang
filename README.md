@@ -269,11 +269,12 @@ before b (rank: 0) in any order.
 
 
 ### to_latex()
-Creates a file called design.tex in an folder called outputs. The design.tex
-file contains latex code for displaying a table representing the design. 
+Creates a file called design.tex in ``outputs``. The design.tex
+file contains latex code for displaying a table representing the plans generated
+from the design used during assignment. 
 
 ```python
-Design().to_latex()
+Assignment().to_latex()
 ```
 
 
