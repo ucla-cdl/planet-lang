@@ -103,17 +103,22 @@ class Designer:
                     )
 
                 case SetRank():
+                    constraint.width = (constraint.width if constraint.width else width)
                     self.set_rank(
                         constraint.variable, 
                         constraint.condition,
                         constraint.rank,
-                        constraint.condition2
+                        constraint.condition2,
+                        constraint.width,
+                        constraint.stride
                     )
 
                 case AbsoluteRank():
                     self.absolute_rank(
                         constraint.variable, 
-                        constraint.ranks
+                        constraint.ranks,
+                        constraint.width,
+                        constraint.stride
                     )
 
                 case InnerBlock():
@@ -180,14 +185,14 @@ class Designer:
         self.solver.start_with(variable, variable.conditions.index(condition))
 
     def set_rank(self, variable, condition, rank, condition2):
-        self.solver.set_rank(variable, variable.conditions.index(condition), rank, variable.conditions.index(condition2))
+        self.solver.set_rank(variable, variable.conditions.index(condition), rank, variable.conditions.index(condition2), width, stride)
     
     def set_position(self, variable, condition, pos):
         self.solver.set_position(variable, variable.conditions.index(condition), pos)
     
-    def absolute_rank(self, variable, ranks):
+    def absolute_rank(self, variable, ranks, width, stride):
         transformed_ranks = {variable.conditions.index(condition): rank for condition, rank in ranks.items()}
-        self.solver.absolute_rank(variable, transformed_ranks)
+        self.solver.absolute_rank(variable, transformed_ranks, width, stride)
     
 
 

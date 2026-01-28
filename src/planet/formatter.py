@@ -17,7 +17,7 @@ class LatexExport:
         try:
             OUTPUT_PATH = Path("outputs") / "design.tex"
             OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)  # create folder if needed
-     
+            print(OUTPUT_PATH)
             with open(OUTPUT_PATH, 'w', encoding='utf-8') as tex_file:
                 tex_file.write(df.to_latex())
             print(f"success")

@@ -123,8 +123,8 @@ class Design:
         self.add_constraint(SetPosition(variable, condition, pos))
         return self
     
-    def set_rank(self, variable:ExperimentVariable, condition, rank, condition2):
-        self.add_constraint(SetRank(variable, condition, rank, condition2))
+    def set_rank(self, variable:ExperimentVariable, condition, rank, condition2, width=0):
+        self.add_constraint(SetRank(variable, condition, rank, condition2, width))
         return self
     
     def absolute_rank(self, variable:ExperimentVariable, condition, rank):

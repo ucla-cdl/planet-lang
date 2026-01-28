@@ -43,7 +43,7 @@ def nest_structure(d1, d2):
             stride = [1, 1]
         ))
 
-
+    print(constraints)
     return constraints
 
 
@@ -85,6 +85,12 @@ def copy_nested_constraints(design1, design2):
                 )
             )
 
+        elif isinstance(constraint, AbsoluteRank):
+            # Modify the existing constraint's width and stride
+            constraint.width = constraint.width if constraint.width < design1.get_width() else design1.get_width()
+            constraint.stride = constraint.stride
+            constraints.append(constraint)
+
         else:
             constraints.append(copy.copy(constraint))
 
@@ -113,6 +119,13 @@ def copy_nested_constraints(design1, design2):
                     constraint.stride*width1
                 )
             )
+        
+        elif isinstance(constraint, AbsoluteRank):
+            # Modify the existing constraint's width and stride
+            constraint.width = constraint.width if constraint.width < width2 else width2
+            constraint.width *= width1
+            constraint.stride *= width1
+            constraints.append(constraint)
     
         elif isinstance(constraint, InnerBlock):
             constraints.append(
@@ -120,7 +133,8 @@ def copy_nested_constraints(design1, design2):
                     constraint.variable, 
                     constraint.width*width1, 
                     constraint.height*design1.num_plans(), 
-                    stride = [1, 1])
+                    stride=[1, 1]
+                )
             )
 
         # # here I need to multiply stride by the number of conditions of the block variable
@@ -177,7 +191,7 @@ def nest(*, outer:Design, inner:Design):
         combined_design.add_constraints(copied_constraints)
 
     combined_design.add_constraints(nest_structure(inner, outer))
-
+    
 
     return combined_design
 

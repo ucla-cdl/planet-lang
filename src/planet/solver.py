@@ -16,7 +16,7 @@ class Solver:
 class BitVecSolver(Solver):
     def __init__(self, shape, variables):
         """
-        Solver using Z3 BitVectors for combinatorial designs.
+        Solver using Z3 BitVectors .
         Automatically sets up BitVectors and enforces row uniqueness.
         """
         super().__init__(shape, variables)
@@ -98,9 +98,9 @@ class BitVecSolver(Solver):
         return np.array(arr)[start_col:end_col:col_step, start_row:end_row:row_step]
 
 
-    def absolute_rank(self, var, ranks):
-        design_matrix = shape_array(self.z3_variables, self.shape)
-        n = self.n_trials()
+    def absolute_rank(self, var, ranks, width, stride):
+        design_matrix = self.get_partition(width, stride)
+        n = len(var)
 
         rank_fn = Function(f'rank_{str(var)}', BitVecSort(self.bitvectors.determine_num_bits()), IntSort())
         self.solver.add([rank_fn(plan[i]) >= rank_fn(plan[i+1]) for i in range(n-1) for plan in design_matrix])
@@ -143,12 +143,6 @@ class BitVecSolver(Solver):
     
 
     def counterbalance(self, block=[], variables=None):
-        """
-        Apply counterbalancing to ensure equal occurrence of variable combinations.
-            
-        Returns:
-            None: Modifies the solver in-place
-        """
         possible_conditions = list(itertools.product(
             *[set(range(len(variable))) for variable in variables]
         ))
