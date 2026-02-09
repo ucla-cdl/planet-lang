@@ -17,14 +17,11 @@ task = ExperimentVariable(
 des1 = (
     Design()
         .within_subjects(treatment)
-        # .counterbalance(treatment)
 )
 
 des2 = (
     Design()
         .within_subjects(task)
-        # .counterbalance(task)
-        # .absolute_rank(task, "a", 1)
 )
 
 units = Units(4)

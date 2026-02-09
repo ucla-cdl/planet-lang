@@ -16,8 +16,9 @@ test = multifact([treatment, task])
 des = (
     Design()
         .within_subjects(test)
-        # .counterbalance(test)
-        # .limit_plans(9)
+        .counterbalance(test)
+        .limit_plans(9)
+        .num_trials(9)
 )
 
 units = Units(1)

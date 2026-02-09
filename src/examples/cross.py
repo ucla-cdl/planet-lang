@@ -30,4 +30,6 @@ des2 = (
      
 )
 
-print(assign(units, cross(des1, des2)))
+des = nest(inner=des1, outer=des2).num_trials(2)
+
+print(assign(units, des))
