@@ -173,6 +173,7 @@ class Design:
             num_plans = (self.num_groups // lcm) * lcm
             if num_plans == 0: 
                 raise ValueError(f"Number of plans ({self.num_groups}) is too small to accommodate counterbalancing constraints. Minimum number of plans needed is {lcm}.")
+            
             return (self.num_groups // lcm) * lcm
 
         counterbalance_info = []
