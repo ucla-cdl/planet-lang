@@ -235,7 +235,7 @@ The result is a fully-counterbalanced, within-subjects design, where each units
 gets observed twice. This means that not every unit sees every assignment value
 of the treatment variable. The number of plans 3!/1! = 6. 
 
-### set_rank
+### absolute_rank
 Sets presedence of a variable's order accross all plans. Default rank is 0.
 Setting a higher rank to one condition results in this condition preceeding all
 other conditions. 
@@ -243,7 +243,7 @@ other conditions.
 ```python
 ( 
     Design()
-    .set_rank(variable, condition, rank)
+    .absolute_rank(variable, condition, rank)
 )
 ```
 
@@ -261,7 +261,7 @@ treatment = Variable("treatment", options=["a", "b"])
 design = (
     Design()
     .within_subjects(treatment)
-    .set_rank(treatment, "a", 1)
+    .absolute_rank(treatment, "a", 1)
 )
 ```
 
