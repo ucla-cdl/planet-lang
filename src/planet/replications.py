@@ -16,7 +16,7 @@ class Replications(Plans):
         super().__init__()
         var = ExperimentVariable("replications", 1)
         self._add_variable(var)
-        self.groups = Groups(1)
+        self.num_groups = 1
         self.num_trials(n)
         self.constraints.append(Counterbalance(var, width = n, height = 1, stride = [1,1]))
 

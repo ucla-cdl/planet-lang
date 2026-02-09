@@ -7,6 +7,7 @@ from planet.constraint import (
     SetRank, SetPosition, AbsoluteRank
 )
 from planet.candl import combine_lists
+from planet.region import DesignRegion
 
 
 def cross_structure(d1, d2):
@@ -15,9 +16,7 @@ def cross_structure(d1, d2):
     for i in range(len(d2.variables)):
         constraints.append(InnerBlock(
             d2.variables[i],
-            1,
-            d1.num_plans(),
-            stride = [1, 1]
+            DesignRegion(1, d1.num_plans(), [1, 1])
         ))
 
      # Match all variables from the inner design across every block
@@ -79,7 +78,7 @@ def copy_crossed_constraints(design1, design2, total_conditions, total_groups):
         elif isinstance(constraint, InnerBlock):
             stride_height = constraint.height if constraint.height else design1.num_plans()
             constraints.append(
-                InnerBlock(constraint.variable, constraint.width,constraint.height*design1.num_plans(), stride = [1, 1])
+                InnerBlock(constraint.variable, DesignRegion(constraint.width,constraint.height*design1.num_plans(), [1, 1]))
             )
 
         # # here I need to multiply stride by the number of conditions of the block variable
@@ -134,5 +133,6 @@ def cross(design1, design2):
     combined_design.variables.extend(combined_variables)
     combined_design.add_constraints(copy_crossed_constraints(design1, design2, total_conditions, total_groups))
     combined_design.add_constraints(cross_structure(design1, design2))
-    
+    combined_design.set_minimum_trials(design1.get_width())
+
     return combined_design

@@ -1,25 +1,14 @@
 # External libraries
 from z3 import *             
 import copy
-import math
-import pandas as pd
 
-# Planet system imports
-from planet.unit import Groups
-from planet.variable import  multifact, ExperimentVariable, MultiFactVariable
 from planet.design import Design
 from planet.constraint import (
-    StartWith, Counterbalance, NoRepeat, InnerBlock, OuterBlock,
-    SetRank, SetPosition, AbsoluteRank
+    Counterbalance, NoRepeat, InnerBlock, OuterBlock,
+    AbsoluteRank
 )
+from planet.region import DesignRegion
 
-def eval(designs):
-    for design in designs:
-        if design.num_plans() == 0:
-            design._determine_num_plans()
-        
-def is_counterbalanced(d1, d2):
-    return d1.counterbalanced or d2.counterbalanced
 
 def nest_structure(d1, d2):
     constraints = []
@@ -28,13 +17,10 @@ def nest_structure(d1, d2):
     for variable in d2.design_variables:
         constraints.append(InnerBlock(
             variable,
-            d1.get_width(),
-            d1.num_plans(),
-            stride = [1, 1]
+            DesignRegion(d1.get_width(),d1.num_plans(),[1, 1])
         ))
 
      # Match all variables from the inner design across every block
-
     for variable in d1.design_variables:
         constraints.append(OuterBlock(
             variable,
@@ -43,7 +29,6 @@ def nest_structure(d1, d2):
             stride = [1, 1]
         ))
 
-    print(constraints)
     return constraints
 
 
@@ -79,17 +64,20 @@ def copy_nested_constraints(design1, design2):
             constraints.append(
                 InnerBlock(
                     constraint.variable,
-                    width=constraint.width or design1.get_width(),
-                    height=constraint.height,
-                    stride=constraint.stride
+                    DesignRegion(
+                        constraint.width or design1.get_width(),
+                        constraint.height,
+                        constraint.stride
+                    )
                 )
             )
 
         elif isinstance(constraint, AbsoluteRank):
             # Modify the existing constraint's width and stride
-            constraint.width = constraint.width if constraint.width < design1.get_width() else design1.get_width()
-            constraint.stride = constraint.stride
-            constraints.append(constraint)
+            new_constraint = copy.copy(constraint)
+            new_constraint.width = constraint.width if constraint.width < design1.get_width() else design1.get_width()
+            new_constraint.stride = constraint.stride
+            constraints.append(new_constraint)
 
         else:
             constraints.append(copy.copy(constraint))
@@ -122,18 +110,21 @@ def copy_nested_constraints(design1, design2):
         
         elif isinstance(constraint, AbsoluteRank):
             # Modify the existing constraint's width and stride
-            constraint.width = constraint.width if constraint.width < width2 else width2
-            constraint.width *= width1
-            constraint.stride *= width1
-            constraints.append(constraint)
+            new_constraint = copy.copy(constraint)
+            new_constraint.width = constraint.width if constraint.width < width2 else width2
+            new_constraint.width *= width1
+            new_constraint.stride *= width1
+            constraints.append(new_constraint)
     
         elif isinstance(constraint, InnerBlock):
             constraints.append(
                 InnerBlock(
                     constraint.variable, 
+                    DesignRegion(
                     constraint.width*width1, 
                     constraint.height*design1.num_plans(), 
-                    stride=[1, 1]
+                    [1, 1]
+                    )
                 )
             )
 
@@ -178,11 +169,6 @@ def nest(*, outer:Design, inner:Design):
         .num_trials(total_conditions)
     )
 
-
-    # NOTE: ORDER MATTERS HERE... The design variable spec stores one outermatch
-    # constraint. Prioritze existing constraints, as they will always have a
-    # width equal to or smaller. Make this more elegant later?
-    # combined_design.add_variables(combined_variables)
     add_design_variables(des = inner, combined_des = combined_design)
     add_design_variables(des = outer, combined_des = combined_design)
     # Nest structural constraints and copy semantic ones
@@ -191,7 +177,7 @@ def nest(*, outer:Design, inner:Design):
         combined_design.add_constraints(copied_constraints)
 
     combined_design.add_constraints(nest_structure(inner, outer))
-    
+    combined_design.set_minimum_trials(inner.get_width() * outer.get_width())
 
     return combined_design
 

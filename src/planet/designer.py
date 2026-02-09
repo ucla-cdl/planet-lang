@@ -6,7 +6,7 @@ import numpy as np
 from planet.candl import *          #
 from planet.helpers import *       
 from planet.narray import *
-from planet.solver import BitVecSolver
+from planet.solver import BitVecSolver, TestSolver
 from planet.constraint import (
     StartWith, Counterbalance, NoRepeat,
     InnerBlock, OuterBlock, Constraint,
@@ -40,9 +40,16 @@ class Designer:
     def check_trial_compatibility(self):
         if self.design.maximum_trials > -1 and self.num_trials > self.design.maximum_trials:
             raise ValueError(
-                f"Design specifies {self.num_trials} trials, "
+                f"Design specifies {self.num_trials} trial(s), "
                 f"but there are only {self.design.maximum_trials} possible conditions. "
-                "Reduce trials or use nesting for to repeat conditions."
+                "Reduce trials or use nesting to repeat conditions."
+            )
+        
+        if self.design._minimum_trials > 1 and self.num_trials < self.design._minimum_trials:
+            raise ValueError(
+                f"Design specifies {self.num_trials} trial(s), "
+                f"but there must be {self.design._minimum_trials} trial(s). "
+                "This is often due to nesting or crossing designs."
             )
 
     @property
@@ -222,6 +229,7 @@ class Designer:
             return np.array([])
         else:
             reshaped_model = np.array(model).reshape(self.shape).tolist()
+            print(reshaped_model)
             return np.array(self.solver.encoding_to_name(reshaped_model, self.variables))
         
   

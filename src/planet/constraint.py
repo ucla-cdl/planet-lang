@@ -25,8 +25,8 @@ class PlanConstraint(Constraint):
 
 class InnerBlock(BlockConstraint):
     """Represents a block structure in the experimental design."""
-    def __init__(self, variable, width, height, stride= [1,1]):
-        super().__init__(variable, width, height, stride)
+    def __init__(self, variable, region):
+        super().__init__(variable, region.width, region.height, region.stride)
 
 class OuterBlock(BlockConstraint):
     """Represents a block structure in the experimental design."""
