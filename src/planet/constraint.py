@@ -25,8 +25,8 @@ class PlanConstraint(Constraint):
 
 class InnerBlock(BlockConstraint):
     """Represents a block structure in the experimental design."""
-    def __init__(self, variable, width, height, stride= [1,1]):
-        super().__init__(variable, width, height, stride)
+    def __init__(self, variable, region):
+        super().__init__(variable, region.width, region.height, region.stride)
 
 class OuterBlock(BlockConstraint):
     """Represents a block structure in the experimental design."""
@@ -57,17 +57,21 @@ class StartWith(Constraint):
         # FIXME: modifying variables to contain list
         self.condition = condition
 
-class SetRank(Constraint):
-    def __init__(self, variable, condition, rank, condition2):
-        super().__init__(variable)
+class SetRank(PlanConstraint):
+    def __init__(self, variable, condition, rank, condition2, width=0, stride=1):
+        if width is None:
+            width = len(variable)
+        super().__init__(variable, width, stride)
         self.condition = condition
         self.rank = rank
         self.condition2 = condition2 
 
     
-class AbsoluteRank(Constraint):
-    def __init__(self, variable, condition, rank):
-        super().__init__(variable)
+class AbsoluteRank(PlanConstraint):
+    def __init__(self, variable, condition, rank, width=None, stride=1):
+        if width is None:
+            width = len(variable)
+        super().__init__(variable, width, stride)
         self.ranks = dict.fromkeys(variable.conditions, 0)
         self.add_rank(condition, rank)
 

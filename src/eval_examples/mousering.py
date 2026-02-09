@@ -28,5 +28,4 @@ page_design = (
 design = nest(inner=page_design, outer=design)
 design = nest(inner = repitition, outer = design)
 participants = Units(12)
-
 print(assign(participants, design))

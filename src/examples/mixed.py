@@ -11,12 +11,13 @@ count = ExperimentVariable(
 
 units = Units(1)
 
+#FIXME. num trials are not correct
 des = (
     Design()
         .within_subjects(count)
-        .between_subjects(treatment)
-        # .counterbalance(count)
-        # .limit_plans(4)
+        .between_subjects(treatment) #problem with num trials and btw subjects
+        .counterbalance(count)
+        .limit_plans(4)
 )
 
 print(assign(units, des))

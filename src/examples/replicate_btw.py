@@ -10,6 +10,11 @@ intervention = ExperimentVariable(
     options=["baseline", "custom"]
 )
 
+task = ExperimentVariable(
+    name = "task",
+    options=["1", "2"]
+)
+
 participants = Units(10)
 
 design = (
@@ -22,6 +27,13 @@ block = (
     .num_trials(2)
 )
 
-design = nest(inner=design, outer=block)
+
+design = nest(inner=block, outer=design)
+design = nest(outer = design,
+              inner = Design()
+               .within_subjects(task)
+               .counterbalance(task)
+)
+
 assignment = assign(participants, design)
 print(assignment)

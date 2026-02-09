@@ -26,8 +26,7 @@ design = (
     Design()
         .within_subjects(multi)
         .counterbalance(multi)
-        .limit_plans(len(multi))
-        .num_trials(6)
+        .limit_plans(len(units))
 )
 
 print(assign(units, design))
