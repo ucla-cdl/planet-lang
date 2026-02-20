@@ -35,7 +35,7 @@ class Units:
     # FIXME: ugly workaround when assigning units multiple times
     def eval(self):
         self._create_new_table()
-        duckdb.sql(f"INSERT INTO {self.table} SELECT i + 1, 0 FROM range({self.n}) AS t(i)")
+        duckdb.sql(f"INSERT INTO {self.table} SELECT i + 1, -1 FROM range({self.n}) AS t(i)")
         self.evaled = True
 
 

@@ -20,7 +20,6 @@ def cross_structure(d1, d2):
         ))
 
      # Match all variables from the inner design across every block
-
     for i in range(len(d1.variables)):
         constraints.append(OuterBlock(
             d1.variables[i],

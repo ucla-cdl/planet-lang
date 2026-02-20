@@ -168,16 +168,9 @@ class Design:
     
     def _determine_num_plans(self):
         """Determine the number of experimental plans based on constraints and trial width."""
-        if self.num_groups > 0:
-            lcm = self._determine_LCM()
-            num_plans = (self.num_groups // lcm) * lcm
-            if num_plans == 0: 
-                raise ValueError(f"Number of plans ({self.num_groups}) is too small to accommodate counterbalancing constraints. Minimum number of plans needed is {lcm}.")
-            
-            return (self.num_groups // lcm) * lcm
-
         counterbalance_info = []
         rankings = []
+        plans_precomputed = False 
 
         for variable in self.design_variables:
             if self.design_variables[variable].is_counterbalanced:
@@ -187,7 +180,20 @@ class Design:
             elif self.design_variables[variable].is_ranked:
                 rankings.append(count_values(self.design_variables[variable].get_ranks()))
 
-        return self.calculate_num_plans(counterbalance_info, rankings, self.get_width())
+            if self.constraints.has_constraint(variable, InnerBlock) or self.constraints.has_constraint(variable, OuterBlock):
+                plans_precomputed = True
+
+        plan_count = self.calculate_num_plans(counterbalance_info, rankings, self.get_width())
+
+        if self.num_groups > 0:
+            lcm = self._determine_LCM()
+            num_plans = (self.num_groups // lcm) * lcm
+            if num_plans == 0: 
+                raise ValueError(f"Number of plans ({self.num_groups}) is too small to accommodate counterbalancing constraints. Minimum number of plans needed is {lcm}.")
+            
+            plan_count = ((self.num_groups // lcm) * lcm) if plans_precomputed else min(plan_count, (self.num_groups // lcm) * lcm)
+
+        return plan_count
     
     def _determine_LCM(self):
         counterbalance_info = []

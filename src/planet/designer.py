@@ -203,10 +203,6 @@ class Designer:
     
 
 
-
-
-
-
     # NOTE: this is with a bitvec representation...
     # ensure that this works
     def eval(self):
@@ -229,7 +225,6 @@ class Designer:
             return np.array([])
         else:
             reshaped_model = np.array(model).reshape(self.shape).tolist()
-            print(reshaped_model)
             return np.array(self.solver.encoding_to_name(reshaped_model, self.variables))
         
   

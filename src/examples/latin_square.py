@@ -2,31 +2,25 @@ from planet import *
 
 
 """
-an experiment testing the effects of AR and VR interfaces combared to a
+an experiment testing the effects of AR and VR interfaces compared to a
 real-world scenario.
 """
 
-
-
-interface = ExperimentVariable(
-    name = "interface",
-    options = ["AR", "VR", "Reality"]
+drug = ExperimentVariable(
+    name = "drug",
+    options = ["tylenol", "placebo"]
 )
 
-task = ExperimentVariable(
-    name = "task",
-    options = ["basketball", "painting"]
-)
+diet = ExperimentVariable("diet", options = ["unhealthy", "healthy"])
 
 units = Units(8)
 
-multi = multifact([interface, task])
-
 design = (
     Design()
-        .within_subjects(multi)
-        .counterbalance(multi)
-        .limit_plans(len(units))
+        .within_subjects(drug)
+        .counterbalance(drug)
+        .within_subjects(diet)
+        .counterbalance(diet)
 )
 
 print(assign(units, design))

@@ -36,7 +36,6 @@ class PlanGenerator:
         # problem identifying random vars
         n = math.ceil(self.num_units / len(plans)) * len(plans)
 
-
         for rand in self.random_variables:
             plans = self.instantiate_random_variables(n, rand, plans)
 
