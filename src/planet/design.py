@@ -8,7 +8,7 @@ from planet.variable import MultiFactVariable, multifact
 from planet.constraint import (
     Counterbalance, NoRepeat,
     InnerBlock, OuterBlock,
-    SetRank, SetPosition, AbsoluteRank, Constraint
+    SetRank, SetPosition, AbsoluteRank, Constraint, Order
 )
 from planet.designer import Designer
 from planet.candl import *
@@ -70,7 +70,7 @@ class Design:
     
     @property
     def counterbalanced(self) -> bool:
-        return self.constraints.check_property(lambda c: isinstance(c, (Counterbalance, AbsoluteRank)))
+        return self.constraints.check_property(lambda c: isinstance(c, (Counterbalance, AbsoluteRank, Order)))
    
     @property
     def is_empty(self) -> bool:
@@ -89,6 +89,10 @@ class Design:
         return 1 if self.is_empty or self.is_random else self._determine_num_plans()
 
     def num_trials(self, n: int) -> "Design":
+
+        if n == 1:
+            raise ValueError("You can only specify trials that are greater than one. If you want a design with one trial, do not include within-subjects variables in the design. ")
+
         self.trials = n
         return self
     
@@ -122,6 +126,15 @@ class Design:
         self.design_variables[variable].add_constraint(constraint)
         return self
     
+    def order(self, variable:ExperimentVariable, sequence:list[str]) -> "Design":
+        assert set(sequence) == set(variable.conditions) and len(set(sequence)) == len(sequence), "Sequence must contain all conditions of the variable."
+
+
+        self.add_constraint(
+            Order(variable, 
+                  sequence = sequence))
+        return self
+    
     def add_constraint(self, constraint:Constraint) -> None:
         self.constraints.add_constraint(constraint)
         self._add_design_variable(constraint.variable)
@@ -148,7 +161,16 @@ class Design:
         return hashlib.sha256(signature.encode()).hexdigest()
     
     def get_width(self) -> int:
-        return self.trials if self.trials else len(next(iter(self.design_variables)))
+
+        if self.trials:
+            num_trials = self.trials
+        else: 
+            num_trials = 1
+            ws_variables = [var for var in self.design_variables.values() if not var.is_repeated]
+            if ws_variables:
+                num_trials *= len(next(iter(ws_variables)))
+        
+        return num_trials
     
     def extract_counterbalance_info(self, var:ExperimentVariable) -> tuple[int, int]:
         """Extract variables and condition count"""
@@ -163,10 +185,10 @@ class Design:
                 total_n_plans *= calculate_plan_multiplier(num_conditions, variables, num_trials)
         for ranking in rankings:
             total_n_plans *= factorial_product_of_counts(ranking)
-
+        
         return int(total_n_plans)
     
-    def _determine_num_plans(self):
+    def _calculate_maximum_plans(self):
         """Determine the number of experimental plans based on constraints and trial width."""
         counterbalance_info = []
         rankings = []
@@ -183,7 +205,12 @@ class Design:
             if self.constraints.has_constraint(variable, InnerBlock) or self.constraints.has_constraint(variable, OuterBlock):
                 plans_precomputed = True
 
-        plan_count = self.calculate_num_plans(counterbalance_info, rankings, self.get_width())
+        return (self.calculate_num_plans(counterbalance_info, rankings, self.get_width()), plans_precomputed)
+    
+    
+    def _determine_num_plans(self):
+        """Determine the number of experimental plans based on constraints and trial width."""
+        plan_count, plans_precomputed = self._calculate_maximum_plans()
 
         if self.num_groups > 0:
             lcm = self._determine_LCM()
@@ -221,7 +248,7 @@ class Design:
     def identify_random_vars(self):
         return [
             v for v, obj in self.design_variables.items()
-            if not (obj.is_counterbalanced or obj.is_ranked)
+            if obj.is_random
         ]
             
     def _add_design_variable(self, variable):
@@ -230,8 +257,10 @@ class Design:
 
     def add_variable(self, variable):
         assert isinstance(variable, ExperimentVariable)
-        if variable in self.design_variables: 
-            raise ValueError(f"Cannot add variable '{variable}' — it already exists in design.")
+
+        for subvar in variable.get_variables():
+            if subvar in self.variables: 
+                raise ValueError(f"Cannot add variable '{variable}' — it already exists in design.")
         
         self._add_design_variable(variable)
 

@@ -168,12 +168,33 @@ class BitVecSolver(Solver):
                     )
                 )
             )
+    
+    def order(self, var, sequence, width, stride):
+        """
+        Enforce that every row of the design matrix has the same sequence of conditions
+        for the specified variable.
+
+        Args:
+            var: The variable to enforce the order on.
+            sequence: A list specifying the sequence of conditions.
+            width: The number of columns per partition.
+            stride: The step size between partitions.
+        """
+        # Partition the design matrix
+        design_matrix = self.get_partition(width, stride)
+
+        # Enforce the sequence of conditions for each row
+        for row in design_matrix:
+            for i, condition in enumerate(sequence):
+                self.solver.add(
+                    self.bitvectors.get_variable_assignment(var, row[i]) == condition
+                )
             
     def count(self, variables, condition, f):
         """
         if f returns true increase count by one for all variables
         """
-        counts = [If(f(var, condition), BitVecVal(1, 1), BitVecVal(0, 1)) for var in variables]
+        counts = [If(f(var, condition), BitVecVal(1, 2), BitVecVal(0, 2)) for var in variables]
         return sum(counts)
     
     
@@ -524,6 +545,7 @@ class TestSolver(Solver):
             counts.extend([self.count(masked_variables, condition, check_equality) for condition in possible_conditions])
         
         # # Add constraints to ensure equal counts for all combinations
+     
         for i in range(len(counts)):
             self.solver.add(counts[i] == counts[0])
 
@@ -572,7 +594,6 @@ class TestSolver(Solver):
         orders = []
         for assignment in z3_assignments:
             # this is an integer value, represented as a binary string
-            print(assignment)
             # this is where we will store the string rep of a condition
             # which is a concatination of it's variable assignments
             decoded_assignment = ""

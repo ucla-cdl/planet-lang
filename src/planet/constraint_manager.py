@@ -1,4 +1,4 @@
-from planet.constraint import AbsoluteRank
+from planet.constraint import AbsoluteRank, Counterbalance, Order
 from typing import Callable
 
 class ConstraintManager:
@@ -17,6 +17,7 @@ class ConstraintManager:
             constraint.add_rank(condition, rank)
 
         return constraint
+    
 
 
     def add_constraint(self, constraint):
@@ -42,7 +43,16 @@ class ConstraintManager:
         return any(property(c) for c in self.constraints)
     
     def stringified(self):
-        return (str(c) for c in self.constraints)
+        return "\n".join(str(c) for c in self.constraints)
     
     def get_constraints(self):
         return self.constraints
+    
+    def get_counterbalanced_constraints(self):
+        """
+        Get all counterbalanced constraints.
+
+        Returns:
+            list: A list of all Counterbalance constraints.
+        """
+        return [c for c in self.constraints if isinstance(c, Counterbalance)]

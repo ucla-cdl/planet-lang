@@ -1,6 +1,7 @@
 from planet.design import Design
 from itertools import combinations
 from planet.variable import ExperimentVariable, MultiFactVariable
+import warnings
 
 class Analysis:
     """Main class for analyzing experimental designs."""
@@ -18,7 +19,7 @@ class Analysis:
         self.counterbalanced_variables = [
             design_variable
             for design_variable in self.design.design_variables.values()
-            if design_variable.is_counterbalanced and not design_variable.is_repeated
+            if design_variable.is_counterbalanced
         ]
 
         self.perform_analysis()
@@ -29,17 +30,19 @@ class Analysis:
         than two conditions for that variable. This is under the assumption that
         all plans are distinct and each plan is assigned an equal number of times.
         """
-
-        # main effects are unbiased and estimable if there are more than one
-        # conditons assigned to participants for that variable and the number of
-        # plans is divisible by the number of conditions for that variable (i.e.
-        # the variable conditions are assigned an equal number of times)
-        for var in self.design.variables:
-            if len(var.conditions) >= 2 and (self.design.num_plans()*self.design.trials % len(var.conditions)) == 0:
-                self.main_effects.add(var)
+    
+        for var, dvar in self.design.design_variables.items():
+            if dvar.is_counterbalanced: 
+                if len(var.conditions) >= 2:
+                    self.main_effects.update(var.get_variables())
+            elif not dvar.is_repeated and dvar.is_ordered:
+                if len(var.conditions) >= 2:
+                    self.main_effects.update(var.get_variables())
+            else:
+                warnings.warn(f"Could not perform analysis for variable {var}.")
     
 
-    def analyze_interaction_effects(self):
+    def analyze_interaction_effects(self):  
         """Analyze and update interaction effects based on the design's variables.
 
         An interaction effect is estimable if:
@@ -56,10 +59,16 @@ class Analysis:
         # NOTE: need to check properties with rankings.
         # NOTE: we only want pairwise combinations, and we can infer this from
         # interactiosn with three or more variables. This is a TODO. 
-        for design_variable in self.counterbalanced_variables:
-            if design_variable.is_multifact and len(design_variable.get_variable()) >= 2:
-                if (self.design.num_plans()*self.design.trials % len(design_variable) == 0):
-                    self.interaction_effects.add(design_variable.get_variable())
+        for var, dvar in self.design.design_variables.items():
+            if var.is_multifact():
+                if dvar.is_counterbalanced: 
+                    if len(var.conditions) >= 2:
+                        self.interaction_effects.add(var)
+                elif not dvar.is_repeated and dvar.is_ordered:
+                    if len(var.conditions) >= 2:
+                        self.interaction_effects.add(var)
+                else:
+                    warnings.warn(f"Could not perform analysis for variable {var}.")
 
        # Then, we want to identify all implicit combinations created by adding
        # individual variables to a design. This occurs when two variables are
@@ -71,22 +80,19 @@ class Analysis:
         plan_count, _ = self.design._calculate_maximum_plans()
         plan_limit = self.design.num_groups
 
-        inner_variables = [
-            design_var.constraint_spec["InnerBlock"]
-            for design_var in self.design.design_variables.values()
-            if design_var.is_ranked
-        ]
-
-        if (plan_count <= plan_limit or plan_limit == 0):
-             # Add every pair of variables as a multifact variable
-            for var1, var2 in combinations(self.design.variables, 2):
-                var1_dv = self.design.design_variables[var1]
-                var2_dv = self.design.design_variables[var2]
-                # at least on variable must be unranked 
-                if not var1_dv.is_ranked or not var2_dv.is_ranked:
-    
+            # Add every pair of variables as a multifact variable
+        for var1, var2 in combinations(self.design.design_variables, 2):
+            var1_dv = self.design.design_variables[var1]
+            var2_dv = self.design.design_variables[var2]
+            # at least on variable must be unranked 
+            if var1_dv.is_counterbalanced and var2_dv.is_counterbalanced:
+                if (plan_count <= plan_limit or plan_limit == 0):
                     multifact_var = MultiFactVariable([var1, var2])
                     self.interaction_effects.add(multifact_var)
+
+            elif (var1_dv.is_counterbalanced and var2_dv.is_ordered) or (var2_dv.is_counterbalanced and var1_dv.is_ordered):
+                multifact_var = MultiFactVariable([var1, var2])
+                self.interaction_effects.add(multifact_var)
             
         # Lastly, we want to identify all implicit combinations created by
         # composing designs. 
@@ -94,23 +100,52 @@ class Analysis:
         # - get all variables with inner block. 
         # - For each pair, check if inner block is within the bounds of outer block.
         inner_variables = [
-            design_var.constraint_spec["InnerBlock"]
+            (design_var, design_var.constraint_spec["InnerBlock"])
             for design_var in self.design.design_variables.values()
             if design_var.is_blocked_inner
         ]
 
         outer_variables = [
-            design_var.constraint_spec["OuterBlock"]
+            (design_var, design_var.constraint_spec["OuterBlock"])
             for design_var in self.design.design_variables.values()
             if design_var.is_blocked_outer
         ]
-        
+ 
         # NOTE: this checks for nest! Still need to check for cross ;) 
-        for outer_var in outer_variables:
-            for inner_var in inner_variables:
-                if outer_var.height <= inner_var.height and outer_var.variable != inner_var.variable:
-                    interaction = MultiFactVariable([outer_var.variable, inner_var.variable])
-                    self.interaction_effects.add(interaction)
+        for outer_var, outer_spec in outer_variables:
+            for inner_var, inner_spec in inner_variables:
+                # the inner block height is always a multiple or factor of the
+                # outer block height based on how we compose designs. We always
+                # add an inner block when we add an outer block. 
+                if (
+                    (outer_spec.height <= inner_spec.height 
+                    and outer_spec.variable != inner_spec.variable) 
+                ):
+
+                    outer_repeats = outer_var.constraint_spec["NoRepeat"]
+                    inner_repeats = outer_var.constraint_spec["NoRepeat"]
+                
+
+                    outer_check = (
+                        ((outer_repeats is not None and 
+                        outer_repeats.width*outer_repeats.stride < outer_spec.width and outer_var.is_ordered) and self.design.num_trials > outer_spec.width*outer_spec*outer_spec.stride)
+                    ) 
+
+                    inner_check = (
+                          ((inner_repeats is not None and 
+                        inner_repeats.width*inner_repeats.stride < inner_spec.width and inner_var.is_ordered) and self.design.num_trials > inner_spec.width*inner_spec*inner_spec.stride)
+                    ) 
+
+                    if (outer_spec.width <= inner_spec.width and inner_spec.height <= outer_spec.height) and (outer_check or outer_var.is_counterbalanced) and (inner_check or inner_var.is_counterbalanced): 
+                        interaction = MultiFactVariable([outer_var.variable, inner_var.variable])
+                        self.interaction_effects.add(interaction)
+
+                    elif (inner_spec.height <= outer_spec.height) and (outer_check or outer_var.is_counterbalanced) and inner_var.is_counterbalanced:
+                        interaction = MultiFactVariable([outer_var.variable, inner_var.variable])
+                        self.interaction_effects.add(interaction)
+                        
+
+            
 
         # For cross, need to check that counterbalance is on same width as the
         # inner block, and that the either the number of trials is the same as
@@ -136,13 +171,14 @@ class Analysis:
         if self.design.trials > 1 or self.design.trials == 0:
             for counterbalanced_variable in self.counterbalanced_variables:
                 self.time_varying_effects.add(counterbalanced_variable.get_variable())
+                if counterbalanced_variable.get_variable().is_multifact(): 
+                    self.time_varying_effects.update(counterbalanced_variable.get_variable().get_variables())
 
         for var1, var2 in combinations(self.counterbalanced_variables, 2):
-            if (self.design.trials > 1 or self.design.trials == 0) and (self.design.num_plans() % (len(var1) * len(var2)) == 0): 
+            if (self.design.trials > 1 or self.design.trials == 0): 
                 combined_var = MultiFactVariable([var1.variable, var2.variable])
                 if combined_var in self.interaction_effects:
                     self.time_varying_effects.add(combined_var)
-
 
 
     def analyze_ws_comparisons(self):
@@ -186,8 +222,14 @@ class Analysis:
                     interaction = MultiFactVariable([outer_var.variable, inner_var.variable])
                     self.ws_comparisons.add(interaction)
                     self.ws_comparisons.update(interaction.get_variables())
+                
 
     def perform_analysis(self):
+
+        if self.design.is_random:
+            warnings.warn("Analysis is not supported for designs with fully random variables. Skipping analysis.")
+            return
+
         self.analyze_main_effects()
         self.analyze_interaction_effects()
         self.analyze_time_varying_effects()
@@ -247,6 +289,14 @@ def compare(design1: Design, design2: Design):
             if var in interaction_var.get_variables():
                 print(f"\t- {var} (under assumption of interaction with {interaction_var})")
 
+        for time_var in design1_time_varying_effects:
+            if not time_var.is_multifact() and var in time_var.get_variables():
+                print(f"\t+ {var} (under weaker assumption of no time-varying effect)")
+
+        for time_var in design2_time_varying_effects:
+            if not time_var.is_multifact() and var in time_var.get_variables():
+                print(f"\t- {var} (under weaker assumption of no time-varying effect)")
+
     # Interaction effects
     print("\nInteraction Effects:")
     for var in design1_interaction_effects:
@@ -256,9 +306,9 @@ def compare(design1: Design, design2: Design):
     # Check if shared interaction effects are conditional on time-varying effects
     for var in shared_interaction_effects:
         if var in design1_time_varying_effects:
-            print(f"\t+ {var} (under assumption of time-varying effect of {var})")
+            print(f"\t+ {var} (under weaker assumption of no time-varying effect of {var})")
         if var in design2_time_varying_effects:
-            print(f"\t- {var} (under assumption of time-varying effect of {var})")
+            print(f"\t- {var} (under weaker assumption of no time-varying effect of {var})")
 
     # Time-varying effects
     print("\nTime-Varying Effects:")

@@ -93,7 +93,7 @@ def construct_assignment_table(table, units, num_plans, num_participants):
     duckdb.sql("CREATE TABLE members (plan INT)")
 
    
-    required_participants = (num_participants // num_plans) * num_plans
+    required_participants = max((num_participants // num_plans) * num_plans, num_plans)
     
     num_per_group = required_participants // num_plans  # Number of participants per plan
     

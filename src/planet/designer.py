@@ -10,7 +10,7 @@ from planet.solver import BitVecSolver, TestSolver
 from planet.constraint import (
     StartWith, Counterbalance, NoRepeat,
     InnerBlock, OuterBlock, Constraint,
-    SetRank, SetPosition, AbsoluteRank
+    SetRank, SetPosition, AbsoluteRank, Order
 )
 from planet.variable import MultiFactVariable
 from planet.unit import Units
@@ -72,7 +72,7 @@ class Designer:
             match constraint:
                 
                 case Counterbalance():
-                    # FIXME
+                
                     if groups:
                         constraint.width = (
                             constraint.width if constraint.width else width
@@ -128,6 +128,14 @@ class Designer:
                         constraint.stride
                     )
 
+                case Order():
+                    self.order(
+                        constraint.variable, 
+                        constraint.sequence,
+                        constraint.width,
+                        constraint.stride
+                    )
+
                 case InnerBlock():
                     constraint.width = (
                         constraint.width if constraint.width else width
@@ -163,26 +171,23 @@ class Designer:
         # get number of block matrices per row
         m = int(self.shape[1] / width)
 
-        composed_variables = variable.get_variables()
-        for variable in composed_variables:
-            for i in range(n):
-                for j in range(m):
-                    self.solver.match_block(
-                        variable, 
-                        [
-                            (i*height + 0, i * height  + height, 1)
-                            , (j*width + 0, j * width + width, 1)
-                        ]
-                    )
+    
+        for i in range(n):
+            for j in range(m):
+                self.solver.match_block(
+                    variable, 
+                    [
+                        (i*height + 0, i * height  + height, 1)
+                        , (j*width + 0, j * width + width, 1)
+                    ]
+                )
 
 
     def match_outer(self, v, w, h):
-        composed_variables = v.get_variables()
-        for v in composed_variables:
-            for i in range(h):
-                for j in range(w):
-                    
-                    self.solver.match_block(v, [(i, self.shape[0], h), (j, self.shape[1], w)])
+        for i in range(h):
+            for j in range(w):
+                
+                self.solver.match_block(v, [(i, self.shape[0], h), (j, self.shape[1], w)])
 
     def counterbalance(self, v, w, h, stride = [1, 1]):
         block = [(0, h, stride[0]), (0, w, stride[1])]
@@ -200,8 +205,11 @@ class Designer:
     def absolute_rank(self, variable, ranks, width, stride):
         transformed_ranks = {variable.conditions.index(condition): rank for condition, rank in ranks.items()}
         self.solver.absolute_rank(variable, transformed_ranks, width, stride)
-    
 
+    def order(self, variable, sequence, width, stride):
+        transformed_sequence = [variable.conditions.index(condition) for condition in sequence]
+
+        self.solver.order(variable, transformed_sequence, width, stride)
 
     # NOTE: this is with a bitvec representation...
     # ensure that this works
