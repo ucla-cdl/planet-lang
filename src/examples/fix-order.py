@@ -4,23 +4,15 @@ from planet.analysis import Analysis
 
 task = ExperimentVariable(
     name = "task",
-    options = ["a", "b"]
+    options = ["a", "b", "c", "d"]
 )
-
-tool = ExperimentVariable(
-    name = "tool",
-    options = ["1", "2"]
-)
-
 
 # this is a possible bug. Come back to this! 
 units = Units(16)
 des = (
     Design()
         .within_subjects(task)
-        .absolute_rank(task, "b", 1)
-        .within_subjects(tool)
-        .counterbalance(tool) 
+        .order(task, ["a", "d", "c", "b"])
 )
 
 assignment = assign(units, des)

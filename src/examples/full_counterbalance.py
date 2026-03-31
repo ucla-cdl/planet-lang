@@ -1,5 +1,6 @@
 from planet import *
 import time
+from planet.analysis import Analysis
 
 treatment = ExperimentVariable(
     name = "treatment",
@@ -13,10 +14,12 @@ des = (
     Design()
         .within_subjects(treatment)
         .counterbalance(treatment)
+        .num_trials(2)
 )
 
 assignment = assign(units, des)
+print(assignment)
+print(Analysis(des))
 
-
-assignment.to_latex()
+# assignment.to_latex()
 

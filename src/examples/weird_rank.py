@@ -1,15 +1,9 @@
 from planet import *
-from planet.analysis import Analysis
 
 
 task = ExperimentVariable(
     name = "task",
-    options = ["a", "b"]
-)
-
-tool = ExperimentVariable(
-    name = "tool",
-    options = ["1", "2"]
+    options = ["a", "b", "c", "d"]
 )
 
 
@@ -19,11 +13,9 @@ des = (
     Design()
         .within_subjects(task)
         .absolute_rank(task, "b", 1)
-        .within_subjects(tool)
-        .counterbalance(tool) 
+        # .num_trials(2)
+        .limit_plans(3)
 )
 
 assignment = assign(units, des)
 print(assignment)
-
-print(Analysis(des))

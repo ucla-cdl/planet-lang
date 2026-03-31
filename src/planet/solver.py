@@ -218,6 +218,9 @@ class BitVecSolver(Solver):
         possible_conditions = list(itertools.product(
             *[set(range(len(variable))) for variable in variables]
         ))
+
+
+
         design_matrix = shape_array(self.z3_variables, self.shape)
         design_matrix = self.slice_matrix(design_matrix, block)
         design_matrix_transposed = np.transpose(design_matrix)
@@ -236,7 +239,11 @@ class BitVecSolver(Solver):
         for i in range(len(counts)):
             self.solver.add(counts[i] == counts[0])
 
-        self.precompute_complete_counterbalancing(possible_conditions, design_matrix, variables) 
+
+        # print(counts[0])
+
+        # FIXEME: will break when counterbalancing between subjects variables. 
+        # self.precompute_complete_counterbalancing(possible_conditions, design_matrix, variables) 
     
 
    
@@ -247,9 +254,10 @@ class BitVecSolver(Solver):
         flat_block = np.array(block).flatten()
         for i in range(len(flat_block)):
             for j in range(i, len(flat_block)):
-                a1 = self.bitvectors.get_variable_assignment(variable, flat_block[i])
-                a2 = self.bitvectors.get_variable_assignment(variable, flat_block[j])
-                self.solver.add(a1==a2)
+                if i != j: 
+                    a1 = self.bitvectors.get_variable_assignment(variable, flat_block[i])
+                    a2 = self.bitvectors.get_variable_assignment(variable, flat_block[j])
+                    self.solver.add(a1==a2)
 
         # works when z3 representation is a matrix 
     def get_one_model(self):
@@ -583,6 +591,7 @@ class TestSolver(Solver):
         t2 = time()
         print(f"Time taken to get one model: {t2 - t1} seconds")
         print(all_assignments)
+
         return all_assignments
 
 

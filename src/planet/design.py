@@ -89,10 +89,6 @@ class Design:
         return 1 if self.is_empty or self.is_random else self._determine_num_plans()
 
     def num_trials(self, n: int) -> "Design":
-
-        if n == 1:
-            raise ValueError("You can only specify trials that are greater than one. If you want a design with one trial, do not include within-subjects variables in the design. ")
-
         self.trials = n
         return self
     
@@ -161,28 +157,33 @@ class Design:
         return hashlib.sha256(signature.encode()).hexdigest()
     
     def get_width(self) -> int:
-
-        if self.trials:
+        ws_variables = [var for var in self.design_variables.values() if not var.is_repeated]
+        if self.trials == 1 and ws_variables:
+            raise ValueError("There must be more than one trial for designs with within-subjects variables.")
+        elif self.trials:
             num_trials = self.trials
         else: 
             num_trials = 1
-            ws_variables = [var for var in self.design_variables.values() if not var.is_repeated]
             if ws_variables:
                 num_trials *= len(next(iter(ws_variables)))
         
         return num_trials
     
-    def extract_counterbalance_info(self, var:ExperimentVariable) -> tuple[int, int]:
+    def extract_counterbalance_info(self, dvar:DesignVariable) -> tuple[int, int]:
         """Extract variables and condition count"""
-        return (len(var.get_variables()), len(var))
+        var = dvar.get_variable()
+        return (len(var.get_variables()), len(var), dvar.is_repeated)
     
     def calculate_num_plans(self, counterbalanced_groups, rankings, num_trials):
         """Determine the number of experimental plans based on constraints and trial width."""
         total_n_plans = 1
 
-        for variables, num_conditions in counterbalanced_groups:
+        for variables, num_conditions, repeats in counterbalanced_groups:
                 num_trials = num_trials
-                total_n_plans *= calculate_plan_multiplier(num_conditions, variables, num_trials)
+                if repeats:
+                    total_n_plans *= num_conditions
+                else:
+                    total_n_plans *= calculate_plan_multiplier(num_conditions, variables, num_trials)
         for ranking in rankings:
             total_n_plans *= factorial_product_of_counts(ranking)
         
@@ -194,9 +195,9 @@ class Design:
         rankings = []
         plans_precomputed = False 
 
-        for variable in self.design_variables:
+        for variable, dvar in self.design_variables.items():
             if self.design_variables[variable].is_counterbalanced:
-                group = self.extract_counterbalance_info(variable)
+                group = self.extract_counterbalance_info(dvar)
                 counterbalance_info.append(group)
 
             elif self.design_variables[variable].is_ranked:
@@ -220,18 +221,19 @@ class Design:
             
             plan_count = ((self.num_groups // lcm) * lcm) if plans_precomputed else min(plan_count, (self.num_groups // lcm) * lcm)
 
+
         return plan_count
     
     def _determine_LCM(self):
         counterbalance_info = []
 
-        for variable in self.design_variables:
-            if self.design_variables[variable].is_counterbalanced:
-                group = self.extract_counterbalance_info(variable)
+        for variable, dvar in self.design_variables.items():
+            if dvar.is_counterbalanced:
+                group = self.extract_counterbalance_info(dvar)
                 counterbalance_info.append(group)
 
         """Determine the number of experimental plans based on constraints and trial width."""
-        total_n_plans = math.lcm(*(y for _, y in counterbalance_info))
+        total_n_plans = math.lcm(*(y for _, y, _ in counterbalance_info))
         return int(total_n_plans)
     
 

@@ -23,6 +23,7 @@ class Designer:
 
     """
     def __init__(self):
+
         self.constraints = []
         self.previous_snapshot = None
         self.previous_model = []
@@ -140,6 +141,7 @@ class Designer:
                     constraint.width = (
                         constraint.width if constraint.width else width
                     )
+
                     self.match_inner(
                         constraint.variable, 
                         constraint.width, 
@@ -159,7 +161,9 @@ class Designer:
             n = self.num_plans
         else: 
             n = 1
+
         return tuple([n, self.num_trials])
+    
     
     # FIXME: creating block matrix for specific test case 
     # Note: use for creating blocks
@@ -215,6 +219,7 @@ class Designer:
     # ensure that this works
     def eval(self):
         if not self.design_has_changed:
+
             model = self.previous_model
 
         else:

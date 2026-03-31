@@ -1,5 +1,5 @@
 from planet import *
-
+from planet.analysis import Analysis, compare
 
 # NOTE: need to make all different wrt. variables. Should this be under the hood though?
 # ie. handle with cross instead of reasoning about counterbalanced vars independently 
@@ -13,13 +13,17 @@ task = ExperimentVariable(
     options = ["A", "B"]
 )
 
+num = ExperimentVariable(
+    name = "num",   
+    options = ["1", "2"]
+)
+
 units = Units(12)
 
 des1 = (
     Design()
         .within_subjects(treatment)
         .counterbalance(treatment)
-        # .start_with(treatment, "a", 1)
      
 )
 # # note: set / argv because no order
@@ -27,9 +31,26 @@ des2 = (
     Design()
         .within_subjects(task)
         .counterbalance(task)
-     
 )
 
-des = nest(inner=des1, outer=des2).num_trials(2)
+des3 = (
+    Design()
+        .within_subjects(num)
+        .counterbalance(num)
+)
+
+des4 = (
+    Design()
+        .within_subjects(task)
+        .counterbalance(task)
+        .within_subjects(treatment)
+        .counterbalance(treatment)
+        .limit_plans(2)
+
+)
+des = cross(des2, des1)
+# des = nest(inner=des, outer=des3)
 
 print(assign(units, des))
+print(Analysis(des))
+compare(des, des4)  

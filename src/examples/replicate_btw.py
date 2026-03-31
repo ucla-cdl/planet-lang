@@ -1,4 +1,5 @@
 from planet import *
+from planet.analysis import Analysis
 
 """
 PLanet tutorial starter code
@@ -29,11 +30,14 @@ block = (
 
 
 design = nest(inner=block, outer=design)
-design = nest(outer = design,
-              inner = Design()
-               .within_subjects(task)
-               .counterbalance(task)
-)
+design = cross(design, Design().within_subjects(task).counterbalance(task))
+# design = nest(outer = design,
+#               inner = Design()
+#                .within_subjects(task)
+#                .counterbalance(task)
+# )
+
 
 assignment = assign(participants, design)
 print(assignment)
+print(Analysis(design))
