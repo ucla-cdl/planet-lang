@@ -41,7 +41,7 @@ effects.
 ## Experiment Variable
 An Experiment Variable is an independent variable the experimenter wants to use in an experiment. The experiment variables included in an experiment determine the conditions a unit sees. For example, treatment is an Experiment Variable with two conditions: drug or placebo. 
 
-<img src="tutorial/img/var-ui.png" alt="alt text" width="300">
+<img src="img/var-ui.png" alt="alt text" width="300">
 
 ```python
 Variable(name, options=[])
@@ -59,7 +59,7 @@ A design consists of every possible experimental plan a unit can get assigned
 to, and the method of assigning these experimental plans to units. Experimental
 designs describe the method of assigning conditions to units in an experiment. 
 
-<img src="tutorial/img/design-ui.png" alt="alt text" width="300">
+<img src="img/design-ui.png" alt="alt text" width="300">
 
 ```python
 Design()
@@ -73,7 +73,7 @@ Adds a between subjects variable to the design. Adding a between-subjects
 variable implies the assignment value to the between-subjects variable is the
 same across all trials within a participant. 
 
-<img src="tutorial/img/bs-ui.png" alt="alt text" width="300">
+<img src="img/bs-ui.png" alt="alt text" width="300">
 
 ```python
 ( 
@@ -101,7 +101,7 @@ Creates a design with exactly one between-subjects variable, treatment.
 ### WS
 Adds a within subjects variable to the design. Adding a within subjects implies that assigment value to the within-subjects variable is the different for every trial in each experiment plan. 
 
-<img src="tutorial/img/cb-ui.png" alt="alt text" width="300">
+<img src="img/cb-ui.png" alt="alt text" width="300">
 
 ```python
 ( 
@@ -132,7 +132,7 @@ an equal number of times in each position across all plans.
 Then input variable must already be specified in the
 design as either within or between subjects.
 
-<img src="tutorial/img/cb-ui.png" alt="alt text" width="300">
+<img src="img/cb-ui.png" alt="alt text" width="300">
 
 ```python
 ( 
@@ -164,7 +164,7 @@ design with two possible experiment plans: $drug \rightarrow placebo$ and $place
 Limits the number of unique plans in the design. Limit plans set a maximum limit
 on the number of assigned orders in an experimental design. 
 
-<img src="tutorial/img/limit-plans-ui.png" alt="alt text" width="300">
+<img src="img/limit-plans-ui.png" alt="alt text" width="300">
 
 ```python
 ( 
@@ -238,9 +238,9 @@ Composes orders of two designs as one design with a nesting strategy. Nesting en
 that every condition of each order in the *inner* design is nested within each
 trial of the *outer* design. 
 
-<img src="tutorial/img/nest.png" alt="alt text" width="600">
+<img src="img/nest.png" alt="alt text" width="600">
 
-<img src="tutorial/img/nest-ui.png" alt="alt text" width="300">
+<img src="img/nest-ui.png" alt="alt text" width="300">
 
 ```python
 nest(inner=design1, outer=design2)
@@ -283,13 +283,13 @@ that each order in the first design is overlaid with each order of the second
 design. `cross` requires that each design has the same number of trials per
 participant. 
 
-<img src="tutorial/img/cross-ui.png" alt="alt text" width="300">
+<img src="img/cross-ui.png" alt="alt text" width="300">
 
 ```python
 cross(design1, design2)
 ```
 
-<img src="tutorial/img/cross.png" alt="alt text" width="600">
+<img src="img/cross.png" alt="alt text" width="600">
 
 Parameters:
 
@@ -328,7 +328,7 @@ des = cross(treatment_des, task_des)
 Combines every condition of all sub-variables to create a new variable, where
 the conditions are the combined conditions of its sub-variables. 
 
-<img src="tutorial/img/mv-ui.png" alt="alt text" width="300">
+<img src="img/mv-ui.png" alt="alt text" width="300">
 
 ```python
 multifact(variables[])
