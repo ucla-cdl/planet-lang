@@ -38,18 +38,25 @@ class ExperimentVariable:
             # can refer back 
             self.conditions.append(attr)
             self.condition_map[attr] = i
+        
 
     def get_condition(self, s):
         return self.conditions[self.condition_map[s]]
 
     def get_variables(self):
         return [self]
+    
+    def __lt__(self, other):
+        return self.name < other.name
 
     def add_constraint(self, constraint):
         self.constraint = constraint
 
     def get_conditions(self):
         return self.conditions
+    
+    def is_multifact(self):
+        return False
 
     def __str__(self):
         return str(self.name)
@@ -82,12 +89,15 @@ class Replications(ExperimentVariable):
         self.__init__("replications", n)
 
 class MultiFactVariable(ExperimentVariable):
-    def __init__(self, variables):
+    def __init__(self, variables:list[ExperimentVariable]):
+
         self.n = reduce(lambda x, y: x*y, list(map(len, variables)))
+        variables.sort()
         combinations = list(itertools.product(*[variable.conditions for variable in variables]))
         combinations = ["-".join(combination) for combination in combinations]
 
-        super().__init__("factorial", self.n, options = combinations)
+        variable_name = "-".join(variable.name for variable in variables)
+        super().__init__(variable_name, self.n, options = combinations)
         self.variables = variables
 
     def _get_variables(self):
@@ -110,8 +120,17 @@ class MultiFactVariable(ExperimentVariable):
     def contains_variable(self, var):
         return var in self.variables
     
+    def is_multifact(self):
+        return True
+    
     def get_variables(self):
         return self.variables
+    
+    def __hash__(self):
+        return hash(self.name)  # or whatever uniquely identifies a variable
+    
+    def __eq__(self, other):
+        return self.name == other.name  # or whatever defines equivalence
     
 
 def multifact(variables):

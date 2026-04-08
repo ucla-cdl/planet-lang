@@ -7,8 +7,8 @@ class DesignVariable:
             "AbsoluteRank":None,
             "OuterBlock":None,
             "InnerBlock":None,
+            "Order":None,
         }
-
 
     def add_constraint(self, constraint):
         if self.constraint_spec[constraint.__class__.__name__] is None:
@@ -20,6 +20,10 @@ class DesignVariable:
     def get_ranks(self):
                 # count_values(constraint.ranks)
         return self.constraint_spec.get("AbsoluteRank").ranks
+    
+    @property
+    def is_multifact(self):
+        return self.variable.is_multifact()
 
     @property
     def is_counterbalanced(self):
@@ -32,6 +36,10 @@ class DesignVariable:
     @property
     def is_ranked(self):
         return self.has("AbsoluteRank")
+    
+    @property
+    def is_ordered(self):
+        return self.has("Order")
 
     @property
     def is_blocked_outer(self):
@@ -46,7 +54,10 @@ class DesignVariable:
         return not (
             self.is_counterbalanced
             or self.is_ranked
+            or self.is_ordered
         )
+    
+
     
     def max_width(self):
         width = 1
@@ -73,6 +84,11 @@ class DesignVariable:
   
         return int(width/div)
     
+    def __len__(self):
+        return len(self.variable)   
+    
+    def get_variable(self):
+        return self.variable
 
     def get_span(self):
         span = 1
@@ -80,4 +96,5 @@ class DesignVariable:
             span = self.constraint_spec["InnerBlock"].width
                
         return span
+    
         

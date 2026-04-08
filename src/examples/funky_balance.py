@@ -9,15 +9,11 @@ count = ExperimentVariable(
 
 alpha = ExperimentVariable(
     name = "alpha",
-    options = ["a", "b"]
+    options = ["a", "b", "c", "d"]
 )
 
-beta = ExperimentVariable(
-    name = "beta",
-    options = ["x", "y"]
-)
 
-units = Units(4)
+units = Units(24)
 
 multi = multifact(
     [count,
@@ -27,21 +23,14 @@ multi = multifact(
 # NOTE: counterbalancing first will break. Add a warning :) 
 des = (
     Design()
-        .within_subjects(count)
+        # .within_subjects(count)
         .within_subjects(alpha)
-        .counterbalance(count)
+        .num_trials(2)
+        # .counterbalance(count)
         .counterbalance(alpha)
-        .within_subjects(beta)
-        .counterbalance(beta)
-        .limit_plans(4)
+        # .limit_plans(4)
 )
 
 
 print(assign(units, des))
 print(Analysis(des))
-
-
-
-
-
-

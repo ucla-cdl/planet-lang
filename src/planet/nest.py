@@ -5,7 +5,7 @@ import copy
 from planet.design import Design
 from planet.constraint import (
     Counterbalance, NoRepeat, InnerBlock, OuterBlock,
-    AbsoluteRank
+    AbsoluteRank, Order
 )
 from planet.region import DesignRegion
 
@@ -14,14 +14,15 @@ def nest_structure(d1, d2):
     constraints = []
     # Match all variables from the outer design within each block matrix
     
-    for variable in d2.design_variables:
+    # NOTE: changed this from design variables to variables. Check that nothing breaks.
+    for variable in d2.variables:
         constraints.append(InnerBlock(
             variable,
             DesignRegion(d1.get_width(),d1.num_plans(),[1, 1])
         ))
 
      # Match all variables from the inner design across every block
-    for variable in d1.design_variables:
+    for variable in d1.variables:
         constraints.append(OuterBlock(
             variable,
             d1.get_width(),
@@ -79,6 +80,13 @@ def copy_nested_constraints(design1, design2):
             new_constraint.stride = constraint.stride
             constraints.append(new_constraint)
 
+        elif isinstance(constraint, Order):
+            # Modify the existing constraint's width and stride
+            new_constraint = copy.copy(constraint)
+            new_constraint.width = constraint.width if constraint.width < design1.get_width() else design1.get_width()
+            new_constraint.stride = constraint.stride
+            constraints.append(new_constraint)
+
         else:
             constraints.append(copy.copy(constraint))
 
@@ -109,6 +117,14 @@ def copy_nested_constraints(design1, design2):
             )
         
         elif isinstance(constraint, AbsoluteRank):
+            # Modify the existing constraint's width and stride
+            new_constraint = copy.copy(constraint)
+            new_constraint.width = constraint.width if constraint.width < width2 else width2
+            new_constraint.width *= width1
+            new_constraint.stride *= width1
+            constraints.append(new_constraint)
+
+        elif isinstance(constraint, Order):
             # Modify the existing constraint's width and stride
             new_constraint = copy.copy(constraint)
             new_constraint.width = constraint.width if constraint.width < width2 else width2
@@ -149,6 +165,7 @@ def add_design_variables(*, des, combined_des):
         combined_des.add_variable(v)
 
 
+
 def nest(*, outer:Design, inner:Design):
     """
     Nest two designs to create a combined experimental design.
@@ -162,6 +179,7 @@ def nest(*, outer:Design, inner:Design):
     """
     total_groups = inner.num_plans() * outer.num_plans()
     total_conditions = inner.get_width() * outer.get_width()
+
 
     combined_design = (
         Design()

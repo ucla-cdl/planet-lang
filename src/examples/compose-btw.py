@@ -25,7 +25,7 @@ test2 = ExperimentVariable(
 
 des1 = (
     Design()
-        .within_subjects(treatment)
+        .between_subjects(treatment)
         .counterbalance(treatment)
         # .limit_plans(2)
 )
@@ -37,25 +37,11 @@ des2 = (
         # .limit_plans(2)
 )
 
-des3 = (Design()
-        .within_subjects(test)
-        .counterbalance(test)
-
-)
-
-des4 = (Design()
-        .within_subjects(test2)
-        .counterbalance(test2)
-        .counterbalance(test2)
-        .limit_plans(2)
-)
 
 units = Units(48)
 
 des = nest(inner=des2, outer=des1)
 
-
-mega = nest(inner=des3, outer=des)
 # mega.to_latex()
-print(assign(units, mega))
-print(Analysis(mega))
+print(assign(units, des))
+print(Analysis(des))

@@ -13,14 +13,14 @@ drug = ExperimentVariable(
 
 diet = ExperimentVariable("diet", options = ["unhealthy", "healthy"])
 
-units = Units(3)
+units = Units(8)
 
 design = (
     Design()
         .within_subjects(drug)
-        .counterbalance(drug)
+        .absolute_rank(drug, "placebo", 1)
         .within_subjects(diet)
-        .counterbalance(diet)
+        .absolute_rank(diet, "healthy", 1)
 )
 
 print(assign(units, design))

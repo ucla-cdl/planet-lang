@@ -3,6 +3,7 @@ import hashlib
 from planet.designer import Designer
 import math
 from planet.randomizer import Randomizer
+import numpy as np
 
 
 class PlanGenerator:
@@ -36,9 +37,10 @@ class PlanGenerator:
         # problem identifying random vars
         n = math.ceil(self.num_units / len(plans)) * len(plans)
 
-
         for rand in self.random_variables:
             plans = self.instantiate_random_variables(n, rand, plans)
 
+        # TODO: come back to this
+        # plans = np.unique(plans, axis=0)
         return plans
    

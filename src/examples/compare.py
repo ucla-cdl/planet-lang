@@ -1,5 +1,5 @@
 from planet import *
-from planet.analysis import Analysis
+from planet.analysis import Analysis, compare
 
 """
 an experiment testing the effects of AR and VR interfaces compared to a
@@ -11,19 +11,17 @@ drug = ExperimentVariable(
     options = ["tylenol", "placebo"]
 )
 
-diet = ExperimentVariable("diet", options = ["unhealthy", "healthy"])
+units = Units(8)
 
-units = Units(3)
-
-design = (
+design1 = (
     Design()
         .within_subjects(drug)
         .counterbalance(drug)
-        .within_subjects(diet)
-        .counterbalance(diet)
 )
 
-print(assign(units, design))
-print(Analysis(design))
+design2 = (
+    Design()
+        .between_subjects(drug)
+)
 
-
+compare(design1, design2)

@@ -5,21 +5,26 @@ import time
 
 treatment = ExperimentVariable(
     name = "treatment",
-    options = ["a", "b", "c"]
+    options = ["a", "b"]
 )
 
 task = ExperimentVariable(
     name = "task",
-    options = ["1", "2", "3"]
+    options = ["1", "2"]
 )
 
-test = multifact([treatment, task])
+test = ExperimentVariable(
+    name = "test",
+    options = ["x", "y"]
+)
+
+test = multifact([treatment, task, test])
 
 des = (
     Design()
         .within_subjects(test)
         .counterbalance(test)
-        .limit_plans(9)
+        .limit_plans(8)
 )
 
 # NOTE: fixme! This does not round up :o

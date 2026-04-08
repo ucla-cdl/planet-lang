@@ -8,7 +8,7 @@ from planet.variable import MultiFactVariable, multifact
 from planet.constraint import (
     Counterbalance, NoRepeat,
     InnerBlock, OuterBlock,
-    SetRank, SetPosition, AbsoluteRank, Constraint
+    SetRank, SetPosition, AbsoluteRank, Constraint, Order
 )
 from planet.designer import Designer
 from planet.candl import *
@@ -70,7 +70,7 @@ class Design:
     
     @property
     def counterbalanced(self) -> bool:
-        return self.constraints.check_property(lambda c: isinstance(c, (Counterbalance, AbsoluteRank)))
+        return self.constraints.check_property(lambda c: isinstance(c, (Counterbalance, AbsoluteRank, Order)))
    
     @property
     def is_empty(self) -> bool:
@@ -122,6 +122,15 @@ class Design:
         self.design_variables[variable].add_constraint(constraint)
         return self
     
+    def order(self, variable:ExperimentVariable, sequence:list[str]) -> "Design":
+        assert set(sequence) == set(variable.conditions) and len(set(sequence)) == len(sequence), "Sequence must contain all conditions of the variable."
+
+
+        self.add_constraint(
+            Order(variable, 
+                  sequence = sequence))
+        return self
+    
     def add_constraint(self, constraint:Constraint) -> None:
         self.constraints.add_constraint(constraint)
         self._add_design_variable(constraint.variable)
@@ -148,57 +157,83 @@ class Design:
         return hashlib.sha256(signature.encode()).hexdigest()
     
     def get_width(self) -> int:
-        return self.trials if self.trials else len(next(iter(self.design_variables)))
+        ws_variables = [var for var in self.design_variables.values() if not var.is_repeated]
+        if self.trials == 1 and ws_variables:
+            raise ValueError("There must be more than one trial for designs with within-subjects variables.")
+        elif self.trials:
+            num_trials = self.trials
+        else: 
+            num_trials = 1
+            if ws_variables:
+                num_trials *= len(next(iter(ws_variables)))
+        
+        return num_trials
     
-    def extract_counterbalance_info(self, var:ExperimentVariable) -> tuple[int, int]:
+    def extract_counterbalance_info(self, dvar:DesignVariable) -> tuple[int, int]:
         """Extract variables and condition count"""
-        return (len(var.get_variables()), len(var))
+        var = dvar.get_variable()
+        return (len(var.get_variables()), len(var), dvar.is_repeated)
     
     def calculate_num_plans(self, counterbalanced_groups, rankings, num_trials):
         """Determine the number of experimental plans based on constraints and trial width."""
         total_n_plans = 1
 
-        for variables, num_conditions in counterbalanced_groups:
+        for variables, num_conditions, repeats in counterbalanced_groups:
                 num_trials = num_trials
-                total_n_plans *= calculate_plan_multiplier(num_conditions, variables, num_trials)
+                if repeats:
+                    total_n_plans *= num_conditions
+                else:
+                    total_n_plans *= calculate_plan_multiplier(num_conditions, variables, num_trials)
         for ranking in rankings:
             total_n_plans *= factorial_product_of_counts(ranking)
-
+        
         return int(total_n_plans)
+    
+    def _calculate_maximum_plans(self):
+        """Determine the number of experimental plans based on constraints and trial width."""
+        counterbalance_info = []
+        rankings = []
+        plans_precomputed = False 
+
+        for variable, dvar in self.design_variables.items():
+            if self.design_variables[variable].is_counterbalanced:
+                group = self.extract_counterbalance_info(dvar)
+                counterbalance_info.append(group)
+
+            elif self.design_variables[variable].is_ranked:
+                rankings.append(count_values(self.design_variables[variable].get_ranks()))
+
+            if self.constraints.has_constraint(variable, InnerBlock) or self.constraints.has_constraint(variable, OuterBlock):
+                plans_precomputed = True
+
+        return (self.calculate_num_plans(counterbalance_info, rankings, self.get_width()), plans_precomputed)
+    
     
     def _determine_num_plans(self):
         """Determine the number of experimental plans based on constraints and trial width."""
+        plan_count, plans_precomputed = self._calculate_maximum_plans()
+
         if self.num_groups > 0:
             lcm = self._determine_LCM()
             num_plans = (self.num_groups // lcm) * lcm
             if num_plans == 0: 
                 raise ValueError(f"Number of plans ({self.num_groups}) is too small to accommodate counterbalancing constraints. Minimum number of plans needed is {lcm}.")
             
-            return (self.num_groups // lcm) * lcm
+            plan_count = ((self.num_groups // lcm) * lcm) if plans_precomputed else min(plan_count, (self.num_groups // lcm) * lcm)
 
-        counterbalance_info = []
-        rankings = []
 
-        for variable in self.design_variables:
-            if self.design_variables[variable].is_counterbalanced:
-                group = self.extract_counterbalance_info(variable)
-                counterbalance_info.append(group)
-
-            elif self.design_variables[variable].is_ranked:
-                rankings.append(count_values(self.design_variables[variable].get_ranks()))
-
-        return self.calculate_num_plans(counterbalance_info, rankings, self.get_width())
+        return plan_count
     
     def _determine_LCM(self):
         counterbalance_info = []
 
-        for variable in self.design_variables:
-            if self.design_variables[variable].is_counterbalanced:
-                group = self.extract_counterbalance_info(variable)
+        for variable, dvar in self.design_variables.items():
+            if dvar.is_counterbalanced:
+                group = self.extract_counterbalance_info(dvar)
                 counterbalance_info.append(group)
 
         """Determine the number of experimental plans based on constraints and trial width."""
-        total_n_plans = math.lcm(*(y for _, y in counterbalance_info))
+        total_n_plans = math.lcm(*(y for _, y, _ in counterbalance_info))
         return int(total_n_plans)
     
 
@@ -215,7 +250,7 @@ class Design:
     def identify_random_vars(self):
         return [
             v for v, obj in self.design_variables.items()
-            if not (obj.is_counterbalanced or obj.is_ranked)
+            if obj.is_random
         ]
             
     def _add_design_variable(self, variable):
@@ -224,8 +259,10 @@ class Design:
 
     def add_variable(self, variable):
         assert isinstance(variable, ExperimentVariable)
-        if variable in self.design_variables: 
-            raise ValueError(f"Cannot add variable '{variable}' — it already exists in design.")
+
+        for subvar in variable.get_variables():
+            if subvar in self.variables: 
+                raise ValueError(f"Cannot add variable '{variable}' — it already exists in design.")
         
         self._add_design_variable(variable)
 

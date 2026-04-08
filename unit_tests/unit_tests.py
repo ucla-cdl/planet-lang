@@ -8,8 +8,11 @@ from planet.nest import nest
 from planet.cross import cross
 from planet.solver import BitVecSolver
 from planet.plans import PlanGenerator
+from planet import *
 import unittest
+import pandas as pd
 
+from collections import Counter, defaultdict
 
 class TestDSL(unittest.TestCase):
     def test_ffl(self):
@@ -302,6 +305,97 @@ class TestSolver(unittest.TestCase):
 
         self.assertEqual(solver.solver.check(), unsat)
 
+class TestAssignment(unittest.TestCase):
+    def test_randomization(self):
+        interface = ExperimentVariable(
+            name = "interface",
+            options = ["AR", "VR", "Reality"]
+        )
+
+
+        units = Units(9)
+
+        design = (
+            Design()
+                .within_subjects(interface)
+                .counterbalance(interface)
+                .limit_plans(len(interface))
+        )
+
+        
+        # Initialize: {pid: {position: Counter({treatment: count})}}
+        unit_to_treatment_counts = {f"unit_{i}": {f"pos_{j}":{treatment:0 for treatment in interface.conditions} for j in range(3)} for i in range(1, 10)}
+        plans = None
+
+        # Process dataframes
+        for _ in range(1000):
+            assignment = assign(units, design)
+            df = assignment.format_assignment()
+            plans = assignment.computed_plans
+
+            for _, row in df.iterrows():
+                unit = row['pid']
+                plan = row['plan']
+
+                if plan >= 0: 
+                    for pos in range(3):
+                        treatment = plans[plan][pos]
+                        unit_to_treatment_counts[f"unit_{unit}"][f"pos_{pos}"][treatment] += 1
+
+        # Build with MultiIndex columns
+        rows = []
+        for unit, positions in unit_to_treatment_counts.items():
+            row = {}
+            for position, treatments in positions.items():
+                total = sum(treatments.values())
+                for treatment, count in treatments.items():
+                    prob = count / total if total > 0 else 0
+                    # Use tuple for MultiIndex: (position, treatment)
+                    row[(position, treatment)] = prob
+            rows.append(row)
+
+        prob_df = pd.DataFrame(rows)
+
+        # Set unit as index
+        prob_df.index = unit_to_treatment_counts.keys()
+        prob_df.index.name = 'unit'
+
+        # Create proper MultiIndex for columns
+        prob_df.columns = pd.MultiIndex.from_tuples(
+            prob_df.columns,
+            names=['position', 'treatment']
+        )
+
+        # Sort
+        prob_df = prob_df.sort_index(axis=1).round(2)
+
+        # Expected probability (uniform across 3 treatments)
+        expected_prob = 1/3
+
+        # Tolerance for floating point comparison (due to sampling variation)
+        tolerance = 0.05  # Allow 5% deviation
+
+        # Test 1: Each probability should be close to 1/3
+        assert np.all(np.abs(prob_df.values - expected_prob) < tolerance), \
+            "Some probabilities deviate significantly from 1/3"
+
+        # Test 2: For each (unit, position), probabilities sum to 1
+        for pos in ['pos_0', 'pos_1', 'pos_2']:
+            cols = prob_df.columns[prob_df.columns.get_level_values(0) == pos]
+            row_sums = prob_df[cols].sum(axis=1)
+            assert np.allclose(row_sums, 1.0, atol=0.01), \
+                f"Probabilities for {pos} don't sum to 1"
+
+        # Test 3: No treatment is systematically favored
+        # Mean probability across all units and positions should be ~1/3
+        mean_prob = prob_df.values.mean()
+        assert np.abs(mean_prob - expected_prob) < 0.02, \
+            f"Mean probability {mean_prob:.3f} deviates from expected {expected_prob:.3f}"
+
+        # Test 4: Standard deviation should be small (indicates balance)
+        std_prob = prob_df.values.std()
+        assert std_prob < 0.03, \
+            f"Standard deviation {std_prob:.3f} too high, indicates imbalance"
    
 if __name__ == '__main__':
     unittest.main(argv=['first-arg-is-ignored'], exit=False)

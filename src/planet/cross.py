@@ -20,7 +20,6 @@ def cross_structure(d1, d2):
         ))
 
      # Match all variables from the inner design across every block
-
     for i in range(len(d1.variables)):
         constraints.append(OuterBlock(
             d1.variables[i],
@@ -121,7 +120,14 @@ def cross(design1, design2):
     width1 = design1.get_width()
     width2 = design2.get_width()
     
-    assert width1 == width2
+    # Raise an error if widths are not equal
+    if width1 != width2:
+        raise ValueError(
+            f"Widths of design1 ({width1}) and design2 ({width2}) are not equal. "
+            "The designs cannot be composed."
+        )
+
+
     total_conditions = width2 
     
     # Create a new design with the combined variables
@@ -129,6 +135,8 @@ def cross(design1, design2):
                        .limit_plans(total_groups)
                        .num_trials(total_conditions)
                     )
+    
+    
     
     combined_design.variables.extend(combined_variables)
     combined_design.add_constraints(copy_crossed_constraints(design1, design2, total_conditions, total_groups))

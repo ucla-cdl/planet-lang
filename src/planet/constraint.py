@@ -26,12 +26,14 @@ class PlanConstraint(Constraint):
 class InnerBlock(BlockConstraint):
     """Represents a block structure in the experimental design."""
     def __init__(self, variable, region):
-        super().__init__(variable, region.width, region.height, region.stride)
+        super().__init__(variable, region.width, region.height, [1,1])
+    def __str__(self):
+        return f"{self.variable}: \n\t{self.width}\n\t{self.height}\n"
 
 class OuterBlock(BlockConstraint):
     """Represents a block structure in the experimental design."""
     def __init__(self, variable, width, height, stride):
-        super().__init__(variable, width, height, stride)
+        super().__init__(variable, width, height, [1,1])
 
     def __str__(self):
         return f"{self.variable}: \n\t{self.width}\n\t{self.height}\n"
@@ -41,6 +43,9 @@ class NoRepeat(PlanConstraint):
         if width is None:
             width = len(variable)
         super().__init__(variable, width, stride)
+
+    def __str__(self):
+        return f"NO REPEAT: {self.width, self.stride}"
 
    
 class Counterbalance(BlockConstraint):
@@ -78,7 +83,14 @@ class AbsoluteRank(PlanConstraint):
     def add_rank(self, condition, rank):
         self.ranks[condition] = rank
 
-    
+
+class Order(PlanConstraint):
+    def __init__(self, variable, sequence, stride = 1):
+        width = len(sequence)
+        super().__init__(variable, width, stride)
+        self.sequence = sequence
+        
+
 
 class SetPosition(Constraint):
     def __init__(self, variable, condition, pos):

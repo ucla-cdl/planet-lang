@@ -1,5 +1,5 @@
 from planet import * 
-from planet.analysis import Analysis
+from planet.analysis import Analysis, compare
 
 task = ExperimentVariable(
     name = "task",
@@ -22,7 +22,7 @@ units = Units(16)
 task_des = (
     Design()
         .within_subjects(task)
-        .order(task, ["creation", "editing"])
+        .counterbalance(task)
         
 )
 
@@ -42,17 +42,26 @@ number_des = (
 )
 
 cross_des = cross(interface_des, number_des)
-des = nest(outer=task_des, inner=cross_des)
+des1 = nest(outer=task_des, inner=cross_des)
+
+task_des = (
+    Design()
+        .within_subjects(task)
+        .order(task, ["creation", "editing"])
+        
+)
+
+cross_des = cross(interface_des, number_des)
+des2 = nest(outer=task_des, inner=cross_des)
+
+compare(des1, des2)
 
 # des.to_latex()
-assignment = assign(units, des)
-print(assignment)
-print(Analysis(des))
+# assignment = assign(units, des1)
+# print(assignment)
 
 
-
-
-
+      
 
 
 

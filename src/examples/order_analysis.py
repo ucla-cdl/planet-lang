@@ -23,38 +23,24 @@ task_des = (
     Design()
         .within_subjects(task)
         .order(task, ["creation", "editing"])
-        
 )
 
 interface_des = (
     Design()
         .within_subjects(interface)
         .counterbalance(interface)
-        .limit_plans(2)
 )
 
 number_des = (
     Design()
         .within_subjects(number)
-        .counterbalance(number)
-        .limit_plans(2)
-      
+        .counterbalance(number)  
 )
 
-cross_des = cross(interface_des, number_des)
-des = nest(outer=task_des, inner=cross_des)
+cross_des = cross(interface_des, task_des)
+des = nest(outer=number_des, inner=cross_des)
 
 # des.to_latex()
 assignment = assign(units, des)
 print(assignment)
 print(Analysis(des))
-
-
-
-
-
-
-
-
-
-
