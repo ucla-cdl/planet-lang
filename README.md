@@ -9,6 +9,8 @@ located in `src/examples` and `src/eval_examples`. Outputs from the program
 (such as the latex table or csv file) are located in `/outputs` within the
 working directory. 
 
+Click [here](https://experiment-interface-589760482620.us-central1.run.app) to play with the web application!
+
 
 # PLanet
 Welcome to PLanet's documentation! PLanet is a tool to help researchers author and analyze experimental designs.
