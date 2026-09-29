@@ -41,9 +41,17 @@ class Analysis:
                     self.main_effects.update(var.get_variables())
             else:
                 warnings.warn(f"Could not perform analysis for variable {var}.")
-    
 
-    def analyze_interaction_effects(self):  
+    def _main_effect_estimable(self, var, dvar):
+        if len(var.conditions) < 2:
+            return False
+        if dvar.is_counterbalanced or dvar.is_random:
+            return True
+        if not dvar.is_repeated and dvar.is_ordered:
+            return True
+        return False
+
+    def analyze_interaction_effects(self):
         """Analyze and update interaction effects based on the design's variables.
 
         An interaction effect is estimable if:
@@ -95,7 +103,9 @@ class Analysis:
         for var1, var2 in combinations(self.design.design_variables, 2):
             var1_dv = self.design.design_variables[var1]
             var2_dv = self.design.design_variables[var2]
-            # at least on variable must be unranked 
+            if var1_dv.is_crossed and var2_dv.is_crossed:
+                continue
+            # at least on variable must be unranked
             if (var1_dv.is_counterbalanced or var1_dv.is_random) and (var2_dv.is_counterbalanced or var2_dv.is_random):
                 if (plan_count <= plan_limit or plan_limit == 0):
                     multifact_var = MultiFactVariable([var1, var2])
@@ -125,6 +135,8 @@ class Analysis:
         # NOTE: this checks for nest! Still need to check for cross ;) 
         for outer_var, outer_spec in outer_variables:
             for inner_var, inner_spec in inner_variables:
+                if outer_var.is_crossed or inner_var.is_crossed:
+                    continue
                 # the inner block height is always a multiple or factor of the
                 # outer block height based on how we compose designs. We always
                 # add an inner block when we add an outer block. 
@@ -161,8 +173,18 @@ class Analysis:
         # For cross, need to check that counterbalance is on same width as the
         # inner block, and that the either the number of trials is the same as
         # the number of conditions or there is an outer block with a width the
-        # same as the number of conditions! 
-       
+        # same as the number of conditions!
+
+        # --- Cross composition (I-Cross): no plan-count guard ---
+        crossed_vars = [(v, dv) for v, dv in self.design.design_variables.items() if dv.is_crossed]
+        for (var1, dv1), (var2, dv2) in combinations(crossed_vars, 2):
+            main1_ok = self._main_effect_estimable(var1, dv1)
+            main2_ok = self._main_effect_estimable(var2, dv2)
+            at_least_one_cb = (dv1.is_counterbalanced or dv1.is_random
+                               or dv2.is_counterbalanced or dv2.is_random)
+            if main1_ok and main2_ok and at_least_one_cb:
+                self.interaction_effects.add(MultiFactVariable([var1, var2]))
+
     def analyze_time_varying_effects(self):
         """Analyze and update time-varying effects based on the design's variables.
 

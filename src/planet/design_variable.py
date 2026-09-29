@@ -8,6 +8,7 @@ class DesignVariable:
             "OuterBlock":None,
             "InnerBlock":None,
             "Order":None,
+            "Cross": None,
         }
 
     def add_constraint(self, constraint):
@@ -48,6 +49,10 @@ class DesignVariable:
     @property
     def is_blocked_inner(self):
         return self.has("InnerBlock")
+
+    @property
+    def is_crossed(self):
+        return self.has("Cross")
 
     @property
     def is_random(self):

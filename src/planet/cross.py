@@ -4,7 +4,7 @@ import copy
 from planet.design import Design
 from planet.constraint import (
     StartWith, Counterbalance, NoRepeat, InnerBlock, OuterBlock,
-    SetRank, SetPosition, AbsoluteRank
+    SetRank, SetPosition, AbsoluteRank, Cross
 )
 from planet.candl import combine_lists
 from planet.region import DesignRegion
@@ -18,6 +18,7 @@ def cross_structure(d1, d2):
             d2.variables[i],
             DesignRegion(1, d1.num_plans(), [1, 1])
         ))
+        constraints.append(Cross(d2.variables[i]))
 
      # Match all variables from the inner design across every block
     for i in range(len(d1.variables)):
@@ -27,6 +28,7 @@ def cross_structure(d1, d2):
             d1.num_plans(),
             stride = [1, 1]
         ))
+        constraints.append(Cross(d1.variables[i]))
     return constraints
 
 
@@ -122,9 +124,30 @@ def cross(design1, design2):
     
     # Raise an error if widths are not equal
     if width1 != width2:
+        def is_between_subjects(design):
+            # A design is between-subjects if every variable is repeated across
+            # trials (no NoRepeat) and blocked at the inner level.
+            return all(
+                dv.is_repeated and dv.is_blocked_inner
+                for dv in design.design_variables.values()
+            )
+
+        for narrow, narrow_width in ((design1, width1), (design2, width2)):
+            if narrow_width == 1 and is_between_subjects(narrow):
+                raise ValueError(
+                    "Cannot cross a between-subjects design (width 1) with a "
+                    "within-subjects design. A between-subjects factor is not "
+                    "crossed; it partitions participants into groups, yielding a "
+                    "mixed design. Add the between-subjects factor to your design "
+                    "directly instead of crossing, e.g.:\n"
+                    "    Design().within_subjects(A).counterbalance(A).between_subjects(B)"
+                )
+
         raise ValueError(
-            f"Widths of design1 ({width1}) and design2 ({width2}) are not equal. "
-            "The designs cannot be composed."
+            f"Widths of design1 ({width1}) and design2 ({width2}) are not equal, "
+            "so the designs cannot be crossed. Crossing requires both designs to "
+            "have the same number of within-subjects conditions (width). Check the "
+            "counterbalance/order/within-subjects factors on each design."
         )
 
 

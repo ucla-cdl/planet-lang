@@ -55,7 +55,15 @@ class Counterbalance(BlockConstraint):
  
     def __str__(self):
         return f"COUNTERBALANCE: {self.width, self.height, self.stride}"
-    
+
+class Cross(Constraint):
+    """Marker: this variable participated in a cross(d1, d2) composition.
+    Purely a tag for analysis; carries no region geometry."""
+    def __init__(self, variable):
+        super().__init__(variable)
+    def __str__(self):
+        return f"CROSS: {self.variable}"
+
 class StartWith(Constraint):
     def __init__(self, variable, condition):
         super().__init__(variable)
