@@ -194,7 +194,8 @@ class BitVecSolver(Solver):
         """
         if f returns true increase count by one for all variables
         """
-        counts = [If(f(var, condition), BitVecVal(1, 2), BitVecVal(0, 2)) for var in variables]
+        # Counts must be integers: fixed-width bitvectors silently wrap.
+        counts = [If(f(var, condition), 1, 0) for var in variables]
         return sum(counts)
     
     
