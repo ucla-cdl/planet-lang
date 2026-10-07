@@ -7,9 +7,10 @@ Run from the repository root with:
 """
 import unittest
 
-from z3 import unsat
+from z3 import sat, unsat
 
-from planet import Design, ExperimentVariable, Units, assign
+from planet import Design, ExperimentVariable, Units, assign, cross
+from planet.constraint import Counterbalance
 from planet.designer import Designer
 
 
@@ -33,19 +34,76 @@ def setup(design):
 
 class DimensionReuse(unittest.TestCase):
     def test_regeneration_uses_current_counterbalance_height(self):
-        a = variable("a", 3)
-        design = leaf(a, 3)
-        for height in (6, 3, 6):
+        a, b = variable("a", 3), variable("b", 2)
+        design = leaf(a, 2).between_subjects(b)
+        for height in (3, 6, 3):
             with self.subTest(height=height):
                 design.limit_plans(height)
-                plans = assign(Units(height), design).computed_plans
-                self.assertEqual(plans.shape, (height, 3))
+                designer = setup(design)
+                plans = designer.decode(designer.solver.get_one_model())
+                self.assertEqual(plans.shape, (height, 2))
                 self.assertEqual(len(set(map(tuple, plans))), height)
                 for row in plans:
-                    self.assertEqual(set(row), {"0", "1", "2"})
+                    self.assertEqual(len({cell.split("-")[0] for cell in row}), 2)
                 for col in plans.T:
+                    levels = [cell.split("-")[0] for cell in col]
                     for level in ("0", "1", "2"):
-                        self.assertEqual(list(col).count(level), height // 3)
+                        self.assertEqual(levels.count(level), height // 3)
+                if height == 6:
+                    # The first three rows balance both columns; the added
+                    # rows make column zero's counts (3, 2, 1). b keeps all
+                    # six rows distinct without forcing a to balance.
+                    designer.solver.name_to_encoding([
+                        ["0-0", "1-0"], ["1-0", "2-0"], ["2-0", "0-0"],
+                        ["0-1", "1-1"], ["0-1", "2-1"], ["1-1", "0-1"],
+                    ])
+                    self.assertEqual(designer.solver.solver.check(), unsat)
+
+    def test_cross_preserves_partially_explicit_counterbalance_dimensions(self):
+        cases = (
+            (1, 0, (1, 6), [
+                ["0-0", "1-0"], ["1-0", "0-0"], ["2-0", "0-0"],
+                ["0-1", "1-1"], ["1-1", "0-1"], ["2-1", "0-1"],
+            ]),
+            (0, 3, (2, 3), [
+                ["0-0", "1-0"], ["1-0", "2-0"], ["2-0", "0-0"],
+                ["0-1", "1-1"], ["0-1", "2-1"], ["1-1", "0-1"],
+            ]),
+        )
+        for width, height, expected_dimensions, rows in cases:
+            with self.subTest(width=width, height=height):
+                a, b, c = variable("a", 3), variable("b", 2), variable("c", 2)
+                first = (
+                    Design().within_subjects(a)
+                    .counterbalance(a, w=width, h=height)
+                    .between_subjects(b).num_trials(2).limit_plans(6)
+                )
+                second = Design().between_subjects(c).counterbalance(c).num_trials(2)
+                # These rows satisfy the requested region, but not a region
+                # expanded to both columns or all six rows.
+                original = setup(first)
+                original.solver.name_to_encoding(rows)
+                self.assertEqual(original.solver.solver.check(), sat)
+
+                combined = cross(first, second)
+                designer = setup(combined)
+                designer.solver.name_to_encoding([
+                    [f"{cell}-{level}" for cell in row]
+                    for level in ("0", "1") for row in rows
+                ])
+                self.assertEqual(designer.solver.solver.check(), sat)
+                copied = next(
+                    constraint for constraint in combined.get_constraints()
+                    if isinstance(constraint, Counterbalance)
+                    and constraint.variable == a
+                )
+                self.assertEqual((copied.width, copied.height),
+                                 expected_dimensions)
+                source = next(
+                    constraint for constraint in first.get_constraints()
+                    if isinstance(constraint, Counterbalance)
+                )
+                self.assertEqual((source.width, source.height), (width, height))
 
     def test_regeneration_uses_current_between_subjects_width(self):
         a = variable("a", 3)
