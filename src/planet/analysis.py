@@ -207,6 +207,7 @@ class Analysis:
         conditions. 
         """
 
+        complete_variables = set()
         for var in self.design.design_variables.values():
             
             no_repeat = var.constraint_spec.get("NoRepeat")
@@ -217,6 +218,7 @@ class Analysis:
             stride = no_repeat.stride
 
             if (width/stride) % len(var.variable) == 0 and self.design.get_width() % len(var.variable) == 0:
+                complete_variables.add(var.variable)
                 subvars = var.get_variable().get_variables()
                 self.ws_comparisons.update(subvars)
                 for var_a, var_b in combinations(subvars, 2):
@@ -237,11 +239,13 @@ class Analysis:
 
         for outer_var in outer_variables:
             for inner_var in inner_variables:
+                # Nesting cannot restore conditions omitted by either leaf.
+                if not {outer_var.variable, inner_var.variable} <= complete_variables:
+                    continue
                 if outer_var.width <= inner_var.width and self.design.trials % outer_var.width * inner_var.width == 0 and outer_var != inner_var:
              
                     interaction = MultiFactVariable([outer_var.variable, inner_var.variable])
                     self.ws_comparisons.add(interaction)
-                    self.ws_comparisons.update(interaction.get_variables())
                 
 
     def perform_analysis(self):
