@@ -163,7 +163,7 @@ class BitVecSolver(Solver):
             self.solver.add(
                 ForAll([x],
                     Implies(
-                        self.bitvectors.get_variable_assignment(var, x) == condition,
+                        self.bitvectors.matches_condition(var, x, condition),
                         rank_fn(x) == rank
                     )
                 )
@@ -187,7 +187,7 @@ class BitVecSolver(Solver):
         for row in design_matrix:
             for i, condition in enumerate(sequence):
                 self.solver.add(
-                    self.bitvectors.get_variable_assignment(var, row[i]) == condition
+                    self.bitvectors.matches_condition(var, row[i], condition)
                 )
             
     def count(self, variables, condition, f):
