@@ -209,6 +209,74 @@ class Design:
         return (self.calculate_num_plans(counterbalance_info, rankings, self.get_width()), plans_precomputed)
     
     
+    def _row_variations(self):
+        """Bound the trial sequences each variable can take across the rows
+        of one admissible plan matrix.
+
+        Used by the analysis only. Unlike the generator's plan count, this
+        includes random variables, which the solver also assigns, and follows
+        the block constraints added by nesting and crossing. Empty when the
+        generator refuses the plan limit, since no matrix is admissible.
+        """
+        variations = {}
+        num_trials = self.get_width()
+        try:
+            num_plans = self.num_plans()
+        except ValueError:
+            return variations
+
+        for variable, dvar in self.design_variables.items():
+            variations[variable] = 1
+            inner = dvar.constraint_spec["InnerBlock"]
+            outer = dvar.constraint_spec["OuterBlock"]
+            span = (inner.width or num_trials) if inner else 1
+            # A value shared by every row cannot make rows distinct,
+            # even when its assignment is random after solving.
+            if (outer and outer.height == 1) or (
+                inner and inner.height == num_plans and num_trials % span == 0
+            ):
+                continue
+
+            slots = min(num_trials, outer.width) if outer else num_trials
+            if inner and num_plans % inner.height == 0:
+                # Complete blocks repeat one value. Trailing columns
+                # and rows outside complete blocks remain unconstrained.
+                slots = slots // span + slots % span
+
+            def window(constraint):
+                # trials the constraint reads
+                return range(0, min(constraint.width, num_trials), constraint.stride)
+
+            def reach(constraint):
+                # independent positions inside the constraint's window
+                return min(slots, len(window(constraint))) if constraint else 0
+
+            levels = len(variable)
+            no_repeat = dvar.constraint_spec["NoRepeat"]
+            distinct = reach(no_repeat)
+            if dvar.is_counterbalanced or dvar.is_random:
+                # Choose distinct levels for NoRepeat positions.
+                constrained, arrangements = distinct, math.perm(levels, distinct)
+            elif dvar.is_ordered:
+                # The sequence fixes the positions it reaches.
+                constrained, arrangements = reach(dvar.constraint_spec["Order"]), 1
+            elif distinct == levels and window(dvar.constraint_spec["AbsoluteRank"]) == window(no_repeat):
+                # Ranks sort a complete window; ties permute freely.
+                constrained = distinct
+                arrangements = factorial_product_of_counts(count_values(dvar.get_ranks()))
+            else:
+                constrained, arrangements = distinct, math.perm(levels, distinct)
+            # Any level can fill the remaining independent positions.
+            variations[variable] = arrangements * levels ** (slots - constrained)
+
+        return variations
+
+
+    def _maximum_rows(self):
+        """Bound the distinct rows of one admissible plan matrix."""
+        return math.prod(self._row_variations().values())
+
+
     def _determine_num_plans(self):
         """Determine the number of experimental plans based on constraints and trial width."""
         plan_count, plans_precomputed = self._calculate_maximum_plans()

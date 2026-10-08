@@ -1,5 +1,6 @@
 from planet.design import Design
 from itertools import combinations
+import math
 from planet.variable import ExperimentVariable, MultiFactVariable
 import warnings
 
@@ -90,6 +91,8 @@ class Analysis:
         # redundant computation.
         plan_count, _ = self.design._calculate_maximum_plans()
         plan_limit = self.design.num_groups
+        variations = self.design._row_variations()
+        at_maximum = bool(variations) and math.prod(variations.values()) <= self.design.num_plans()
 
             # Add every pair of variables as a multifact variable
         for var1, var2 in combinations(self.design.design_variables, 2):
@@ -97,7 +100,14 @@ class Analysis:
             var2_dv = self.design.design_variables[var2]
             # at least on variable must be unranked 
             if (var1_dv.is_counterbalanced or var1_dv.is_random) and (var2_dv.is_counterbalanced or var2_dv.is_random):
-                if (plan_count <= plan_limit or plan_limit == 0):
+                if var1_dv.is_counterbalanced and var2_dv.is_counterbalanced:
+                    # Other variables can distinguish rows without supplying
+                    # missing pairs. Count all row variations, not just CB factors.
+                    complete = at_maximum and variations[var1] > 1 and variations[var2] > 1
+                else:
+                    # Keep the existing warning-based reports for random factors.
+                    complete = plan_count <= plan_limit or plan_limit == 0
+                if complete:
                     multifact_var = MultiFactVariable([var1, var2])
                     self.interaction_effects.add(multifact_var)
 
