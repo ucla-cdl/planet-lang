@@ -36,24 +36,14 @@ def copy_crossed_constraints(design1, design2, total_conditions, total_groups):
     # Add counterbalance constraints from design1
     for constraint in design1.constraints.constraints:
         if isinstance(constraint, Counterbalance):
-            if constraint.width and constraint.height:
-                constraints.append(
-                    Counterbalance(
-                        constraint.variable,
-                        width=constraint.width,
-                        height=constraint.height,
-                        stride=constraint.stride
-                    )
+            constraints.append(
+                Counterbalance(
+                    constraint.variable,
+                    width=constraint.width or design1.get_width(),
+                    height=constraint.height or design1.num_plans(),
+                    stride=constraint.stride
                 )
-            else: 
-                constraints.append(
-                    Counterbalance(
-                        constraint.variable,
-                        width=design1.get_width(),
-                        height=design1.num_plans(),
-                        stride=constraint.stride
-                    )
-                )
+            )
 
         else:
             constraints.append(

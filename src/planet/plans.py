@@ -19,7 +19,7 @@ class PlanGenerator:
         """
         assert plans is not None
         width = self.design.design_variables[rand].get_width(self.design.get_width())
-        span = self.design.design_variables[rand].get_span()
+        span = self.design.design_variables[rand].get_span(self.design.get_width())
         variables = rand.get_variables()
 
         random_index = self.design.variables.index(variables[0])

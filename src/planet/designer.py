@@ -73,19 +73,10 @@ class Designer:
             match constraint:
                 
                 case Counterbalance():
-                
-                    if groups:
-                        constraint.width = (
-                            constraint.width if constraint.width else width
-                        )
-                        constraint.height = (
-                            constraint.height if constraint.height else groups
-                        )
-
                     self.counterbalance(
                         variable,
-                        w=constraint.width,
-                        h=constraint.height,
+                        w=constraint.width or width,
+                        h=constraint.height or groups,
                         stride=constraint.stride,
                     )
 
@@ -138,13 +129,9 @@ class Designer:
                     )
 
                 case InnerBlock():
-                    constraint.width = (
-                        constraint.width if constraint.width else width
-                    )
-
                     self.match_inner(
                         constraint.variable, 
-                        constraint.width, 
+                        constraint.width or width,
                         constraint.height
                     )
 
@@ -261,6 +248,3 @@ class Designer:
             model = self.solver.get_all_models()
             self.get_groups(model)
             return np.array(self.solver.encoding_to_name(model, self.variables))
-            
-
-    

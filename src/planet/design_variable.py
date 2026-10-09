@@ -74,13 +74,11 @@ class DesignVariable:
         return width
     
     def get_width(self, width):
-        div = 1
+        div = self.get_span(width)
 
         outer_block = self.constraint_spec["OuterBlock"]
         if outer_block is not None:
             width = outer_block.width
-        if self.is_blocked_inner:
-            div = self.constraint_spec["InnerBlock"].width
   
         return int(width/div)
     
@@ -90,11 +88,10 @@ class DesignVariable:
     def get_variable(self):
         return self.variable
 
-    def get_span(self):
+    def get_span(self, width):
+        """Resolve a default between-subject block against the current trials."""
         span = 1
         if self.is_blocked_inner:
-            span = self.constraint_spec["InnerBlock"].width
+            span = self.constraint_spec["InnerBlock"].width or width
                
         return span
-    
-        
