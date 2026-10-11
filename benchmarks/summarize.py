@@ -22,8 +22,8 @@ import json
 import statistics
 from pathlib import Path
 
-# File -> experiment name used in the paper's execution-time table. Names with
-# "?" could not be mapped unambiguously from the repository alone.
+# File -> experiment name used in the paper's execution-time table. The Shaping
+# Compliance paper numbers its studies Exp 1 (grains x electrodes) and Exp 2 (shapes).
 PAPER_NAMES = {
     "artist.py": "ARTiST (Exp 1)",
     "artist2.py": "ARTiST (Exp 2)",
@@ -35,8 +35,8 @@ PAPER_NAMES = {
     "rambler.py": "Rambler",
     "recommender.py": "When Recommender Systems Snoop",
     "seated_wip.py": "Seated-WIP",
-    "shaping_compliance.py": "Shaping Compliance (multifact, nested; Exp ?)",
-    "shaping_compliance2.py": "Shaping Compliance (shape; Exp ?)",
+    "shaping_compliance.py": "Shaping Compliance (Exp 1)",
+    "shaping_compliance2.py": "Shaping Compliance (Exp 2)",
     "silver.py": "Silver-Tongued and Sundry",
     "skinergy.py": "Skinergy",
     "sweating_details.py": "Sweating the Details",

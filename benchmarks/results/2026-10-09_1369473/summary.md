@@ -50,8 +50,8 @@ changed between versions or whose wall time moved more than 2x.
 | `src/eval_examples/rambler.py` | Rambler | ok | 2 x 2 | 12 | 0.278 | 0.283 | 0.002 | 0.003 | 0.008 | - |  |
 | `src/eval_examples/recommender.py` | When Recommender Systems Snoop | ok | 341 x 1 | 341 | 0.282 | 0.280 | 0.001 | 0.001 | 0.007 | - |  |
 | `src/eval_examples/seated_wip.py` | Seated-WIP | ok | 9 x 9 | 18 | 0.803 | 0.722 | 0.504 | 0.425 | 0.451 | - |  |
-| `src/eval_examples/shaping_compliance.py` | Shaping Compliance (multifact, nested; Exp ?) | error:ValueError | - | - | - | - | - | - | - | - | ValueError: Sample larger than population or is negative |
-| `src/eval_examples/shaping_compliance2.py` | Shaping Compliance (shape; Exp ?) | ok | 12 x 15 | 12 | 0.303 | 0.275 | 0.003 | 0.002 | 0.009 | - |  |
+| `src/eval_examples/shaping_compliance.py` | Shaping Compliance (Exp 1) | error:ValueError | - | - | - | - | - | - | - | - | ValueError: Sample larger than population or is negative |
+| `src/eval_examples/shaping_compliance2.py` | Shaping Compliance (Exp 2) | ok | 12 x 15 | 12 | 0.303 | 0.275 | 0.003 | 0.002 | 0.009 | - |  |
 | `src/eval_examples/silver.py` | Silver-Tongued and Sundry | ok | 210 x 10 | 210 | 0.289 | 0.283 | 0.003 | 0.004 | 0.013 | - |  |
 | `src/eval_examples/skinergy.py` | Skinergy | ok | 10 x 10 | 10 | 0.285 | 0.271 | 0.003 | 0.003 | 0.009 | - |  |
 | `src/eval_examples/sweating_details.py` | Sweating the Details | ok | 12 x 12 | 72 | 0.400 | 0.396 | 0.085 | 0.088 | 0.128 | - |  |
