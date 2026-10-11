@@ -235,14 +235,21 @@ def latex_table(new, meta):
         f"% Median over {meta.get('reps')} runs of the end-to-end wall time of one `python program.py` run",
         f"% and of its z3 part (Designer.eval). Commit {meta.get('commit')}; {meta.get('cpu')}, {meta.get('memory_gb')} GB;",
         f"% Python {meta.get('python_version')}; z3 {meta.get('z3_version')}; {meta.get('started', '')[:10]}.",
-        f"% Rows in bold have a median wall time of {BOLD_WALL_AT:g} s or less.",
+        f"% Rows are in ascending order of median wall time; rows in bold have a median wall time of {BOLD_WALL_AT:g} s or less.",
         "\\begin{tabular}{lrrr}",
         "\\toprule",
         "\\textbf{Experiment} & \\textbf{Plans $\\times$ trials} & \\textbf{Wall (s)} & \\textbf{Solve (s)} \\\\",
         "\\midrule",
     ]
     notes = []
-    rows = sorted(new.items(), key=lambda kv: PAPER_NAMES.get(Path(kv[0]).name, kv[0]).lower())
+    # Ascending wall time; programs that did not complete go last, by name.
+    def order(kv):
+        script, row = kv
+        name = PAPER_NAMES.get(Path(script).name, script).lower()
+        if row["status"] != "ok":
+            return (1, float("inf"), float("inf"), name)
+        return (0, row["wall_med"], row["solve_med"], name)
+    rows = sorted(new.items(), key=order)
     for script, row in rows:
         name = Path(script).name
         paper = PAPER_NAMES.get(name, name).replace("&", "\\&")
