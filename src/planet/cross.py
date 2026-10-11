@@ -53,14 +53,15 @@ def copy_crossed_constraints(design1, design2, total_conditions, total_groups):
     # need to modify out constraint region
     for constraint in design2.constraints.constraints:
         if isinstance(constraint, Counterbalance):
-            stride_height = constraint.height if constraint.height else design1.num_plans()
-            # Add counterbalance constraint for design2 variables
+            # Each plan of design2 fills design1.num_plans() rows, so its
+            # region keeps its shape and takes its rows that far apart.
+            rows = design1.num_plans()
             constraints.append(
                 Counterbalance(
                     constraint.variable,
-                    width=total_conditions,
-                    height=total_groups,
-                    stride=[stride_height, 1]
+                    width=constraint.width or total_conditions,
+                    height=constraint.height * rows if constraint.height else total_groups,
+                    stride=[constraint.stride[0] * rows, constraint.stride[1]]
                 )
             )
     
