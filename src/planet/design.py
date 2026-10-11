@@ -316,11 +316,39 @@ class Design:
         
 
     def identify_random_vars(self):
+        """Variables the solver leaves free, to be randomized plan by plan.
+
+        A component of a multifactor design variable is never random on
+        its own: a counterbalanced, ranked or ordered multifactor variable
+        fixes its components, and a random one is randomized as a single
+        joint variable. Nesting and crossing register the components with
+        block constraints only, so they must not be randomized separately.
+        """
+        components = {
+            component
+            for spec in self.design_variables.values() if spec.is_multifact
+            for component in spec.get_variable().get_variables()
+        }
         return [
             v for v, obj in self.design_variables.items()
-            if obj.is_random
+            if obj.is_random and v not in components
         ]
-            
+
+    def block_spec(self, variable) -> DesignVariable:
+        """The design variable carrying the block constraints of `variable`.
+
+        Nesting and crossing block each component of a multifactor variable
+        rather than the joint variable, so a multifactor variable without
+        blocks of its own reads them from a component. Every component of a
+        composed design receives the same blocks.
+        """
+        spec = self.design_variables[variable]
+        if spec.is_multifact and not (spec.is_blocked_inner or spec.is_blocked_outer):
+            for component in variable.get_variables():
+                if component in self.design_variables:
+                    return self.design_variables[component]
+        return spec
+
     def _add_design_variable(self, variable):
         if variable not in self.design_variables:
             self.design_variables[variable] = DesignVariable(variable)

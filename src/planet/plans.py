@@ -18,8 +18,11 @@ class PlanGenerator:
         Think about this like instantiating the elements of a matrix of random variables
         """
         assert plans is not None
-        width = self.design.design_variables[rand].get_width(self.design.get_width())
-        span = self.design.design_variables[rand].get_span(self.design.get_width())
+        # A nested or crossed multifactor variable keeps its blocks on its
+        # components, so read the block geometry from wherever it lives.
+        spec = self.design.block_spec(rand)
+        width = spec.get_width(self.design.get_width())
+        span = spec.get_span(self.design.get_width())
         variables = rand.get_variables()
 
         random_index = self.design.variables.index(variables[0])
