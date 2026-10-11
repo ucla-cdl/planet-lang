@@ -443,7 +443,7 @@ FAMILY_INFO = [
 OVERVIEW_LABELS = {
     "latin_square":          ((-10, 13), "right",  "center"),
     "full_counterbalance":   ((0, -10),  "center", "top"),
-    "plans":                 ((-9, 0),   "right",  "center"),
+    "plans":                 ((-9, 7),   "right",  "bottom"),
     "nested_latin_squares":  ((0, 10),   "center", "bottom"),
     "crossed_latin_squares": ((0, 8),    "center", "bottom"),
     "trials":                ((7, 0),    "left",   "center"),
@@ -486,11 +486,11 @@ def _floor(points):
 
 def _reference_lines(ax, floor, T, label=True, label_floor=True):
     for y, txt in [(floor, "interpreter + import floor")] + REFERENCE_LINES + [(T, f"{T:.0f} s limit")]:
-        ax.axhline(y, color=PALETTE["muted"], linestyle=(0, (1, 2)), linewidth=0.8, zorder=1)
+        ax.axhline(y, color="black", linestyle=(0, (1, 2)), linewidth=0.8, zorder=1)
         if label and (label_floor or y != floor):
             va = "top" if y == floor else "bottom"
             ax.text(0.012 if y == floor else 0.005, y * (0.93 if va == "top" else 1.0), txt, transform=ax.get_yaxis_transform(),
-                    ha="left", va=va, fontsize=6.5, color=PALETTE["muted"])
+                    ha="left", va=va, fontsize=6.5, color="black")
 
 
 def plot_overview(meta, points, out_dir):
@@ -518,7 +518,7 @@ def plot_overview(meta, points, out_dir):
         place = OVERVIEW_LABELS.get(f["key"], ((7, 0), "left", "center"))
         if place[0] == "leader":
             ax.annotate(text, (end_x, end_y), xytext=place[1], textcoords="data", ha="center", va="center", fontsize=7.5, color=INK,
-                        arrowprops=dict(arrowstyle="-", color=PALETTE["muted"], linewidth=0.8, shrinkA=0, shrinkB=4), zorder=6)
+                        arrowprops=dict(arrowstyle="-", color="black", linewidth=0.7, shrinkA=0, shrinkB=4), zorder=6)
         else:
             (dx, dy), ha, va = place
             ax.annotate(text, (end_x, end_y), textcoords="offset points", xytext=(dx, dy), ha=ha, va=va, fontsize=7.5, color=INK, zorder=6)
@@ -529,7 +529,7 @@ def plot_overview(meta, points, out_dir):
     ax.tick_params(length=3)
     ax.grid(True, which="major", color=PALETTE["grid"], linewidth=0.6); ax.grid(False, which="minor")
     handles, labels = ax.get_legend_handles_labels()
-    handles.append(Line2D([], [], marker="x", color=PALETTE["muted"], markeredgewidth=1.8, linestyle="none", markersize=7))
+    handles.append(Line2D([], [], marker="x", color="black", markeredgewidth=1.8, linestyle="none", markersize=7))
     labels.append(f"did not finish within {T:.0f} s")
     fig.legend(handles, labels, loc="lower center", ncol=2, frameon=False, columnspacing=2.0, handlelength=2.2, bbox_to_anchor=(0.53, 0.0))
     fig.tight_layout(rect=(0, 0.115, 1, 1), h_pad=0.2)
@@ -562,7 +562,7 @@ def plot_families(meta, points, out_dir):
         _reference_lines(ax, floor, T, label=(axes.index(ax) % ncol == 0), label_floor=False)
         name = f["name"] if len(f["name"]) <= 28 else f["name"].replace(" without ", " without\n")
         ax.set_title(f'{name}\n', fontsize=7.5, color=PALETTE["ink"], pad=2)
-        ax.text(0.5, 1.02, f'{f["shape"]} plans × trials', transform=ax.transAxes, ha="center", va="bottom", fontsize=6.5, color=PALETTE["muted"])
+        ax.text(0.5, 1.02, f'{f["shape"]} plans × trials', transform=ax.transAxes, ha="center", va="bottom", fontsize=6.5, color="black")
         ax.set_xlabel(f["xlabel"])
         if f["xscale"] == "linear":
             ax.set_xticks(xs + ([timeout[0]] if timeout and timeout[0] not in xs else []))
@@ -576,10 +576,8 @@ def plot_families(meta, points, out_dir):
     # the spare cell explains the conventions
     spare = axes[len(fams)]
     spare.axis("off")
-    handles = [Line2D([], [], marker="x", color=PALETTE["muted"], markeredgewidth=1.7, linestyle="none", markersize=6.5),
-               Line2D([], [], color=PALETTE["muted"], linewidth=1.1, linestyle=(0, (3, 2))),
-               Line2D([], [], color=PALETTE["muted"], linewidth=0.8, linestyle=(0, (1, 2)))]
-    labels = [f"did not finish within {T:.0f} s", "jump from the last completed point", "floor, 1 s, 10 s, 600 s"]
+    handles = [Line2D([], [], marker="x", color="black", markeredgewidth=1.7, linestyle="none", markersize=6.5)]
+    labels = [f"did not finish within {T:.0f} s"]
     spare.legend(handles, labels, loc="center left", frameon=False, fontsize=7, handlelength=2.4)
     for ax in axes[len(fams) + 1:]:
         ax.axis("off")
