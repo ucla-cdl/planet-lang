@@ -35,7 +35,8 @@ condition_des = (
       
 )
 crossed_des = cross(task_des, condition_des)
-# repeat_des = nest(inner=block, outer=crossed_des)
+# each condition-subtask pair has three steps, i.e. three trials
+repeat_des = nest(inner=block, outer=crossed_des)
 
-assignment = assign(units, crossed_des)
+assignment = assign(units, repeat_des)
 print(assignment)
