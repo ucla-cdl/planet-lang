@@ -114,6 +114,33 @@ do not show the re-runs. Points past the first timeout were never run.
 These programs call `assign` but do not print the assignment, so output
 formatting is excluded.
 
+## Reproduce the paper's table and figures
+
+The paper's execution-time table and both scaling figures are generated from
+the JSON committed in `benchmarks/results/2026-10-10_b33ade0/`. To regenerate
+them without re-measuring anything (seconds):
+
+```sh
+R=benchmarks/results/2026-10-10_b33ade0
+.venv/bin/python benchmarks/summarize.py --out-dir $R \
+  --corpus-new $R/corpus_b33ade0.json --examples-new $R/examples_b33ade0.json \
+  --scaling $R/scaling_b33ade0.json --scaling-long $R/scaling_long_b33ade0.json
+```
+
+This rewrites, in that folder, `summary.md`, `execution-times.tex`,
+`scaling_overview.{png,pdf}` and `scaling_families.{png,pdf}`. The markdown,
+the table and the PNGs come back byte-identical to the committed files; the
+PDFs differ only in their embedded creation date. The paper includes
+`execution-times.tex`, `scaling_overview.pdf` (body) and
+`scaling_families.pdf` (appendix) unchanged.
+
+To re-measure instead, `run_all.py --skip-old` runs the whole pipeline on the
+current tree (about 3.5 hours on the Apple M2 used for the paper) and writes a
+new results folder; its timings will differ from the committed ones, which is
+why the paper names the commit that was measured. Tag `perf-eval-paper-v2`
+marks the commit whose harness produced the paper's files from this data;
+the measured package is at commit `b33ade0`.
+
 ## Running pieces by hand
 
 ```sh
@@ -136,5 +163,7 @@ PYTHONPATH=src .venv/bin/python benchmarks/results/<run>/scaling_<commit>_progra
 - `src/examples/scaling.py` is a developer script with 686 plans and may time
   out; that is a result, not a harness failure.
 - The commit recorded in the JSON is the one whose `src/` was measured. A tag
-  on the commit that adds the results folder points one commit later; the two
-  differ only by `benchmarks/results/`.
+  or a later commit on the branch may hold a newer harness than the one that
+  ran, because reporting changes (table order, figure design) are committed
+  after the run without re-measuring. The JSON is the record; everything else
+  is derived from it.
