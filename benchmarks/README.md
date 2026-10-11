@@ -35,7 +35,7 @@ under the same interpreter with only `PYTHONPATH` changed.
 | file | content |
 |---|---|
 | `summary.md` | machine info, corpus table (old vs. new when both ran), corpus cost drivers, examples regression table, scaling table, a Timeouts section, and the figure |
-| `execution-times.tex` | the body of the paper's execution-time table: one row per corpus program with its citation key, plans x trials, median wall time and median solver time |
+| `execution-times.tex` | the body of the paper's execution-time table: one row per corpus program with its citation key, plans x trials, median wall time and median solver time; rows whose wall time is at most `BOLD_WALL_AT` (1 s) are set in bold |
 | `scaling.png`, `scaling.pdf` | the paper's scaling figure: wall time against each family's axis, four panels, timeouts and re-runs marked |
 | `corpus_<commit>.json` | raw per-run records for `src/eval_examples` |
 | `examples_<commit>.json` | raw per-run records for `src/examples` |

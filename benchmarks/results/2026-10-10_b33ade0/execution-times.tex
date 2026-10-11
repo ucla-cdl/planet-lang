@@ -2,25 +2,26 @@
 % Median over 3 runs of the end-to-end wall time of one `python program.py` run
 % and of its z3 part (Designer.eval). Commit b33ade0; Apple M2, 24 GB;
 % Python 3.12.0; z3 4.13.3; 2026-10-10.
+% Rows in bold have a median wall time of 1 s or less.
 \begin{tabular}{lrrr}
 \toprule
 \textbf{Experiment} & \textbf{Plans $\times$ trials} & \textbf{Wall (s)} & \textbf{Solve (s)} \\
 \midrule
-ARTiST (Exp 1)~\cite{WuARTiST2024} & $4 \times 2$ & 0.271 & 0.005 \\ % artist.py
+\textbf{ARTiST (Exp 1)}~\cite{WuARTiST2024} & {\boldmath$4 \times 2$} & \textbf{0.271} & \textbf{0.005} \\ % artist.py
 ARTiST (Exp 2)~\cite{WuARTiST2024} & $25 \times 15$ & 1.085 & 0.707 \\ % artist2.py
-Don't Just Tell Me, Ask Me~\cite{Danry2023Explainable} & $204 \times 10$ & 0.279 & 0.005 \\ % dont_ask_just_tell.py
-Human Augmentation~\cite{Villa2023Augmentation} & $506 \times 1$ & 0.266 & 0.001 \\ % perception.py
+\textbf{Don't Just Tell Me, Ask Me}~\cite{Danry2023Explainable} & {\boldmath$204 \times 10$} & \textbf{0.279} & \textbf{0.005} \\ % dont_ask_just_tell.py
+\textbf{Human Augmentation}~\cite{Villa2023Augmentation} & {\boldmath$506 \times 1$} & \textbf{0.266} & \textbf{0.001} \\ % perception.py
 MouseRing (Exp 1)~\cite{shen2024mousering} & $12 \times 600$ & 48.122 & 45.464 \\ % mousering.py
 MouseRing (Exp 2)~\cite{shen2024mousering} & $12 \times 200$ & 2.636 & 2.035 \\ % mousering2.py
-OK Google, Let's Learn~\cite{DesaiChin2023} & $51 \times 6$ & 0.278 & 0.010 \\ % ok_google.py
-Rambler~\cite{Lin2024rambler} & $2 \times 2$ & 0.265 & 0.002 \\ % rambler.py
-Seated-WIP~\cite{ChanSeatedWIP2024} & $9 \times 9$ & 0.715 & 0.429 \\ % seated_wip.py
+\textbf{OK Google, Let's Learn}~\cite{DesaiChin2023} & {\boldmath$51 \times 6$} & \textbf{0.278} & \textbf{0.010} \\ % ok_google.py
+\textbf{Rambler}~\cite{Lin2024rambler} & {\boldmath$2 \times 2$} & \textbf{0.265} & \textbf{0.002} \\ % rambler.py
+\textbf{Seated-WIP}~\cite{ChanSeatedWIP2024} & {\boldmath$9 \times 9$} & \textbf{0.715} & \textbf{0.429} \\ % seated_wip.py
 Shaping Compliance (Exp 1)$^\dagger$~\cite{jingu2024shaping} & $12 \times 36$ & 1.248 & 0.866 \\ % shaping_compliance.py
-Shaping Compliance (Exp 2)~\cite{jingu2024shaping} & $12 \times 15$ & 0.268 & 0.002 \\ % shaping_compliance2.py
-Silver-Tongued and Sundry~\cite{Fuji2024GPT} & $210 \times 10$ & 0.271 & 0.003 \\ % silver.py
-Skinergy~\cite{YuSkinergy2023} & $10 \times 110$ & 0.306 & 0.024 \\ % skinergy.py
-Sweating the Details~\cite{PottsSweatingDetails2024} & $12 \times 12$ & 0.393 & 0.091 \\ % sweating_details.py
-When Recommender Systems Snoop~\cite{Sun2023Recommender} & $341 \times 1$ & 0.264 & 0.001 \\ % recommender.py
+\textbf{Shaping Compliance (Exp 2)}~\cite{jingu2024shaping} & {\boldmath$12 \times 15$} & \textbf{0.268} & \textbf{0.002} \\ % shaping_compliance2.py
+\textbf{Silver-Tongued and Sundry}~\cite{Fuji2024GPT} & {\boldmath$210 \times 10$} & \textbf{0.271} & \textbf{0.003} \\ % silver.py
+\textbf{Skinergy}~\cite{YuSkinergy2023} & {\boldmath$10 \times 110$} & \textbf{0.306} & \textbf{0.024} \\ % skinergy.py
+\textbf{Sweating the Details}~\cite{PottsSweatingDetails2024} & {\boldmath$12 \times 12$} & \textbf{0.393} & \textbf{0.091} \\ % sweating_details.py
+\textbf{When Recommender Systems Snoop}~\cite{Sun2023Recommender} & {\boldmath$341 \times 1$} & \textbf{0.264} & \textbf{0.001} \\ % recommender.py
 \bottomrule
 \multicolumn{4}{l}{\footnotesize $^\dagger$ The closest expressible approximation of a design the expressivity evaluation marks as not expressible.} \\
 \end{tabular}
