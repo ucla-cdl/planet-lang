@@ -437,8 +437,8 @@ def plot_scaling(meta, points, long_meta, long_points, corpus, out_dir):
             ("latin_square", "one Latin square, for reference", "gray", "."),
         ]),
         (f"(d) Trials per participant, n = {base_n}", "trials per participant", "trials_total", [
-            ("trials", "repetition: n plans × n·k trials", "blue", "o"),
-            ("nested_variable", "nested variable: n plans × n·m trials", "orange", "s"),
+            ("trials", "repetition (k)", "blue", "o"),
+            ("nested_variable", "nested variable (m)", "orange", "s"),
         ]),
     ]
 
@@ -476,28 +476,32 @@ def plot_scaling(meta, points, long_meta, long_points, corpus, out_dir):
                     ax.plot([p[xkey]], [p["timeout"]], marker="s", color=c, markersize=5, linestyle="none", fillstyle="none", zorder=4)
 
         if lines[0][0] == "plans" and plans_n:
-            # The same design with no limit at all: full_counterbalance at the base n, drawn at p = n!.
+            # The same design with no limit at all: full_counterbalance at the base n, drawn at
+            # p = n! with the figure's usual marks (cross = timeout, hollow = re-run).
             x = math.factorial(plans_n)
             fc = points.get(("full_counterbalance", plans_n))
             lfc = long_points.get(("full_counterbalance", plans_n))
             c = PALETTE["orange"]
             if fc is not None:
+                proxy = dict(marker="D", color=c, markersize=4.2, linestyle="none", fillstyle="none", markeredgewidth=1.2)
                 if fc["status"] == "ok":
-                    ax.plot([x], [fc["wall_med"]], marker="D", color=c, markersize=4.2, linestyle="none", fillstyle="none",
-                            markeredgewidth=1.2, label="no limit: n! plans", zorder=5)
+                    ax.plot([x], [fc["wall_med"]], marker="D", color=c, markersize=4.2, linestyle="none", zorder=5, label="no limit: n! plans")
                 elif fc["status"] == "timeout":
-                    ax.plot([x], [fc["timeout"]], marker="D", color=c, markersize=4.2, linestyle="none", fillstyle="none",
-                            markeredgewidth=1.2, label="no limit: n! plans", zorder=5)
+                    ax.plot([x], [fc["timeout"]], marker="x", color=c, markersize=5.5, markeredgewidth=1.2, linestyle="none", zorder=5)
                     if lfc is not None and lfc["status"] == "ok":
-                        ax.plot([x], [lfc["wall_med"]], marker="D", color=c, markersize=4.2, linestyle="none", zorder=5)
+                        ax.plot([x], [lfc["wall_med"]], zorder=5, label="no limit: n! plans", **proxy)
+                        used_long = True
                     elif lfc is not None and T_long:
-                        ax.plot([x], [T_long], marker="D", color=c, markersize=4.2, linestyle="none", fillstyle="none", markeredgewidth=1.2, zorder=5)
+                        ax.plot([x], [T_long], marker="x", color=c, markersize=5.5, markeredgewidth=1.2, linestyle="none", zorder=5, label="no limit: n! plans")
+                        used_long = True
+                    else:
+                        ax.plot([], [], label="no limit: n! plans", **proxy)
 
         if xkey == "trials_total" and corpus and base_n:
             mr = next((r for s, r in corpus.items() if s.endswith("mousering.py") and r["status"] == "ok"), None)
             if mr and mr["plans"] == base_n:
                 ax.plot([mr["trials"]], [mr["wall_med"]], marker="*", color=PALETTE["ink"], markersize=7, linestyle="none",
-                        label="MouseRing Exp 1 (corpus): 10 pages × 5 repetitions", zorder=6)
+                        label="MouseRing Exp 1", zorder=6)
 
         # Reference lines, labeled at the left where the data sits on the floor and
         # the timeouts sit at the right.
@@ -536,9 +540,14 @@ def plot_scaling(meta, points, long_meta, long_points, corpus, out_dir):
         ax.set_title(title, loc="left", color=PALETTE["ink"])
         ax.grid(True, which="major", axis="y", color=PALETTE["grid"], linewidth=0.6)
         ax.set_axisbelow(True)
-        # Legend just below the limit line, in the empty middle-left of every panel.
-        frac = (math.log(T) - math.log(lo)) / (math.log(top) - math.log(lo))
-        ax.legend(loc="upper left", bbox_to_anchor=(0.0, frac - 0.03), frameon=False, handlelength=2.2, borderaxespad=0.2)
+        # Legend in the empty region of each panel: the middle-left below the limit line
+        # for the n and p axes (data rises to the right), the lower right for the width
+        # panel (its lines start above the floor and rise to the upper right).
+        if xkey == "trials_total":
+            ax.legend(loc="lower right", frameon=False, handlelength=1.8, borderaxespad=0.3)
+        else:
+            frac = (math.log(T) - math.log(lo)) / (math.log(top) - math.log(lo))
+            ax.legend(loc="upper left", bbox_to_anchor=(0.0, frac - 0.03), frameon=False, handlelength=2.2, borderaxespad=0.2)
 
     handles = [
         Line2D([], [], marker="o", color=PALETTE["ink"], linestyle="none", markersize=3.6, label="median of the sweep runs (bar: min to max)"),
