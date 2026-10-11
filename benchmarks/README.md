@@ -34,9 +34,10 @@ under the same interpreter with only `PYTHONPATH` changed.
 
 | file | content |
 |---|---|
-| `summary.md` | machine info, corpus table (old vs. new when both ran), corpus cost drivers, examples regression table, scaling table, a Timeouts section, and the figure |
+| `summary.md` | machine info, corpus table (old vs. new when both ran), corpus cost drivers, examples regression table, scaling table, a Timeouts section, and the figures |
 | `execution-times.tex` | the body of the paper's execution-time table: one row per corpus program with its citation key, plans x trials, median wall time and median solver time, in ascending order of wall time; rows whose wall time is at most `BOLD_WALL_AT` (1 s) are set in bold; the row of a program listed in `APPROXIMATIONS` (an approximation of a design marked not expressible) is emitted as a comment |
-| `scaling.png`, `scaling.pdf` | the paper's scaling figure: wall time against each family's axis, four panels, timeouts and re-runs marked |
+| `scaling_overview.png`, `scaling_overview.pdf` | every scaling family on one log-log chart of wall time against plan-matrix cells, with the 1 s, 10 s and 600 s lines; timeouts as crosses on the limit line |
+| `scaling_families.png`, `scaling_families.pdf` | small multiples: one panel per family against its own parameter (n, p, k or m), shared log y-axis, same reference lines |
 | `corpus_<commit>.json` | raw per-run records for `src/eval_examples` |
 | `examples_<commit>.json` | raw per-run records for `src/examples` |
 | `scaling_<commit>.json`, `scaling_<commit>_programs/` | raw records and the generated programs for the sweep |
@@ -107,8 +108,8 @@ points are skipped), since cost is monotone in the axis. Timeouts are results.
 (default 3600 s) via `scaling.py --rerun-timeouts`, into
 `scaling_long_<commit>.json`. The summary's Timeouts section lists, per family,
 the last completed point, the first timeout in the sweep, and the outcome of
-the re-run; the figure draws sweep timeouts as crosses on the 600 s line and
-the re-runs as hollow markers. Points past the first timeout were never run.
+the re-run; the figures draw sweep timeouts as crosses on the 600 s line and
+do not show the re-runs. Points past the first timeout were never run.
 
 These programs call `assign` but do not print the assignment, so output
 formatting is excluded.

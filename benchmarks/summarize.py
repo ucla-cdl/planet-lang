@@ -1,4 +1,4 @@
-"""Turn benchmark JSON files into a markdown report, a LaTeX table, and a figure.
+"""Turn benchmark JSON files into a markdown report, a LaTeX table, and two figures.
 
 Example:
 
@@ -9,10 +9,11 @@ Example:
 
 Writes into --out-dir:
   summary.md            machine info, corpus table, corpus cost drivers, examples
-                        regression table, scaling table, timeouts, figure
+                        regression table, scaling table, timeouts, figures
   execution-times.tex   the body of the paper's execution-time table, one row per
                         corpus program, with citation keys
-  scaling.png, .pdf     the paper's scaling figure, four panels
+  scaling_overview.png, .pdf   every scaling family on one chart (wall time vs plan-matrix cells)
+  scaling_families.png, .pdf   small multiples, one panel per family against its own parameter
 
 "wall" is the parent-measured end-to-end time of one `python program.py` run,
 which is what the paper's table reports. "solve" is the time inside
@@ -406,181 +407,187 @@ def scaling_section(meta, points, long_meta, long_points, corpus, out_dir):
         "",
         timeouts_section(meta, points, long_meta, long_points),
     ]
-    plot_path = plot_scaling(meta, points, long_meta, long_points, corpus, out_dir)
-    if plot_path:
-        text += ["", "![runtime vs design size](scaling.png)", "",
-                 "Figure: wall time against each family's axis, log scale. Filled markers are sweep medians with "
-                 "a thin bar from min to max; a cross at a dotted limit line is a timeout at that limit; a hollow "
-                 "marker is the re-run of a timed-out point at the longer limit, joined to the sweep by a dashed "
-                 "segment; the lowest dotted line is the interpreter start-up and import floor. "
-                 "Also written as `scaling.pdf` for the paper."]
+    if plot_overview(meta, points, out_dir):
+        text += ["", "![wall time against plan-matrix cells, every family](scaling_overview.png)", "",
+                 "Figure: every family on one chart, wall time against the cells of the plan matrix (plans × trials per "
+                 "participant), log-log. Each curve ends with its parameter value; a cross on the 600 s line, joined to "
+                 "the curve by a dashed segment, is the first point that did not finish; the dotted lines are the "
+                 "interpreter start-up and import floor, Nielsen's 1 s and 10 s response-time limits, and the time limit. "
+                 "Also written as `scaling_overview.pdf`."]
+    if plot_families(meta, points, out_dir):
+        text += ["", "![one panel per family against its own parameter](scaling_families.png)", "",
+                 "Figure: the same data as small multiples, one panel per family against its own parameter, with a "
+                 "shared log y-axis and the same reference lines. Also written as `scaling_families.pdf`."]
     return "\n".join(text)
 
 
-def plot_scaling(meta, points, long_meta, long_points, corpus, out_dir):
+# ---------------------------------------------------------------- figures
+
+# One entry per family, in the order of the paper's list. `shape` is the plan
+# matrix (plans x trials per participant) in the family's parameter; `xscale`
+# is the x-axis scale of the family's panel in the small multiples.
+FAMILY_INFO = [
+    {"key": "latin_square",          "name": "Conditions with limit",            "shape": "n × n",    "param": "n", "xlabel": "conditions n",   "xscale": "linear", "color": "#2a78d6", "marker": "o"},
+    {"key": "full_counterbalance",   "name": "Conditions with no limit",         "shape": "n! × n",   "param": "n", "xlabel": "conditions n",   "xscale": "linear", "color": "#eb6834", "marker": "s"},
+    {"key": "plans",                 "name": "Plans with limit",                 "shape": "p × 5",    "param": "p", "xlabel": "plan limit p",   "xscale": "linear", "color": "#1baf7a", "marker": "D"},
+    {"key": "nested_latin_squares",  "name": "Nesting two Latin squares",        "shape": "n² × n²",  "param": "n", "xlabel": "conditions n",   "xscale": "linear", "color": "#eda100", "marker": "^"},
+    {"key": "crossed_latin_squares", "name": "Crossing two Latin squares",       "shape": "n² × n",   "param": "n", "xlabel": "conditions n",   "xscale": "linear", "color": "#e87ba4", "marker": "v"},
+    {"key": "trials",                "name": "Repeated trials",                  "shape": "12 × 12k", "param": "k", "xlabel": "repetitions k",  "xscale": "log",    "color": "#008300", "marker": "P"},
+    {"key": "nested_variable",       "name": "Nesting without counterbalancing", "shape": "12 × 12m", "param": "m", "xlabel": "options m",      "xscale": "log",    "color": "#6250d6", "marker": "X"},
+]
+
+# End-label placement in the overview, tuned by eye to the 2026-10-10 data:
+# ((dx, dy) in points, ha, va), or ("leader", (x, y)) to put the text at data
+# coordinates with a thin line back to the curve's end. Re-tune after a re-run
+# that moves where a curve ends.
+OVERVIEW_LABELS = {
+    "latin_square":          ((-10, 13), "right",  "center"),
+    "full_counterbalance":   ((0, -10),  "center", "top"),
+    "plans":                 ((-9, 0),   "right",  "center"),
+    "nested_latin_squares":  ((0, 10),   "center", "bottom"),
+    "crossed_latin_squares": ((0, 8),    "center", "bottom"),
+    "trials":                ((7, 0),    "left",   "center"),
+    "nested_variable":       ("leader",  (1.2e5, 9)),
+}
+TWO_LINE_LABELS = {"crossed_latin_squares"}
+
+REFERENCE_LINES = [(1.0, "1 s"), (10.0, "10 s")]  # Nielsen's response-time limits
+
+
+def _mpl():
     try:
         import matplotlib
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
         from matplotlib.lines import Line2D
-        from matplotlib.ticker import NullFormatter, ScalarFormatter
     except Exception:
-        return None
+        return None, None
     plt.rcParams.update({
         "font.family": "serif", "font.size": 7.5, "axes.titlesize": 8, "axes.labelsize": 7.5,
-        "legend.fontsize": 6.2, "xtick.labelsize": 6.5, "ytick.labelsize": 6.5,
+        "legend.fontsize": 7, "xtick.labelsize": 6.5, "ytick.labelsize": 6.5,
         "axes.spines.top": False, "axes.spines.right": False, "axes.edgecolor": "#6b6b67",
         "xtick.color": "#6b6b67", "ytick.color": "#6b6b67", "axes.labelcolor": PALETTE["ink"],
     })
-    T = meta["timeout"]
-    T_long = long_meta.get("timeout") if long_meta else None
-    floor = median([p["import_med"] for p in points.values() if p.get("import_med")])
-    bases = meta.get("bases", {})
-    plans_n = bases.get("plans", {}).get("n")
-    base_n = bases.get("trials", {}).get("n") or bases.get("nested_variable", {}).get("n")
+    return plt, Line2D
 
-    panels = [
-        ("(a) Number of conditions", "number of conditions n", "x", [
-            ("latin_square", "Latin square: n plans × n trials", "blue", "o"),
-            ("full_counterbalance", "full counterbalancing: n! plans × n trials", "orange", "s"),
-        ]),
-        (f"(b) Number of plans, n = {plans_n}", "plan limit p", "x", [
-            ("plans", "limit_plans(p): p plans × n trials", "aqua", "^"),
-        ]),
-        ("(c) Composition", "number of conditions n", "x", [
-            ("nested_latin_squares", "nest: n² plans × n² trials", "blue", "o"),
-            ("crossed_latin_squares", "cross: n² plans × n trials", "orange", "s"),
-            ("latin_square", "one Latin square, for reference", "gray", "."),
-        ]),
-        (f"(d) Trials per participant, n = {base_n}", "trials per participant", "trials_total", [
-            ("trials", "repetition (k)", "blue", "o"),
-            ("nested_variable", "nested variable (m)", "orange", "s"),
-        ]),
-    ]
 
-    fig, axes = plt.subplots(2, 2, figsize=(6.4, 5.0))
-    used_long = False
-    for ax, (title, xlabel, xkey, lines) in zip(axes.flat, panels):
-        for fam, label, color, marker in lines:
-            pts = family_points(points, fam)
-            if not pts:
-                continue
-            c = PALETTE[color]
-            ok = [p for p in pts if p["status"] == "ok"]
-            ms = 3.0 if marker == "." else 3.6
-            ax.plot([p[xkey] for p in ok], [p["wall_med"] for p in ok], marker=marker, color=c, label=label,
-                    linewidth=1.1, markersize=ms, zorder=3)
-            for p in ok:
-                if p["wall_min"] is not None and p["wall_max"] > p["wall_min"]:
-                    ax.plot([p[xkey]] * 2, [p["wall_min"], p["wall_max"]], color=c, linewidth=0.7, alpha=0.7, zorder=2)
-            for p in pts:
-                if p["status"] == "timeout":
-                    ax.plot([p[xkey]], [p["timeout"]], marker="x", color=c, markersize=5.5, markeredgewidth=1.2, linestyle="none", zorder=4)
-                    lp = long_points.get((fam, p["x"]))
-                    if lp is None:
-                        continue
-                    used_long = True
-                    if lp["status"] == "ok":
-                        ax.plot([p[xkey]], [lp["wall_med"]], marker=marker, color=c, markersize=4.6, linestyle="none",
-                                fillstyle="none", markeredgewidth=1.2, zorder=4)
-                        if ok:
-                            ax.plot([ok[-1][xkey], p[xkey]], [ok[-1]["wall_med"], lp["wall_med"]], color=c,
-                                    linestyle=(0, (2, 2)), linewidth=1.0, zorder=2)
-                    elif lp["status"] == "timeout" and T_long:
-                        ax.plot([p[xkey]], [T_long], marker="x", color=c, markersize=5.5, markeredgewidth=1.2, linestyle="none", zorder=4)
-                elif p["status"] != "ok":
-                    ax.plot([p[xkey]], [p["timeout"]], marker="s", color=c, markersize=5, linestyle="none", fillstyle="none", zorder=4)
+def _series(points, key):
+    """Completed points of a family as (x, cells, wall) plus its first timeout, if any."""
+    fp = family_points(points, key)
+    done = [(p["x"], p["expected_plans"] * p["expected_width"], p["wall_med"]) for p in fp if p["status"] == "ok"]
+    to = next((p for p in fp if p["status"] == "timeout"), None)
+    timeout = (to["x"], to["expected_plans"] * to["expected_width"]) if to else None
+    return done, timeout
 
-        if lines[0][0] == "plans" and plans_n:
-            # The same design with no limit at all: full_counterbalance at the base n, drawn at
-            # p = n! with the figure's usual marks (cross = timeout, hollow = re-run).
-            x = math.factorial(plans_n)
-            fc = points.get(("full_counterbalance", plans_n))
-            lfc = long_points.get(("full_counterbalance", plans_n))
-            c = PALETTE["orange"]
-            if fc is not None:
-                proxy = dict(marker="D", color=c, markersize=4.2, linestyle="none", fillstyle="none", markeredgewidth=1.2)
-                if fc["status"] == "ok":
-                    ax.plot([x], [fc["wall_med"]], marker="D", color=c, markersize=4.2, linestyle="none", zorder=5, label="no limit: n! plans")
-                elif fc["status"] == "timeout":
-                    ax.plot([x], [fc["timeout"]], marker="x", color=c, markersize=5.5, markeredgewidth=1.2, linestyle="none", zorder=5)
-                    if lfc is not None and lfc["status"] == "ok":
-                        ax.plot([x], [lfc["wall_med"]], zorder=5, label="no limit: n! plans", **proxy)
-                        used_long = True
-                    elif lfc is not None and T_long:
-                        ax.plot([x], [T_long], marker="x", color=c, markersize=5.5, markeredgewidth=1.2, linestyle="none", zorder=5, label="no limit: n! plans")
-                        used_long = True
-                    else:
-                        ax.plot([], [], label="no limit: n! plans", **proxy)
 
-        if xkey == "trials_total" and corpus and base_n:
-            mr = next((r for s, r in corpus.items() if s.endswith("mousering.py") and r["status"] == "ok"), None)
-            if mr and mr["plans"] == base_n:
-                ax.plot([mr["trials"]], [mr["wall_med"]], marker="*", color=PALETTE["ink"], markersize=7, linestyle="none",
-                        label="MouseRing Exp 1", zorder=6)
+def _floor(points):
+    return median([p["import_med"] for p in points.values() if p.get("import_med")])
 
-        # Reference lines, labeled at the left where the data sits on the floor and
-        # the timeouts sit at the right.
-        top = T * 4
-        if T_long and used_long:
-            top = T_long * 4
-        lo = floor / 2.5
-        ax.set_yscale("log")
-        ax.set_ylim(lo, top)
-        ax.axhline(floor, color=PALETTE["muted"], linestyle=(0, (1, 2)), linewidth=0.8, zorder=1)
-        ax.text(0.01, floor * 0.88, "interpreter + import", transform=ax.get_yaxis_transform(), ha="left", va="top",
-                fontsize=5.5, color=PALETTE["muted"])
-        ax.axhline(T, color=PALETTE["muted"], linestyle=(0, (1, 2)), linewidth=0.8, zorder=1)
-        ax.text(0.01, T * 1.15, f"{T:.0f} s limit", transform=ax.get_yaxis_transform(), ha="left", va="bottom",
-                fontsize=5.5, color=PALETTE["muted"])
-        if T_long and used_long:
-            ax.axhline(T_long, color=PALETTE["muted"], linestyle=(0, (1, 2)), linewidth=0.8, zorder=1)
-            ax.text(0.01, T_long * 1.15, f"{T_long:.0f} s limit", transform=ax.get_yaxis_transform(), ha="left", va="bottom",
-                    fontsize=5.5, color=PALETTE["muted"])
-        if xkey == "trials_total":
-            ax.set_xscale("log")
-            ax.xaxis.set_major_formatter(ScalarFormatter())
-            ax.xaxis.set_minor_formatter(NullFormatter())
-            xs = sorted({p[xkey] for p in points.values() if p["family"] in [l[0] for l in lines]})
-            if xs:
-                decades = [10 ** e for e in range(int(math.floor(math.log10(xs[0]))), int(math.ceil(math.log10(xs[-1]))) + 1)]
-                ticks = sorted({xs[0], *[d for d in decades if xs[0] <= d <= xs[-1]], xs[-1]})
-                ax.set_xticks(ticks)
-                ax.set_xticklabels([str(t) for t in ticks])
+
+def _reference_lines(ax, floor, T, label=True, label_floor=True):
+    for y, txt in [(floor, "interpreter + import floor")] + REFERENCE_LINES + [(T, f"{T:.0f} s limit")]:
+        ax.axhline(y, color=PALETTE["muted"], linestyle=(0, (1, 2)), linewidth=0.8, zorder=1)
+        if label and (label_floor or y != floor):
+            va = "top" if y == floor else "bottom"
+            ax.text(0.012 if y == floor else 0.005, y * (0.93 if va == "top" else 1.0), txt, transform=ax.get_yaxis_transform(),
+                    ha="left", va=va, fontsize=6.5, color=PALETTE["muted"])
+
+
+def plot_overview(meta, points, out_dir):
+    """Every family on one log-log chart of wall time against plan-matrix cells."""
+    plt, Line2D = _mpl()
+    if plt is None:
+        return None
+    T, floor, INK = meta["timeout"], _floor(points), PALETTE["ink"]
+    fig, ax = plt.subplots(figsize=(7.4, 5.3))
+    ax.set_xscale("log"); ax.set_yscale("log")
+    for f in FAMILY_INFO:
+        done, timeout = _series(points, f["key"])
+        if not done:
+            continue
+        c, mk = f["color"], f["marker"]
+        xs, ys = [d[1] for d in done], [d[2] for d in done]
+        ax.plot(xs, ys, marker=mk, color=c, markersize=4.5, linewidth=1.6, zorder=3, label=f'{f["name"]} ({f["shape"]})')
+        end_x, end_y, end_param = xs[-1], ys[-1], done[-1][0]
+        if timeout:
+            ax.plot([xs[-1], timeout[1]], [ys[-1], T], color=c, linewidth=1.2, linestyle=(0, (3, 2)), zorder=2)
+            ax.plot([timeout[1]], [T], marker="x", color=c, markersize=7, markeredgewidth=1.8, linestyle="none", zorder=4)
+            end_x, end_y, end_param = timeout[1], T, timeout[0]
+        sep = "\n" if f["key"] in TWO_LINE_LABELS else " "
+        text = f'{f["name"]}{sep}({f["param"]} = {end_param})'
+        place = OVERVIEW_LABELS.get(f["key"], ((7, 0), "left", "center"))
+        if place[0] == "leader":
+            ax.annotate(text, (end_x, end_y), xytext=place[1], textcoords="data", ha="center", va="center", fontsize=7.5, color=INK,
+                        arrowprops=dict(arrowstyle="-", color=PALETTE["muted"], linewidth=0.8, shrinkA=0, shrinkB=4), zorder=6)
         else:
-            xs = sorted({p[xkey] for p in points.values() if p["family"] in [l[0] for l in lines]})
-            if 0 < len(xs) <= 14:
-                ax.set_xticks(xs)
-        ax.set_xlabel(xlabel)
+            (dx, dy), ha, va = place
+            ax.annotate(text, (end_x, end_y), textcoords="offset points", xytext=(dx, dy), ha=ha, va=va, fontsize=7.5, color=INK, zorder=6)
+    _reference_lines(ax, floor, T)
+    ax.set_xlim(2.5, 1.0e6); ax.set_ylim(0.15, 2.0e3)
+    ax.set_xlabel("cells of the plan matrix (plans × trials per participant)")
+    ax.set_ylabel("wall time (s)")
+    ax.tick_params(length=3)
+    ax.grid(True, which="major", color=PALETTE["grid"], linewidth=0.6); ax.grid(False, which="minor")
+    handles, labels = ax.get_legend_handles_labels()
+    handles.append(Line2D([], [], marker="x", color=PALETTE["muted"], markeredgewidth=1.8, linestyle="none", markersize=7))
+    labels.append(f"did not finish within {T:.0f} s")
+    fig.legend(handles, labels, loc="lower center", ncol=2, frameon=False, columnspacing=2.0, handlelength=2.2, bbox_to_anchor=(0.53, 0.0))
+    fig.tight_layout(rect=(0, 0.115, 1, 1), h_pad=0.2)
+    fig.savefig(out_dir / "scaling_overview.png", dpi=200)
+    fig.savefig(out_dir / "scaling_overview.pdf")
+    plt.close(fig)
+    return out_dir / "scaling_overview.png"
+
+
+def plot_families(meta, points, out_dir):
+    """Small multiples: one panel per family against its own parameter, shared log y-axis."""
+    plt, Line2D = _mpl()
+    if plt is None:
+        return None
+    T, floor = meta["timeout"], _floor(points)
+    fams = [f for f in FAMILY_INFO if _series(points, f["key"])[0]]
+    ncol = 4
+    nrow = math.ceil((len(fams) + 1) / ncol)
+    fig, axes = plt.subplots(nrow, ncol, figsize=(7.4, 2.3 * nrow), sharey=True)
+    axes = list(axes.flat)
+    for ax, f in zip(axes, fams):
+        done, timeout = _series(points, f["key"])
+        c, mk = f["color"], f["marker"]
+        xs, ys = [d[0] for d in done], [d[2] for d in done]
+        ax.set_yscale("log"); ax.set_xscale(f["xscale"])
+        ax.plot(xs, ys, marker=mk, color=c, markersize=4, linewidth=1.5, zorder=3)
+        if timeout:
+            ax.plot([xs[-1], timeout[0]], [ys[-1], T], color=c, linewidth=1.1, linestyle=(0, (3, 2)), zorder=2)
+            ax.plot([timeout[0]], [T], marker="x", color=c, markersize=6.5, markeredgewidth=1.7, linestyle="none", zorder=4)
+        _reference_lines(ax, floor, T, label=(axes.index(ax) % ncol == 0), label_floor=False)
+        name = f["name"] if len(f["name"]) <= 28 else f["name"].replace(" without ", " without\n")
+        ax.set_title(f'{name}\n', fontsize=7.5, color=PALETTE["ink"], pad=2)
+        ax.text(0.5, 1.02, f'{f["shape"]} plans × trials', transform=ax.transAxes, ha="center", va="bottom", fontsize=6.5, color=PALETTE["muted"])
+        ax.set_xlabel(f["xlabel"])
+        if f["xscale"] == "linear":
+            ax.set_xticks(xs + ([timeout[0]] if timeout and timeout[0] not in xs else []))
+            if len(ax.get_xticks()) > 7:
+                ax.set_xticks([x for x in ax.get_xticks() if x % 2 == 0 or x == ax.get_xticks()[0]])
+        ax.tick_params(length=3)
+        ax.grid(True, which="major", color=PALETTE["grid"], linewidth=0.6); ax.grid(False, which="minor")
+        ax.set_ylim(0.15, 2.0e3)
+    for ax in axes[:nrow * ncol:ncol]:
         ax.set_ylabel("wall time (s)")
-        ax.set_title(title, loc="left", color=PALETTE["ink"])
-        ax.grid(True, which="major", axis="y", color=PALETTE["grid"], linewidth=0.6)
-        ax.set_axisbelow(True)
-        # Legend in the empty region of each panel: the middle-left below the limit line
-        # for the n and p axes (data rises to the right), the lower right for the width
-        # panel (its lines start above the floor and rise to the upper right).
-        if xkey == "trials_total":
-            ax.legend(loc="lower right", frameon=False, handlelength=1.8, borderaxespad=0.3)
-        else:
-            frac = (math.log(T) - math.log(lo)) / (math.log(top) - math.log(lo))
-            ax.legend(loc="upper left", bbox_to_anchor=(0.0, frac - 0.03), frameon=False, handlelength=2.2, borderaxespad=0.2)
-
-    handles = [
-        Line2D([], [], marker="o", color=PALETTE["ink"], linestyle="none", markersize=3.6, label="median of the sweep runs (bar: min to max)"),
-        Line2D([], [], marker="x", color=PALETTE["ink"], linestyle="none", markersize=5.5, markeredgewidth=1.2, label="timed out at the dotted limit"),
-    ]
-    if T_long and used_long:
-        handles.append(Line2D([], [], marker="o", color=PALETTE["ink"], linestyle="none", markersize=4.6, fillstyle="none",
-                              markeredgewidth=1.2, label=f"re-run once with a {T_long:.0f} s limit"))
-    fig.legend(handles=handles, loc="lower center", ncol=len(handles), frameon=False, fontsize=6.2, bbox_to_anchor=(0.5, 0.0))
-    fig.tight_layout(rect=(0, 0.04, 1, 1), h_pad=1.4, w_pad=1.2)
-    out_dir = Path(out_dir)
-    fig.savefig(out_dir / "scaling.png", dpi=200)
-    fig.savefig(out_dir / "scaling.pdf")
-    return out_dir / "scaling.png"
-
-
-# ---------------------------------------------------------------- main
+    # the spare cell explains the conventions
+    spare = axes[len(fams)]
+    spare.axis("off")
+    handles = [Line2D([], [], marker="x", color=PALETTE["muted"], markeredgewidth=1.7, linestyle="none", markersize=6.5),
+               Line2D([], [], color=PALETTE["muted"], linewidth=1.1, linestyle=(0, (3, 2))),
+               Line2D([], [], color=PALETTE["muted"], linewidth=0.8, linestyle=(0, (1, 2)))]
+    labels = [f"did not finish within {T:.0f} s", "jump from the last completed point", "floor, 1 s, 10 s, 600 s"]
+    spare.legend(handles, labels, loc="center left", frameon=False, fontsize=7, handlelength=2.4)
+    for ax in axes[len(fams) + 1:]:
+        ax.axis("off")
+    fig.tight_layout(w_pad=0.6, h_pad=1.2)
+    fig.savefig(out_dir / "scaling_families.png", dpi=200)
+    fig.savefig(out_dir / "scaling_families.pdf")
+    plt.close(fig)
+    return out_dir / "scaling_families.png"
 
 
 def main():

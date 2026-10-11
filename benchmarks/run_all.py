@@ -14,7 +14,7 @@ Steps:
   4. time every other example (src/examples) once on both versions;
   5. run the scaling sweep on the new version (--scaling-reps runs per point);
   6. re-run the points that timed out, once each, under --long-timeout;
-  7. write summary.md, execution-times.tex, scaling.png and scaling.pdf.
+  7. write summary.md, execution-times.tex, scaling_overview.{png,pdf} and scaling_families.{png,pdf}.
 
 Everything lands in benchmarks/results/<date>_<new label>/. The same
 interpreter and virtualenv is used for both versions; only PYTHONPATH differs.

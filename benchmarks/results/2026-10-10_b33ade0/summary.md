@@ -240,6 +240,10 @@ The timed-out points were then re-run 1 time(s) each with a limit of 3600 s (`sc
 | trials | k = 400: 373.815 s | none | - |
 | nested_variable | m = 100: 253.951 s | none | - |
 
-![runtime vs design size](scaling.png)
+![wall time against plan-matrix cells, every family](scaling_overview.png)
 
-Figure: wall time against each family's axis, log scale. Filled markers are sweep medians with a thin bar from min to max; a cross at a dotted limit line is a timeout at that limit; a hollow marker is the re-run of a timed-out point at the longer limit, joined to the sweep by a dashed segment; the lowest dotted line is the interpreter start-up and import floor. Also written as `scaling.pdf` for the paper.
+Figure: every family on one chart, wall time against the cells of the plan matrix (plans × trials per participant), log-log. Each curve ends with its parameter value; a cross on the 600 s line, joined to the curve by a dashed segment, is the first point that did not finish; the dotted lines are the interpreter start-up and import floor, Nielsen's 1 s and 10 s response-time limits, and the time limit. Also written as `scaling_overview.pdf`.
+
+![one panel per family against its own parameter](scaling_families.png)
+
+Figure: the same data as small multiples, one panel per family against its own parameter, with a shared log y-axis and the same reference lines. Also written as `scaling_families.pdf`.
