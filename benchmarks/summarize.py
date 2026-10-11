@@ -236,12 +236,13 @@ def latex_table(new, meta):
         f"% and of its z3 part (Designer.eval). Commit {meta.get('commit')}; {meta.get('cpu')}, {meta.get('memory_gb')} GB;",
         f"% Python {meta.get('python_version')}; z3 {meta.get('z3_version')}; {meta.get('started', '')[:10]}.",
         f"% Rows are in ascending order of median wall time; rows in bold have a median wall time of {BOLD_WALL_AT:g} s or less.",
+        "% The row of a program that only approximates a design the expressivity evaluation marks as not",
+        "% expressible is kept as a comment: the paper's table shows the expressible designs.",
         "\\begin{tabular}{lrrr}",
         "\\toprule",
         "\\textbf{Experiment} & \\textbf{Plans $\\times$ trials} & \\textbf{Wall (s)} & \\textbf{Solve (s)} \\\\",
         "\\midrule",
     ]
-    notes = []
     # Ascending wall time; programs that did not complete go last, by name.
     def order(kv):
         script, row = kv
@@ -254,9 +255,6 @@ def latex_table(new, meta):
         name = Path(script).name
         paper = PAPER_NAMES.get(name, name).replace("&", "\\&")
         mark = ""
-        if name in APPROXIMATIONS:
-            notes.append(APPROXIMATIONS[name])
-            mark = "$^\\dagger$"
         cite = f"~\\cite{{{CITE_KEYS[name]}}}" if name in CITE_KEYS else ""
         shape = f"${row['plans']} \\times {row['trials']}$" if row["plans"] is not None else "--"
         if row["status"] == "ok":
@@ -268,10 +266,12 @@ def latex_table(new, meta):
             paper, mark = f"\\textbf{{{paper}{mark}}}", ""
             wall, solve = f"\\textbf{{{wall}}}", f"\\textbf{{{solve}}}"
             shape = f"{{\\boldmath{shape}}}"
-        lines.append(f"{paper}{mark}{cite} & {shape} & {wall} & {solve} \\\\ % {name}")
+        line = f"{paper}{mark}{cite} & {shape} & {wall} & {solve} \\\\ % {name}"
+        if name in APPROXIMATIONS:
+            lines.append(f"% {line}: {APPROXIMATIONS[name]}; not shown")
+        else:
+            lines.append(line)
     lines.append("\\bottomrule")
-    for note in notes:
-        lines.append(f"\\multicolumn{{4}}{{l}}{{\\footnotesize $^\\dagger$ {note[0].upper() + note[1:]}.}} \\\\")
     lines.append("\\end{tabular}")
     return "\n".join(lines) + "\n"
 

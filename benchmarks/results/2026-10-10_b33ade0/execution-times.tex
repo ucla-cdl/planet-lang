@@ -3,6 +3,8 @@
 % and of its z3 part (Designer.eval). Commit b33ade0; Apple M2, 24 GB;
 % Python 3.12.0; z3 4.13.3; 2026-10-10.
 % Rows are in ascending order of median wall time; rows in bold have a median wall time of 1 s or less.
+% The row of a program that only approximates a design the expressivity evaluation marks as not
+% expressible is kept as a comment: the paper's table shows the expressible designs.
 \begin{tabular}{lrrr}
 \toprule
 \textbf{Experiment} & \textbf{Plans $\times$ trials} & \textbf{Wall (s)} & \textbf{Solve (s)} \\
@@ -19,9 +21,8 @@
 \textbf{Sweating the Details}~\cite{PottsSweatingDetails2024} & {\boldmath$12 \times 12$} & \textbf{0.393} & \textbf{0.091} \\ % sweating_details.py
 \textbf{Seated-WIP}~\cite{ChanSeatedWIP2024} & {\boldmath$9 \times 9$} & \textbf{0.715} & \textbf{0.429} \\ % seated_wip.py
 ARTiST (Exp 2)~\cite{WuARTiST2024} & $25 \times 15$ & 1.085 & 0.707 \\ % artist2.py
-Shaping Compliance (Exp 1)$^\dagger$~\cite{jingu2024shaping} & $12 \times 36$ & 1.248 & 0.866 \\ % shaping_compliance.py
+% Shaping Compliance (Exp 1)~\cite{jingu2024shaping} & $12 \times 36$ & 1.248 & 0.866 \\ % shaping_compliance.py: the closest expressible approximation of a design the expressivity evaluation marks as not expressible; not shown
 MouseRing (Exp 2)~\cite{shen2024mousering} & $12 \times 200$ & 2.636 & 2.035 \\ % mousering2.py
 MouseRing (Exp 1)~\cite{shen2024mousering} & $12 \times 600$ & 48.122 & 45.464 \\ % mousering.py
 \bottomrule
-\multicolumn{4}{l}{\footnotesize $^\dagger$ The closest expressible approximation of a design the expressivity evaluation marks as not expressible.} \\
 \end{tabular}
