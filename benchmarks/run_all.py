@@ -12,8 +12,9 @@ Steps:
   2. check out the old ref into a temporary git worktree (removed at the end);
   3. time every corpus program (src/eval_examples) on both versions, --reps times;
   4. time every other example (src/examples) once on both versions;
-  5. run the scaling sweep on the new version;
-  6. write summary.md, execution-times.tex and scaling.png.
+  5. run the scaling sweep on the new version (--scaling-reps runs per point);
+  6. re-run the points that timed out, once each, under --long-timeout;
+  7. write summary.md, execution-times.tex, scaling.png and scaling.pdf.
 
 Everything lands in benchmarks/results/<date>_<new label>/. The same
 interpreter and virtualenv is used for both versions; only PYTHONPATH differs.
@@ -61,20 +62,25 @@ def main():
     ap.add_argument("--new", default=None, help="git ref of the new version (default: this working tree)")
     ap.add_argument("--reps", type=int, default=3, help="runs per corpus program")
     ap.add_argument("--timeout", type=float, default=300.0, help="seconds per corpus/example run")
-    ap.add_argument("--scaling-timeout", type=float, default=600.0, help="seconds per scaling point")
-    ap.add_argument("--ns", nargs="+", type=int, default=None, help="condition counts for the scaling sweep")
+    ap.add_argument("--scaling-timeout", type=float, default=600.0, help="seconds per scaling run")
+    ap.add_argument("--scaling-reps", type=int, default=3, help="runs per scaling point")
+    ap.add_argument("--long-timeout", type=float, default=3600.0, help="seconds for the re-run of timed-out scaling points")
+    ap.add_argument("--ns", nargs="+", type=int, default=None, help="condition counts for the n-axis scaling families")
     ap.add_argument("--skip-old", action="store_true")
     ap.add_argument("--skip-examples", action="store_true")
     ap.add_argument("--skip-scaling", action="store_true")
+    ap.add_argument("--skip-long", action="store_true", help="do not re-run timed-out scaling points")
     ap.add_argument("--quick", action="store_true", help="1 rep, 60 s timeouts, n <= 5: checks the pipeline")
     ap.add_argument("--install", action="store_true", help="pip install requirements.txt if imports fail")
     ap.add_argument("--out-dir", default=None, help="default benchmarks/results/<date>_<new label>")
     ap.add_argument("--python", default=sys.executable)
     args = ap.parse_args()
 
+    scaling_extra = []
     if args.quick:
-        args.reps, args.timeout, args.scaling_timeout = 1, 60.0, 60.0
+        args.reps, args.timeout, args.scaling_timeout, args.scaling_reps, args.long_timeout = 1, 60.0, 60.0, 1, 60.0
         args.ns = args.ns or [2, 3, 4, 5]
+        scaling_extra = ["--ps", "5", "10", "--ks", "1", "2", "--ms", "2", "4", "--base-n", "4"]
 
     check_deps(args.python, args.install)
 
@@ -112,15 +118,23 @@ def main():
         if not args.skip_scaling:
             scaling = out_dir / f"scaling_{new_label}.json"
             cmd = [args.python, HERE / "scaling.py", "--src", new_tree / "src", "--timeout", args.scaling_timeout,
-                   "--label", new_label, "--out", scaling, "--python", args.python]
+                   "--reps", args.scaling_reps, "--label", new_label, "--out", scaling, "--python", args.python]
             if args.ns:
                 cmd += ["--ns", *args.ns]
+            cmd += scaling_extra
             sh(cmd)
             files["scaling"] = scaling
+            if not args.skip_long and has_timeouts(scaling):
+                scaling_long = out_dir / f"scaling_long_{new_label}.json"
+                sh([args.python, HERE / "scaling.py", "--src", new_tree / "src", "--timeout", args.long_timeout,
+                    "--reps", 1, "--rerun-timeouts", scaling, "--label", new_label, "--out", scaling_long,
+                    "--python", args.python])
+                files["scaling_long"] = scaling_long
 
         cmd = [args.python, HERE / "summarize.py", "--out-dir", out_dir, "--corpus-new", files["corpus_new"]]
         for key, flag in (("corpus_old", "--corpus-old"), ("examples_new", "--examples-new"),
-                          ("examples_old", "--examples-old"), ("scaling", "--scaling")):
+                          ("examples_old", "--examples-old"), ("scaling", "--scaling"),
+                          ("scaling_long", "--scaling-long")):
             if key in files:
                 cmd += [flag, files[key]]
         sh(cmd)
@@ -130,6 +144,12 @@ def main():
             subprocess.run(["git", "-C", str(REPO), "worktree", "remove", "--force", str(tree)],
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         shutil.rmtree(tmp, ignore_errors=True)
+
+
+def has_timeouts(scaling_json):
+    import json
+    with open(scaling_json) as fh:
+        return any(r["status"] == "timeout" for r in json.load(fh)["records"])
 
 
 def dirty(tree):
