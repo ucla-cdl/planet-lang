@@ -1,0 +1,999 @@
+{
+ "meta": {
+  "label": "03a6f15",
+  "commit": "03a6f15",
+  "src": "/scratch/xs307/Projects/planet/planet-lang/src",
+  "examples": [
+   "/scratch/xs307/Projects/planet/planet-lang/src/examples"
+  ],
+  "python": "/scratch/xs307/Projects/planet/.amp/venv-bench/bin/python",
+  "reps": 1,
+  "timeout": 300.0,
+  "started": "2026-10-12T04:02:53",
+  "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.39",
+  "machine": "x86_64",
+  "cpu": "AMD EPYC 9555 64-Core Processor",
+  "memory_gb": 1511,
+  "finished": "2026-10-12T04:07:54"
+ },
+ "records": [
+  {
+   "script": "src/examples/analysis/mixed.py",
+   "status": "error:ValueError",
+   "error": "ValueError: Cannot assign 10 units to 3 plans: every plan must receive the same number of units. Use 12 units, the next multiple of 3.",
+   "phases": {
+    "import": 0.19633986987173557,
+    "solve": 0.004647576250135899,
+    "assign": 0.009286570828408003,
+    "total": 0.20658115996047854
+   },
+   "calls": {
+    "import": 1,
+    "solve": 1,
+    "assign": 1
+   },
+   "plans": 3,
+   "trials": 3,
+   "participants": null,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.27843660302460194,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/analysis/multifact.py",
+   "status": "error:ValueError",
+   "error": "ValueError: Cannot assign 1 units to 8 plans: every plan must receive the same number of units. Use 8 units, the next multiple of 8.",
+   "phases": {
+    "import": 0.2035531848669052,
+    "solve": 0.08918367605656385,
+    "assign": 0.10136708104982972,
+    "total": 0.30589993111789227
+   },
+   "calls": {
+    "import": 1,
+    "solve": 1,
+    "assign": 1
+   },
+   "plans": 8,
+   "trials": 8,
+   "participants": null,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.37198205292224884,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/analysis/replicate_btw.py",
+   "status": "error:ValueError",
+   "error": "ValueError: Cannot assign 10 units to 48 plans: every plan must receive the same number of units. Use 48 units, the next multiple of 48.",
+   "phases": {
+    "import": 0.1981555800884962,
+    "solve": 0.29502828512340784,
+    "assign": 0.31654722802340984,
+    "total": 0.5159512110985816
+   },
+   "calls": {
+    "import": 1,
+    "solve": 1,
+    "assign": 1
+   },
+   "plans": 48,
+   "trials": 4,
+   "participants": null,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.5965401749126613,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/balance.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.18562801275402308,
+    "solve": 0.00718773202970624,
+    "plans": 0.0015222690999507904,
+    "assign": 0.020765940193086863,
+    "analysis": 8.217291906476021e-05,
+    "total": 0.21126803988590837
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 1,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 4,
+   "trials": 2,
+   "participants": 4,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.2733189007267356,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/chi2026.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.20335531421005726,
+    "solve": 0.0051302784122526646,
+    "plans": 0.0016811462119221687,
+    "assign": 0.018135270569473505,
+    "total": 0.22735838498920202
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 1,
+    "assign": 1
+   },
+   "plans": 2,
+   "trials": 4,
+   "participants": 12,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.29073587618768215,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/cluster.py",
+   "status": "error:ModuleNotFoundError",
+   "error": "ModuleNotFoundError: No module named 'lib'",
+   "phases": {
+    "import": 0.179941532202065,
+    "total": 0.18118946300819516
+   },
+   "calls": {
+    "import": 1
+   },
+   "plans": null,
+   "trials": null,
+   "participants": null,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.2498843097127974,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/compare.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.185327070299536,
+    "analysis": 0.00016656937077641487,
+    "total": 0.18604713818058372
+   },
+   "calls": {
+    "import": 1,
+    "analysis": 2
+   },
+   "plans": null,
+   "trials": null,
+   "participants": null,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.2759663430042565,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/compose-btw.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.19847623025998473,
+    "solve": 0.0026220078580081463,
+    "plans": 0.0007168333977460861,
+    "assign": 0.013747962191700935,
+    "analysis": 6.331689655780792e-05,
+    "total": 0.21738799614831805
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 1,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 4,
+   "trials": 1,
+   "participants": 48,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.2785307210870087,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/cross.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.18302534194663167,
+    "solve": 0.0038917590864002705,
+    "plans": 0.0018989858217537403,
+    "assign": 0.03115150798112154,
+    "analysis": 0.00018184026703238487,
+    "total": 0.22219225810840726
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 1,
+    "assign": 1,
+    "analysis": 3
+   },
+   "plans": 4,
+   "trials": 2,
+   "participants": 12,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.30119302310049534,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/cross_nest.py",
+   "status": "error:ValueError",
+   "error": "ValueError: Cannot assign 16 units to 6 plans: every plan must receive the same number of units. Use 18 units, the next multiple of 6.",
+   "phases": {
+    "import": 0.20141301909461617,
+    "solve": 0.018680129200220108,
+    "assign": 0.0278275478631258,
+    "total": 0.2313352911733091
+   },
+   "calls": {
+    "import": 1,
+    "solve": 1,
+    "assign": 1
+   },
+   "plans": 6,
+   "trials": 6,
+   "participants": null,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.3176843277178705,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/cross_test.py",
+   "status": "error:ModuleNotFoundError",
+   "error": "ModuleNotFoundError: No module named 'lib'",
+   "phases": {
+    "import": 0.1981311859562993,
+    "total": 0.19935978297144175
+   },
+   "calls": {
+    "import": 1
+   },
+   "plans": null,
+   "trials": null,
+   "participants": null,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.2630244977772236,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/demo.py",
+   "status": "error:ModuleNotFoundError",
+   "error": "ModuleNotFoundError: No module named 'lib'",
+   "phases": {
+    "import": 0.19815023289993405,
+    "total": 0.19929876876994967
+   },
+   "calls": {
+    "import": 1
+   },
+   "plans": null,
+   "trials": null,
+   "participants": null,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.2904637632891536,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/ffl.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.20019410690292716,
+    "solve": 0.006993806455284357,
+    "plans": 0.0026746001094579697,
+    "assign": 0.023383830673992634,
+    "analysis": 0.00010848836973309517,
+    "total": 0.22876960085704923
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 1,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 4,
+   "trials": 4,
+   "participants": 16,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.2973980759270489,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/ffl_alt.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.18354208068922162,
+    "analysis": 0.00015580374747514725,
+    "total": 0.18459740886464715
+   },
+   "calls": {
+    "import": 1,
+    "analysis": 2
+   },
+   "plans": null,
+   "trials": null,
+   "participants": null,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.2584901861846447,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/fix-order.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.1822022427804768,
+    "solve": 0.0013482901267707348,
+    "plans": 0.000596257857978344,
+    "assign": 0.012125815730541945,
+    "analysis": 3.544893115758896e-05,
+    "total": 0.1990537429228425
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 1,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 1,
+   "trials": 4,
+   "participants": 16,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.2903383313678205,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/full_counterbalance.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.18386835884302855,
+    "solve": 0.004974285140633583,
+    "plans": 0.0014485870487987995,
+    "assign": 0.018490908667445183,
+    "analysis": 4.2547937482595444e-05,
+    "total": 0.20842816401273012
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 1,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 6,
+   "trials": 2,
+   "participants": 48,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.27368056727573276,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/fun.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.18227783683687449,
+    "solve": 0.006436669733375311,
+    "plans": 0.0013760579749941826,
+    "assign": 0.02312426595017314,
+    "total": 0.21037108916789293
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 1,
+    "assign": 1
+   },
+   "plans": 4,
+   "trials": 2,
+   "participants": 12,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.29645770601928234,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/funky_balance.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.18029640801250935,
+    "solve": 0.010599362198263407,
+    "plans": 0.002744636032730341,
+    "assign": 0.0266401800327003,
+    "analysis": 3.719097003340721e-05,
+    "total": 0.21097360597923398
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 1,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 12,
+   "trials": 2,
+   "participants": 24,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.2813336872495711,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/latin_square.py",
+   "status": "error:ValueError",
+   "error": "ValueError: Cannot assign 3 units to 4 plans: every plan must receive the same number of units. Use 4 units, the next multiple of 4.",
+   "phases": {
+    "import": 0.17942648474127054,
+    "solve": 0.005321531090885401,
+    "assign": 0.010267786681652069,
+    "total": 0.19062786223366857
+   },
+   "calls": {
+    "import": 1,
+    "solve": 1,
+    "assign": 1
+   },
+   "plans": 4,
+   "trials": 2,
+   "participants": null,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.25420821318402886,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/mixed.py",
+   "status": "error:ValueError",
+   "error": "ValueError: Cannot assign 1 units to 2 plans: every plan must receive the same number of units. Use 2 units, the next multiple of 2.",
+   "phases": {
+    "import": 0.18580903206020594,
+    "solve": 0.0024313251487910748,
+    "assign": 0.007404258940368891,
+    "total": 0.19416794879361987
+   },
+   "calls": {
+    "import": 1,
+    "solve": 1,
+    "assign": 1
+   },
+   "plans": 2,
+   "trials": 2,
+   "participants": null,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.28553990833461285,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/mixed_nest.py",
+   "status": "error:ValueError",
+   "error": "ValueError: Cannot assign 1 units to 2 plans: every plan must receive the same number of units. Use 2 units, the next multiple of 2.",
+   "phases": {
+    "import": 0.180989399086684,
+    "solve": 0.0023953868076205254,
+    "assign": 0.007126557640731335,
+    "total": 0.18906550854444504
+   },
+   "calls": {
+    "import": 1,
+    "solve": 1,
+    "assign": 1
+   },
+   "plans": 2,
+   "trials": 2,
+   "participants": null,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.27708306536078453,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/multi_but_not_all.py",
+   "status": "error:ValueError",
+   "error": "ValueError: Cannot assign 1 units to 24 plans: every plan must receive the same number of units. Use 24 units, the next multiple of 24.",
+   "phases": {
+    "import": 0.18249368341639638,
+    "solve": 0.06828596536070108,
+    "assign": 0.0820194068364799,
+    "total": 0.2655451758764684
+   },
+   "calls": {
+    "import": 1,
+    "solve": 1,
+    "assign": 1
+   },
+   "plans": 24,
+   "trials": 4,
+   "participants": null,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.33251872984692454,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/multifact.py",
+   "status": "error:ValueError",
+   "error": "ValueError: Cannot assign 1 units to 9 plans: every plan must receive the same number of units. Use 9 units, the next multiple of 9.",
+   "phases": {
+    "import": 0.17962256399914622,
+    "solve": 0.15395983587950468,
+    "assign": 0.1660296549089253,
+    "total": 0.34665167005732656
+   },
+   "calls": {
+    "import": 1,
+    "solve": 1,
+    "assign": 1
+   },
+   "plans": 9,
+   "trials": 9,
+   "participants": null,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.4103013342246413,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/nest.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.182690333109349,
+    "solve": 0.016422821208834648,
+    "plans": 0.006537199020385742,
+    "assign": 0.03780858078971505,
+    "analysis": 0.00011732103303074837,
+    "total": 0.22538164258003235
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 1,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 8,
+   "trials": 4,
+   "participants": 48,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.29092511627823114,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/nest_random.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.17933687195181847,
+    "solve": 0.0015674391761422157,
+    "plans": 0.0008008787408471107,
+    "assign": 0.013530042953789234,
+    "total": 0.19779055938124657
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 1,
+    "assign": 1
+   },
+   "plans": 4,
+   "trials": 4,
+   "participants": 4,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.2620136011391878,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/order_analysis.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.1814035070128739,
+    "solve": 0.006908016745001078,
+    "plans": 0.0026841317303478718,
+    "assign": 0.022459624335169792,
+    "analysis": 0.0001086289994418621,
+    "total": 0.2089749639853835
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 1,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 4,
+   "trials": 4,
+   "participants": 16,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.27088816557079554,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/random_order.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.18389374297112226,
+    "solve": 0.0026336228474974632,
+    "plans": 0.0015348559245467186,
+    "assign": 0.017523600719869137,
+    "analysis": 0.00028879614546895027,
+    "total": 0.20924008823931217
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 1,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 8,
+   "trials": 2,
+   "participants": 8,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.3021166198886931,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/rank_twice.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.18122583394870162,
+    "solve": 0.003272739704698324,
+    "plans": 0.0005889981985092163,
+    "assign": 0.017944898921996355,
+    "analysis": 0.00017867609858512878,
+    "total": 0.20428081415593624
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 1,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 1,
+   "trials": 2,
+   "participants": 8,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.2992399539798498,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/ranking.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.18065539095550776,
+    "solve": 0.004083092324435711,
+    "plans": 0.001005709171295166,
+    "assign": 0.014852306805551052,
+    "analysis": 0.0002039899118244648,
+    "total": 0.20118288369849324
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 1,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 2,
+   "trials": 2,
+   "participants": 16,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.2641499009914696,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/replicate_btw.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.18278058664873242,
+    "solve": 0.0024479092098772526,
+    "plans": 0.0007685753516852856,
+    "assign": 0.015366931911557913,
+    "analysis": 0.00017951615154743195,
+    "total": 0.20341614773496985
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 1,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 10,
+   "trials": 2,
+   "participants": 10,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.2880135611630976,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/replication/repeat.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.19043221417814493,
+    "solve": 0.008385204244405031,
+    "plans": 0.003341785166412592,
+    "assign": 0.023172662127763033,
+    "total": 0.2176531800068915
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 1,
+    "assign": 1
+   },
+   "plans": 6,
+   "trials": 6,
+   "participants": 24,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.2843760810792446,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/snapshot.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.18833107221871614,
+    "solve": 0.012191243935376406,
+    "plans": 0.0034602880477905273,
+    "assign": 0.0335624860599637,
+    "total": 0.23083738796412945
+   },
+   "calls": {
+    "import": 1,
+    "solve": 4,
+    "plans": 2,
+    "assign": 2
+   },
+   "plans": 6,
+   "trials": 2,
+   "participants": 12,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.31860797479748726,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/test.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.1808714480139315,
+    "solve": 0.004807765129953623,
+    "plans": 0.0011518709361553192,
+    "assign": 0.017620103899389505,
+    "total": 0.20343203889206052
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 1,
+    "assign": 1
+   },
+   "plans": 2,
+   "trials": 4,
+   "participants": 10,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.2670874521136284,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/tutorial.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.1818460337817669,
+    "solve": 0.005586974788457155,
+    "plans": 0.002356263343244791,
+    "assign": 0.019320897292345762,
+    "total": 0.2101462921127677
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 1,
+    "assign": 1
+   },
+   "plans": 6,
+   "trials": 2,
+   "participants": 12,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.2919053500518203,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/weird_counterbalance.py",
+   "status": "error:ValueError",
+   "error": "ValueError: Cannot assign 4 units to 24 plans: every plan must receive the same number of units. Use 24 units, the next multiple of 24.",
+   "phases": {
+    "import": 0.1833587996661663,
+    "solve": 0.04048442281782627,
+    "assign": 0.04864409798756242,
+    "total": 0.23295249976217747
+   },
+   "calls": {
+    "import": 1,
+    "solve": 1,
+    "assign": 1
+   },
+   "plans": 24,
+   "trials": 3,
+   "participants": null,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.3132480219937861,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/weird_rank.py",
+   "status": "error:ValueError",
+   "error": "ValueError: Cannot assign 16 units to 3 plans: every plan must receive the same number of units. Use 18 units, the next multiple of 3.",
+   "phases": {
+    "import": 0.1851804992184043,
+    "solve": 0.003584877587854862,
+    "assign": 0.008745567873120308,
+    "total": 0.1948561342433095
+   },
+   "calls": {
+    "import": 1,
+    "solve": 1,
+    "assign": 1
+   },
+   "plans": 3,
+   "trials": 4,
+   "participants": null,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.25951839704066515,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/whoa.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.1817240472882986,
+    "solve": 0.005510719958692789,
+    "plans": 0.002747769933193922,
+    "assign": 0.027309847995638847,
+    "total": 0.21653936197981238
+   },
+   "calls": {
+    "import": 1,
+    "solve": 4,
+    "plans": 2,
+    "assign": 2
+   },
+   "plans": 16,
+   "trials": 4,
+   "participants": 16,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.2946940269321203,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/yuwei.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.18210376799106598,
+    "solve": 0.002250577788800001,
+    "plans": 0.001383909024298191,
+    "assign": 0.014416939113289118,
+    "total": 0.20136944903060794
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 1,
+    "assign": 1
+   },
+   "plans": 12,
+   "trials": 9,
+   "participants": 12,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 0.26276967814192176,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "status": "timeout",
+   "error": "exceeded 300.0s",
+   "phases": {},
+   "calls": {},
+   "plans": null,
+   "trials": null,
+   "participants": null,
+   "wall": 301.0303481570445,
+   "script": "src/examples/scaling.py",
+   "rep": 0
+  }
+ ]
+}

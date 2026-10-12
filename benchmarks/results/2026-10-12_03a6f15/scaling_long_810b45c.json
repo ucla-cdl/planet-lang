@@ -1,0 +1,108 @@
+{
+ "meta": {
+  "label": "810b45c",
+  "commit": null,
+  "src": "/scratch/xs307/Projects/planet/.amp/in/main-810b45c/src",
+  "python": "/scratch/xs307/Projects/planet/.amp/venv-bench/bin/python",
+  "reps": 1,
+  "timeout": 3600.0,
+  "started": "2026-10-12T05:28:39",
+  "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.39",
+  "machine": "x86_64",
+  "cpu": "AMD EPYC 9555 64-Core Processor",
+  "memory_gb": 1511,
+  "rerun_of": "scaling_810b45c.json",
+  "points": [
+   {
+    "family": "full_counterbalance",
+    "x": 5
+   },
+   {
+    "family": "plans",
+    "x": 120,
+    "n": 5
+   }
+  ],
+  "finished": "2026-10-12T05:40:42",
+  "parallel_shards": [
+   "scaling_long_810b45c_full_counterbalance.json",
+   "scaling_long_810b45c_plans.json"
+  ]
+ },
+ "records": [
+  {
+   "script": "full_counterbalance_n05.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.18518566992133856,
+    "solve": 723.2648306754418,
+    "plans": 723.4007210349664,
+    "assign": 723.4107318869792,
+    "total": 723.5964688044041
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 120,
+   "trials": 5,
+   "participants": 120,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 723.6967415232211,
+   "returncode": 0,
+   "family": "full_counterbalance",
+   "axis": "n",
+   "x": 5,
+   "n": 5,
+   "k": 1,
+   "p": null,
+   "m": null,
+   "expected_plans": 120,
+   "expected_width": 5,
+   "trials_total": 5,
+   "timeout": 3600.0,
+   "rep": 0
+  },
+  {
+   "script": "plans_n05_p120.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.19584068795666099,
+    "solve": 723.41841882281,
+    "plans": 723.5540989250876,
+    "assign": 723.5616485709324,
+    "total": 723.7580317733809
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 120,
+   "trials": 5,
+   "participants": 120,
+   "python": "3.12.13",
+   "z3": "4.13.3",
+   "wall": 723.8594539486803,
+   "returncode": 0,
+   "family": "plans",
+   "axis": "p",
+   "x": 120,
+   "n": 5,
+   "k": 1,
+   "p": 120,
+   "m": null,
+   "expected_plans": 120,
+   "expected_width": 5,
+   "trials_total": 5,
+   "timeout": 3600.0,
+   "rep": 0
+  }
+ ]
+}
