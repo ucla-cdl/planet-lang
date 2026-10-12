@@ -34,6 +34,12 @@ class Design:
         self.design_variables:Dict[str, DesignVariable] = {}
 
         self._minimum_trials = 1
+        # How this design was composed: None for a leaf design, else
+        # ('nest', outer, inner) or ('cross', first, second) with the two side
+        # designs. The flat matrix the solver works on is this design; the
+        # tree records what the paper's semantics keeps as pairs of plans and
+        # of trial positions, and what its analysis reads as labels.
+        self.composition = None
 
     @property
     def maximum_trials(self):
@@ -348,6 +354,25 @@ class Design:
                 if component in self.design_variables:
                     return self.design_variables[component]
         return spec
+
+    def contains(self, variable) -> bool:
+        """Whether `variable`, a joint or an atomic variable, belongs to this design."""
+        return variable in self.design_variables or variable in self.variables
+
+    def composition_relation(self, x, y):
+        """The label of the pair: 'nest' or 'cross' when x and y are on
+        different sides of that composition, None when one leaf design
+        declares both. The lowest composition that separates them decides,
+        as nest(x, y) and cross(x, y) do in the paper's analysis."""
+        if self.composition is None:
+            return None
+        kind, left, right = self.composition
+        in_left = (left.contains(x), left.contains(y))
+        if all(in_left):
+            return left.composition_relation(x, y)
+        if not any(in_left):
+            return right.composition_relation(x, y)
+        return kind
 
     def _add_design_variable(self, variable):
         if variable not in self.design_variables:

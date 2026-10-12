@@ -6,7 +6,6 @@ pair with an ordered variable whose no-repeat window was narrower than its
 block raised `TypeError`. Those checks could never be true, so dropping them
 changes no analysis that previously completed.
 """
-import copy
 import unittest
 import warnings
 
@@ -25,13 +24,16 @@ def effects(analysis):
 
 class NestedAnalysis(unittest.TestCase):
     def analyse(self, design):
-        before = [(c.variable, copy.deepcopy({k: v for k, v in vars(c).items() if k != 'variable'}))
-                  for c in design.get_constraints()]
+        def snapshot():
+            # constraint attributes by value; variables by name
+            render = lambda v: [str(x) for x in v] if isinstance(v, list) else v
+            return [(str(c.variable), {k: render(v) for k, v in vars(c).items() if k != 'variable'})
+                    for c in design.get_constraints()]
+        before = snapshot()
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
             result = Analysis(design)
-        after = [(c.variable, {k: v for k, v in vars(c).items() if k != 'variable'})
-                 for c in design.get_constraints()]
+        after = snapshot()
         self.assertEqual(before, after, "analysis must not change the constraints")
         return result
 
