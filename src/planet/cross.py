@@ -13,16 +13,16 @@ from planet.region import DesignRegion
 def cross_structure(d1, d2):
     constraints = []
     # Match all variables from the outer design within each block matrix
-    for i in range(len(d2.variables)):
+    for variable in d2.design_variables:
         constraints.append(InnerBlock(
-            d2.variables[i],
+            variable,
             DesignRegion(1, d1.num_plans(), [1, 1])
         ))
 
      # Match all variables from the inner design across every block
-    for i in range(len(d1.variables)):
+    for variable in d1.design_variables:
         constraints.append(OuterBlock(
-            d1.variables[i],
+            variable,
             d1.get_width(),
             d1.num_plans(),
             stride = [1, 1]

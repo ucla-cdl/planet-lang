@@ -14,15 +14,16 @@ def nest_structure(d1, d2):
     constraints = []
     # Match all variables from the outer design within each block matrix
     
-    # NOTE: changed this from design variables to variables. Check that nothing breaks.
-    for variable in d2.variables:
+    # The declared variables of each side: a joint variable is blocked as one
+    # variable, its component fields are not variables of the design.
+    for variable in d2.design_variables:
         constraints.append(InnerBlock(
             variable,
             DesignRegion(d1.get_width(),d1.num_plans(),[1, 1])
         ))
 
      # Match all variables from the inner design across every block
-    for variable in d1.variables:
+    for variable in d1.design_variables:
         constraints.append(OuterBlock(
             variable,
             d1.get_width(),
