@@ -130,10 +130,10 @@ class CrossWithCompositeOperand(unittest.TestCase):
     def test_counterbalance_covers_every_plan_of_the_second_operand(self):
         # v is counterbalanced over four plans that w keeps distinct, so
         # balancing v over only some of them leaves it free on the others.
-        x, v, w, s = variable("x", 2), variable("v", 2), variable("w", 3), variable("s", 2)
+        x, v, w, s = variable("x", 2), variable("v", 2), variable("w", 2), variable("s", 2)
         outer = (
             Design().between_subjects(v).counterbalance(v)
-            .between_subjects(w).limit_plans(4)
+            .between_subjects(w).counterbalance(w)
         )
         design = cross(balanced(x)(), nest(outer=outer, inner=fixed(s)()))
         designer = setup(design)

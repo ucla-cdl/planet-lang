@@ -97,7 +97,7 @@ class Analysis:
 
         # What is the effect of including precomputed plans? I think just
         # redundant computation.
-        plan_count, _ = self.design._calculate_maximum_plans()
+        plan_count = self.design._calculate_maximum_plans()
         plan_limit = self.design.num_groups
         variations = self.design._row_variations()
         at_maximum = bool(variations) and math.prod(variations.values()) <= self.design.num_plans()

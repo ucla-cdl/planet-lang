@@ -1,5 +1,6 @@
 # External dependencies
 from z3 import *  # requires `pip install z3-solver`
+import copy
 import math
 import pandas as pd
 # Internal modules (installed via `pip install -e .`)
@@ -153,8 +154,62 @@ class Design:
         return self
     
     def limit_plans(self, n:int) -> "Design":
-        self.num_groups = n
+        """Limit the design to at most `n` plans.
+
+        A leaf design gets `n` rounded down to a multiple of its period, the
+        least common multiple of the condition counts of its counterbalanced
+        variables, and never more plans than its default. A limit on a nest
+        or a cross limits one side: the inner design of a nest and the first
+        design of a cross keep their plans, and the limit divided by those
+        plans passes to the other side, down to one leaf. The composition is
+        then rebuilt from its sides, so that its constraints are laid out for
+        the plans it has. A composition has multiples of its step
+        (`_limit_step`) plans or none, so a limit below the step is refused.
+        """
+        if n < 1:
+            raise ValueError(f"limit_plans({n}): a design needs at least one plan.")
+        if self.composition is None:
+            self.num_groups = n
+            return self
+        step = self._limit_step()
+        if n < step:
+            raise ValueError(
+                f"limit_plans({n}): too few plans for this composition. It has "
+                f"{self.num_plans()} plans, and its limits give multiples of {step}."
+            )
+        trials = self.trials
+        vars(self).update(vars(self._limited(n)))
+        self.trials = trials
         return self
+
+    def _limited(self, n:int) -> "Design":
+        """This design limited to `n` plans, as a new design; `n` is at least
+        the step of this design. The sides of a composition are not modified:
+        the leaf that the limit reaches is copied."""
+        if self.composition is None:
+            leaf = copy.copy(self)
+            # A limit on a composition never gives a leaf more plans than it
+            # has, so a limit stated on the leaf itself is respected.
+            leaf.num_groups = min(n, self.num_plans())
+            return leaf
+        from planet.nest import nest  # the composers import this module
+        from planet.cross import cross
+        kind, left, right = self.composition
+        if kind == 'nest':
+            return nest(outer=left._limited(n // right.num_plans()), inner=right)
+        return cross(left, right._limited(n // left.num_plans()))
+
+    def _limit_step(self) -> int:
+        """The step of the design: a limit gives it a multiple of this many
+        plans, or none. For a leaf design it is the period; for a composition,
+        the step of the side a limit reaches times the plans of the side it
+        keeps."""
+        if self.composition is None:
+            return self._determine_LCM()
+        kind, left, right = self.composition
+        if kind == 'nest':
+            return left._limit_step() * right.num_plans()
+        return left.num_plans() * right._limit_step()
 
     def snapshot(self) -> str:
         groups = self.num_plans()
@@ -199,7 +254,6 @@ class Design:
         """Determine the number of experimental plans based on constraints and trial width."""
         counterbalance_info = []
         rankings = []
-        plans_precomputed = False 
 
         for variable, dvar in self.design_variables.items():
             if self.design_variables[variable].is_counterbalanced:
@@ -209,10 +263,7 @@ class Design:
             elif self.design_variables[variable].is_ranked:
                 rankings.append(count_values(self.design_variables[variable].get_ranks()))
 
-            if self.constraints.has_constraint(variable, InnerBlock) or self.constraints.has_constraint(variable, OuterBlock):
-                plans_precomputed = True
-
-        return (self.calculate_num_plans(counterbalance_info, rankings, self.get_width()), plans_precomputed)
+        return self.calculate_num_plans(counterbalance_info, rankings, self.get_width())
     
     
     def _row_variations(self):
@@ -285,7 +336,12 @@ class Design:
 
     def _determine_num_plans(self):
         """Determine the number of experimental plans based on constraints and trial width."""
-        plan_count, plans_precomputed = self._calculate_maximum_plans()
+        if self.composition is not None:
+            # The plans of a nest or a cross are the product of the plans of
+            # its sides, recorded when it was composed.
+            return self.num_groups
+
+        plan_count = self._calculate_maximum_plans()
 
         if self.num_groups > 0:
             lcm = self._determine_LCM()
@@ -293,8 +349,7 @@ class Design:
             if num_plans == 0: 
                 raise ValueError(f"Number of plans ({self.num_groups}) is too small to accommodate counterbalancing constraints. Minimum number of plans needed is {lcm}.")
             
-            plan_count = ((self.num_groups // lcm) * lcm) if plans_precomputed else min(plan_count, (self.num_groups // lcm) * lcm)
-
+            plan_count = min(plan_count, num_plans)
 
         return plan_count
     
