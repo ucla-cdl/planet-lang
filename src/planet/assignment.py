@@ -92,10 +92,7 @@ def construct_assignment_table(table, units, num_plans, num_participants):
      # Create a temporary table to store plan assignments
     duckdb.sql("CREATE TABLE members (plan INT)")
 
-   
-    required_participants = max((num_participants // num_plans) * num_plans, num_plans)
-    
-    num_per_group = required_participants // num_plans  # Number of participants per plan
+    num_per_group = num_participants // num_plans  # Number of participants per plan
     
     # Insert plan assignments into the temporary table
     duckdb.sql(f"""
@@ -125,7 +122,6 @@ def construct_assignment_table(table, units, num_plans, num_participants):
         WHERE assignment.id = {table}.pid
     """)
     duckdb.sql("DROP TABLE members")
-    duckdb.sql(f"UPDATE {units.table} SET pid = -1 WHERE pid > {num_participants}")
 
 
 
@@ -134,21 +130,36 @@ def assign_units(units, plans):
     Assigns participants (units) to different plans in a balanced manner.
     Ensures that the number of participants is evenly distributed across all plans.
 
+    A balanced assignment exists only when the design's number of plans
+    divides the number of units. Otherwise this raises ValueError naming the
+    next multiple, before the units' table is created or changed.
+
     Parameters:
     units : object
         An object containing participant data and metadata.
     plans : object
         An object containing plan assignment logic.
     """
-    
+    num_participants = len(units)  # Total number of participants
+    generator = PlanGenerator(plans, num_participants)
+    rows = generator.generate()
+    # The plans of the design. With random variables, `rows` holds one row
+    # per unit, each with its own random draw; the plans are still the rows
+    # the solver found.
+    num_plans = generator.num_plans
+    if num_participants % num_plans:
+        noun = "clusters" if isinstance(units, Clusters) else "units"
+        next_units = math.ceil(num_participants / num_plans) * num_plans
+        raise ValueError(
+            f"Cannot assign {num_participants} {noun} to {num_plans} plans: every plan "
+            f"must receive the same number of {noun}. Use {next_units} {noun}, the next "
+            f"multiple of {num_plans}."
+        )
+
     # Evaluate the units object to ensure it's up-to-date
     table = units.get_table()
-    plans = determine_plans(units, plans)
-    num_plans = len(plans)  # Total number of available plans
-    num_participants = len(units)  # Total number of participants
-
-    if num_plans:
-        construct_assignment_table(table, units, num_plans, num_participants)
+    if len(rows):
+        construct_assignment_table(table, units, len(rows), num_participants)
     
    
 def assign_counterbalance(units, plans, parent = None):
