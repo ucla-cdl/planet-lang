@@ -14,6 +14,12 @@ class Analysis:
         self.design = design
         self.main_effects = set()
         self.interaction_effects = set()
+        # Interactions derived from a fixed order (rule I-Ord), mapped to the
+        # variable whose effect must be assumed constant over time: the
+        # ordered variable's conditions are aliased with trial position, so
+        # the interaction cannot be told apart from a time-varying effect of
+        # the other variable.
+        self.assumed_interactions = {}
         self.time_varying_effects = set()
         self.ws_comparisons = set()
 
@@ -124,6 +130,7 @@ class Analysis:
             elif (len(var1.conditions) >= 2 and len(var2.conditions) >= 2) and (((var1_dv.is_counterbalanced or var1_dv.is_random) and var2_dv.is_ordered) or ((var2_dv.is_counterbalanced or var2_dv.is_random) and var1_dv.is_ordered)):
                 multifact_var = MultiFactVariable([var1, var2])
                 self.interaction_effects.add(multifact_var)
+                self.assumed_interactions[multifact_var] = var1 if var2_dv.is_ordered else var2
             
         # --- Nest composition (I-Nest): two variables on opposite sides of a
         # nest, each with a main effect. Every condition of one side meets
@@ -238,11 +245,17 @@ class Analysis:
         self.analyze_time_varying_effects()
         self.analyze_ws_comparisons()
 
+    def describe(self, var):
+        """The name of an effect, with the assumption its identification rests on."""
+        if var in self.assumed_interactions:
+            return f"{var} (assuming no time-varying effect of {self.assumed_interactions[var]})"
+        return str(var)
+
     def __str__(self):
         return (
             f"Analysis Summary:\n"
             f"- Main Effects: \n\t" + "\n\t".join(str(var) for var in self.main_effects) + "\n"
-            f"- Interaction Effects: \n\t" + "\n\t".join(str(var) for var in self.interaction_effects) + "\n"
+            f"- Interaction Effects: \n\t" + "\n\t".join(self.describe(var) for var in self.interaction_effects) + "\n"
             f"- Time-Varying Effects: \n\t" + "\n\t".join(str(var) for var in self.time_varying_effects) + "\n"
             f"- Within-Subjects Comparisons: \n\t" + "\n\t".join(str(var) for var in self.ws_comparisons) + "\n"
         )
@@ -250,9 +263,12 @@ class Analysis:
 
 def compare(design1: Design, design2: Design):
     """
-    Compares two designs and prints the effects that are testable in one but not the other.
-    + indicates effects that are testable in design 1 but not design 2.
-    - indicates effects that are testable in design 2 but not design 1.
+    Compares two designs and prints the effects that one identifies and the other does not.
+    + indicates effects identified in design 1 but not design 2.
+    - indicates effects identified in design 2 but not design 1.
+    An effect identified in both designs is listed when one of them identifies
+    it only under an assumption the other can check: no interaction with a
+    variable the other design varies, or no effect of trial position.
     """
     analysis1 = Analysis(design1)
     analysis2 = Analysis(design2)
@@ -261,10 +277,10 @@ def compare(design1: Design, design2: Design):
         return a.difference(b), b.difference(a), a.intersection(b)
 
     def print_diff(d1_only, d2_only):
-        for var in d1_only:
-            print(f"\t+ {var}")
-        for var in d2_only:
-            print(f"\t- {var}")
+        for var in sorted(d1_only, key=str):
+            print(f"\t+ {analysis1.describe(var)}")
+        for var in sorted(d2_only, key=str):
+            print(f"\t- {analysis2.describe(var)}")
 
     main1, main2, shared_main           = diff_sets(analysis1.main_effects, analysis2.main_effects)
     inter1, inter2, shared_inter        = diff_sets(analysis1.interaction_effects, analysis2.interaction_effects)
@@ -272,32 +288,34 @@ def compare(design1: Design, design2: Design):
     ws1, ws2, shared_ws                 = diff_sets(analysis1.ws_comparisons, analysis2.ws_comparisons)
 
     print("Comparative Analysis")
-    print("+ indicates effects testable in design 1 but not design 2.")
-    print("- indicates effects testable in design 2 but not design 1.\n")
+    print("+ indicates effects identified in design 1 but not design 2.")
+    print("- indicates effects identified in design 2 but not design 1.\n")
 
     # Main effects
     print("Main Effects:")
     print_diff(main1, main2)
 
-    for var in shared_main:
-        for sign, interaction_vars, time_vars in [("+", inter1, time1), ("-", inter2, time2)]:
-            for interaction_var in interaction_vars:
+    # A main effect both designs identify, where one of them cannot check an
+    # assumption the other can: the sign favours the design that can.
+    for var in sorted(shared_main, key=str):
+        for sign, other, interaction_vars, time_vars in [("+", "design 2", inter1, time1), ("-", "design 1", inter2, time2)]:
+            for interaction_var in sorted(interaction_vars, key=str):
                 if var in interaction_var.get_variables():
-                    print(f"\t{sign} {var} (under assumption of interaction with {interaction_var})")
+                    partners = "-".join(str(v) for v in interaction_var.get_variables() if v != var)
+                    print(f"\t{sign} {var} ({other} identifies it only assuming no interaction with {partners})")
             for time_var in time_vars:
                 if not time_var.is_multifact() and var in time_var.get_variables():
-                    print(f"\t{sign} {var} (under weaker assumption of no time-varying effect)")
+                    print(f"\t{sign} {var} ({other} identifies it only assuming no time-based effect)")
 
     # Interaction effects
     print("\nInteraction Effects:")
     print_diff(inter1, inter2)
 
-     
-    for var in shared_inter:
+    for var in sorted(shared_inter, key=str):
         if var in time1:
-            print(f"\t+ {var} (under weaker assumption of no time-varying effect of {var})")
+            print(f"\t+ {var} (design 2 identifies it only assuming no time-based effect)")
         if var in time2:
-            print(f"\t- {var} (under weaker assumption of no time-varying effect of {var})")
+            print(f"\t- {var} (design 1 identifies it only assuming no time-based effect)")
 
     # Time-varying effects
     print("\nTime-Varying Effects:")
