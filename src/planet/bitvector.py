@@ -75,6 +75,21 @@ class BitVectors:
         length = get_num_bits(len(var))
         return Extract(lo+length, lo, z3)
 
+    def matches_condition(self, var, cell, condition):
+        """Match a condition index, including a joint variable's tuple.
+
+        Multi-factor conditions follow the Cartesian product of the sorted
+        components, with the last component varying fastest. Each component
+        has its own packed field; those fields need not be adjacent.
+        """
+        if not isinstance(var, MultiFactVariable):
+            return self.get_variable_assignment(var, cell) == condition
+        matches = []
+        for component in reversed(var.variables):
+            condition, level = divmod(condition, len(component))
+            matches.append(self.matches_condition(component, cell, level))
+        return And(matches)
+
     
     def get_variable_assignments(self, var, z3s):
         assignments = []
