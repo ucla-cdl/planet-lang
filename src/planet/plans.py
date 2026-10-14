@@ -11,6 +11,7 @@ class PlanGenerator:
         self.design = design
         self.random_variables = design.identify_random_vars()
         self.num_units = num_units
+        self.num_plans = None  # the plans the solver found, set by generate()
 
     def instantiate_random_variables(self, n, rand, plans):
         # NOTE to self: this will only work if there is one random variable :)
@@ -36,6 +37,8 @@ class PlanGenerator:
 
         if not plans.any():
             raise ValueError("This design results in no viable plans. Consider a new design.")
+        # The design's plans, before random variables expand them to one row per unit.
+        self.num_plans = len(plans)
      
         # problem identifying random vars
         n = math.ceil(self.num_units / len(plans)) * len(plans)

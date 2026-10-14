@@ -5,6 +5,8 @@ from .candl import *
 from .unit import Clusters
 import pandas as pd
 import math
+import random
+import warnings
 from pathlib import Path
 import duckdb
 from planet.plans import PlanGenerator
@@ -18,8 +20,8 @@ def determine_plans(units, design):
 
 
 class Assignment:
-    def __init__(self, units, plans):
-        assign_counterbalance(units, plans)
+    def __init__(self, units, plans, strict = False):
+        assign_counterbalance(units, plans, strict = strict)
         self.units = units
         self.plans = plans
         self.computed_plans = determine_plans(units, plans)
@@ -88,51 +90,89 @@ def assign_subunits(units, parent):
            """)
 
 
-def construct_assignment_table(table, units, num_plans, num_participants):
-     # Create a temporary table to store plan assignments
-    duckdb.sql("CREATE TABLE members (plan INT)")
+def allocation_warning(num_units, num_plans, noun="units"):
+    """The warning for an assignment that cannot give every plan the same
+    number of units, or None when the plans divide the units.
 
-   
-    required_participants = max((num_participants // num_plans) * num_plans, num_plans)
-    
-    num_per_group = required_participants // num_plans  # Number of participants per plan
-    
-    # Insert plan assignments into the temporary table
-    duckdb.sql(f"""
-        INSERT INTO members
-        SELECT plan 
-        FROM (
-            SELECT i AS plan 
-            FROM range({num_plans}) AS t(i)
-        ) plans
-        CROSS JOIN (
-            SELECT i AS repeat FROM range({num_per_group}) AS r(i)
-        ) repeats
-    """ )
-    
-    # Randomly distribute the plan assignments to the participants
+    It says how the units fall on the plans and names the nearest number of
+    units that the plans divide. When the next smaller and the next larger
+    multiple are equally near, it names the larger.
+    """
+    def count(k, singular):
+        return f"{k} {singular if k == 1 else singular + 's'}"
+
+    one = noun[:-1]
+    base, extra = divmod(num_units, num_plans)
+    if not extra:
+        return None
+    if base == 0:
+        unused = num_plans - num_units
+        return (
+            f"Assigning {count(num_units, one)} to {num_plans} plans: "
+            f"{count(unused, 'plan')} {'is' if unused == 1 else 'are'} not used, so the "
+            f"properties of the design do not hold over these {noun}. "
+            f"Use at least {num_plans} {noun}, one for each plan."
+        )
+    fewer, more = extra, num_plans - extra
+    if more <= fewer:
+        advice = f"{num_units + more} {noun} ({more} more)"
+    else:
+        advice = f"{num_units - fewer} {noun} ({fewer} fewer)"
+    return (
+        f"Assigning {num_units} {noun} to {num_plans} plans: "
+        f"{count(extra, 'plan')} {'receives' if extra == 1 else 'receive'} {base + 1} {noun} "
+        f"and {count(more, 'plan')} {'receives' if more == 1 else 'receive'} "
+        f"{count(base, one)}, so the properties of the design do not hold exactly "
+        f"over these {noun}. Use {advice} to give every plan the same number."
+    )
+
+
+def allocate_rows(num_rows, num_plans, num_participants):
+    """A row of the plan table for each participant, in random order.
+
+    Every plan receives the same number of participants when the plans divide
+    them. Otherwise the counts differ by at most one, and the plans that
+    receive one more are chosen at random.
+
+    `num_rows` is `num_plans` for a design without random variables. With
+    random variables each plan is expanded to `num_rows / num_plans`
+    consecutive rows, one random draw each, and every participant gets a row
+    of their own.
+    """
+    copies = num_rows // num_plans
+    base, extra = divmod(num_participants, num_plans)
+    one_more = set(random.sample(range(num_plans), extra))
+    rows = []
+    for plan in range(num_plans):
+        for k in range(base + (plan in one_more)):
+            rows.append(plan * copies + k if copies > 1 else plan)
+    random.shuffle(rows)
+    return rows
+
+
+def construct_assignment_table(table, num_rows, num_plans, num_participants):
+    rows = allocate_rows(num_rows, num_plans, num_participants)
+    if not rows:
+        return
+    values = ", ".join(f"({pid}, {row})" for pid, row in enumerate(rows, start=1))
     duckdb.sql(f"""
         UPDATE {table}
         SET plan = assignment.plan
-        FROM (
-            SELECT {table}.pid AS id, members.plan
-            FROM (
-                SELECT *, ROW_NUMBER() OVER (ORDER BY UUID()) AS rand
-                FROM members
-            ) members
-            JOIN {table} ON {table}.pid = members.rand
-        ) AS assignment
-        WHERE assignment.id = {table}.pid
+        FROM (VALUES {values}) AS assignment(pid, plan)
+        WHERE assignment.pid = {table}.pid
     """)
-    duckdb.sql("DROP TABLE members")
-    duckdb.sql(f"UPDATE {units.table} SET pid = -1 WHERE pid > {num_participants}")
 
 
-
-def assign_units(units, plans):
+def assign_units(units, plans, strict=False):
     """
-    Assigns participants (units) to different plans in a balanced manner.
-    Ensures that the number of participants is evenly distributed across all plans.
+    Assigns every participant (unit) to a plan, as evenly as the numbers allow.
+
+    When the design's number of plans divides the number of units, every plan
+    receives the same number of units. Otherwise the assignment still covers
+    every unit, the numbers of units per plan differ by at most one, and a
+    warning says how they fall and which number of units would make them equal.
+    With `strict`, that case raises ValueError with the same message instead,
+    before the units' table is created or changed.
 
     Parameters:
     units : object
@@ -140,30 +180,46 @@ def assign_units(units, plans):
     plans : object
         An object containing plan assignment logic.
     """
-    
+    num_participants = len(units)  # Total number of participants
+    generator = PlanGenerator(plans, num_participants)
+    rows = generator.generate()
+    # The plans of the design. With random variables, `rows` holds one row
+    # per unit, each with its own random draw; the plans are still the rows
+    # the solver found.
+    num_plans = generator.num_plans
+    noun = "clusters" if isinstance(units, Clusters) else "units"
+    message = allocation_warning(num_participants, num_plans, noun)
+    if message and strict:
+        raise ValueError(message)
+    if message:
+        warnings.warn(message, stacklevel=5)
+
     # Evaluate the units object to ensure it's up-to-date
     table = units.get_table()
-    plans = determine_plans(units, plans)
-    num_plans = len(plans)  # Total number of available plans
-    num_participants = len(units)  # Total number of participants
+    if len(rows):
+        construct_assignment_table(table, len(rows), num_plans, num_participants)
 
-    if num_plans:
-        construct_assignment_table(table, units, num_plans, num_participants)
-    
-   
-def assign_counterbalance(units, plans, parent = None):
+
+def assign_counterbalance(units, plans, parent = None, strict = False):
     if parent is not None:
         assign_subunits(units, parent)
     else:
-        assign_units(units, plans)
+        assign_units(units, plans, strict)
         
     # NOTE: assign subunits to the same plan as their parent unit was assigned to 
     if isinstance(units, Clusters):
         assign_counterbalance(units.units, plans, parent = units)
 
 
-def assign(units, plans):
-    return Assignment(units, plans)
+def assign(units, plans, strict = False):
+    """Assign the units to the plans of the design.
+
+    Every unit gets a plan. If the plans do not divide the units, the plans
+    cannot all receive the same number of units: the assignment is then as
+    even as possible and a warning says so. With `strict=True` that case
+    raises ValueError instead and the units are left unchanged.
+    """
+    return Assignment(units, plans, strict)
 
 
        
