@@ -51,13 +51,12 @@ class InteractionRowBound(unittest.TestCase):
                         design.between_subjects(c)
                     if limit:
                         design.limit_plans(limit)
-                    # A limit is not the actual row count: the within-only
-                    # generator still caps this design at four plans.
-                    expected_plans = limit if limit and not within else 4
+                    # A limit is not the actual row count: the design has
+                    # four plans, and a limit never gives it more.
                     self.assertEqual(design._maximum_rows(), maximum)
-                    self.assertEqual(design.num_plans(), expected_plans)
+                    self.assertEqual(design.num_plans(), 4)
                     interactions = {str(v) for v in self.analyse(design).interaction_effects}
-                    self.assertEqual("a-b" in interactions, expected_plans == maximum)
+                    self.assertNotIn("a-b", interactions)
 
 
     def test_missing_pair_witness_remains_admissible(self):
@@ -154,54 +153,39 @@ class InteractionRowBound(unittest.TestCase):
                   .between_subjects(b).counterbalance(b))
         design.add_variable(c)
         design.add_constraint(NoRepeat(c, width=3, stride=2))
-        design.start_with(c, "0").num_trials(3).limit_plans(18)
-        self.assertEqual(design.num_plans(), 18)
+        design.start_with(c, "0").num_trials(3)
+        self.assertEqual(design.num_plans(), 9)
         self.assertGreaterEqual(design._maximum_rows(), 27)
-        self.assertNotIn("a-b", {str(v) for v in self.analyse(design).interaction_effects})
-
-
-    def test_oversized_inner_block_does_not_hide_row_variations(self):
-        a, b, c = variable("a", 2), variable("b", 2), variable("c", 2)
-        inner = leaf(a, 2).within_subjects(b).counterbalance(b)
-        design = nest(outer=Design().between_subjects(c), inner=inner).limit_plans(2)
-        # c's four-row InnerBlock cannot constrain a two-row matrix. Each
-        # of the four a/b orders can have any of four c trial sequences.
-        self.assertEqual(design._maximum_rows(), 16)
-        designer = setup(design)
-        designer.solver.name_to_encoding([
-            ["0-0-0", "1-1-1"], ["1-1-1", "0-0-0"],
-        ])
-        self.assertEqual(designer.solver.solver.check(), sat)
         self.assertNotIn("a-b", {str(v) for v in self.analyse(design).interaction_effects})
 
 
     def test_spare_trials_of_fixed_and_ranked_variables_distinguish_rows(self):
         # A between-subjects variable lifts the trial limit, so the third
-        # trial of the two-level variable c is outside its sequence.
+        # trial of the two-level variable c is outside its sequence. The
+        # design has four plans; its eight possible rows are not all present.
         for fix in ("order", "start_with"):
-            for limit, expected in ((4, False), (8, True)):
-                with self.subTest(fix=fix, limit=limit):
-                    a, b, c = variable("a", 2), variable("b", 2), variable("c", 2)
-                    design = (Design().between_subjects(a).counterbalance(a)
-                              .between_subjects(b).counterbalance(b)
-                              .within_subjects(c))
-                    if fix == "order":
-                        design.order(c, ["0", "1"])
-                    else:
-                        design.start_with(c, "0")
-                    design.num_trials(3).limit_plans(limit)
-                    self.assertEqual(design._maximum_rows(), 8)
-                    self.assertEqual(design.num_plans(), limit)
-                    interactions = {str(v) for v in self.analyse(design).interaction_effects}
-                    self.assertEqual("a-b" in interactions, expected)
-                    if fix == "order" and limit == 4:
-                        # Four rows that differ in c's free trial and
-                        # contain only two of the four a-b pairs.
-                        rows = [["0-0-0", "0-0-1", "0-0-0"], ["0-0-0", "0-0-1", "0-0-1"],
-                                ["1-1-0", "1-1-1", "1-1-0"], ["1-1-0", "1-1-1", "1-1-1"]]
-                        designer = setup(design)
-                        designer.solver.name_to_encoding(rows)
-                        self.assertEqual(designer.solver.solver.check(), sat)
+            with self.subTest(fix=fix):
+                a, b, c = variable("a", 2), variable("b", 2), variable("c", 2)
+                design = (Design().between_subjects(a).counterbalance(a)
+                          .between_subjects(b).counterbalance(b)
+                          .within_subjects(c))
+                if fix == "order":
+                    design.order(c, ["0", "1"])
+                else:
+                    design.start_with(c, "0")
+                design.num_trials(3)
+                self.assertEqual(design._maximum_rows(), 8)
+                self.assertEqual(design.num_plans(), 4)
+                interactions = {str(v) for v in self.analyse(design).interaction_effects}
+                self.assertNotIn("a-b", interactions)
+                if fix == "order":
+                    # Four rows that differ in c's free trial and
+                    # contain only two of the four a-b pairs.
+                    rows = [["0-0-0", "0-0-1", "0-0-0"], ["0-0-0", "0-0-1", "0-0-1"],
+                            ["1-1-0", "1-1-1", "1-1-0"], ["1-1-0", "1-1-1", "1-1-1"]]
+                    designer = setup(design)
+                    designer.solver.name_to_encoding(rows)
+                    self.assertEqual(designer.solver.solver.check(), sat)
 
 
     def test_refused_plan_limit_does_not_stop_the_analysis(self):

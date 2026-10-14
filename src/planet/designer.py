@@ -129,18 +129,13 @@ class Designer:
                     )
 
                 case InnerBlock():
-                    self.match_inner(
-                        constraint.variable, 
-                        constraint.width or width,
-                        constraint.height
-                    )
+                    # a joint variable is blocked through each of its fields
+                    for v in variable:
+                        self.match_inner(v, constraint.width or width, constraint.height)
 
                 case OuterBlock():
-                    self.match_outer(
-                        constraint.variable, 
-                        constraint.width, 
-                        constraint.height
-                    )
+                    for v in variable:
+                        self.match_outer(v, constraint.width, constraint.height)
  
     
     def determine_shape(self):
