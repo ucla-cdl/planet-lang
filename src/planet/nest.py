@@ -195,6 +195,7 @@ def nest(*, outer:Design, inner:Design):
         combined_design.add_constraints(copied_constraints)
 
     combined_design.add_constraints(nest_structure(inner, outer))
+    combined_design.composition = ('nest', outer, inner)
     combined_design.set_minimum_trials(inner.get_width() * outer.get_width())
 
     return combined_design

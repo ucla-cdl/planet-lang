@@ -113,9 +113,30 @@ def cross(design1, design2):
     
     # Raise an error if widths are not equal
     if width1 != width2:
+        def is_between_subjects(design):
+            # A design is between-subjects if every variable is repeated across
+            # trials (no NoRepeat) and blocked at the inner level.
+            return all(
+                dv.is_repeated and dv.is_blocked_inner
+                for dv in design.design_variables.values()
+            )
+
+        for narrow, narrow_width in ((design1, width1), (design2, width2)):
+            if narrow_width == 1 and is_between_subjects(narrow):
+                raise ValueError(
+                    "Cannot cross a between-subjects design (width 1) with a "
+                    "within-subjects design. A between-subjects factor is not "
+                    "crossed; it partitions participants into groups, yielding a "
+                    "mixed design. Add the between-subjects factor to your design "
+                    "directly instead of crossing, e.g.:\n"
+                    "    Design().within_subjects(A).counterbalance(A).between_subjects(B)"
+                )
+
         raise ValueError(
-            f"Widths of design1 ({width1}) and design2 ({width2}) are not equal. "
-            "The designs cannot be composed."
+            f"Widths of design1 ({width1}) and design2 ({width2}) are not equal, "
+            "so the designs cannot be crossed. Crossing requires both designs to "
+            "have the same number of within-subjects conditions (width). Check the "
+            "counterbalance/order/within-subjects factors on each design."
         )
 
 
@@ -132,6 +153,7 @@ def cross(design1, design2):
     combined_design.variables.extend(combined_variables)
     combined_design.add_constraints(copy_crossed_constraints(design1, design2, total_conditions, total_groups))
     combined_design.add_constraints(cross_structure(design1, design2))
+    combined_design.composition = ('cross', design1, design2)
     combined_design.set_minimum_trials(design1.get_width())
 
     return combined_design
