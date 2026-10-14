@@ -143,25 +143,11 @@ class Analysis:
                     and outer_spec.variable != inner_spec.variable) 
                 ):
 
-                    outer_repeats = outer_var.constraint_spec["NoRepeat"]
-                    inner_repeats = outer_var.constraint_spec["NoRepeat"]
-                
-
-                    outer_check = (
-                        ((outer_repeats is not None and 
-                        outer_repeats.width*outer_repeats.stride < outer_spec.width and outer_var.is_ordered) and self.design.num_trials > outer_spec.width*outer_spec*outer_spec.stride)
-                    ) 
-
-                    inner_check = (
-                          ((inner_repeats is not None and 
-                        inner_repeats.width*inner_repeats.stride < inner_spec.width and inner_var.is_ordered) and self.design.num_trials > inner_spec.width*inner_spec*inner_spec.stride)
-                    ) 
-
-                    if (outer_spec.width <= inner_spec.width and inner_spec.height <= outer_spec.height) and (outer_check or (outer_var.is_counterbalanced or outer_var.is_random)) and (inner_check or (inner_var.is_counterbalanced or inner_var.is_random)): 
+                    if (outer_spec.width <= inner_spec.width and inner_spec.height <= outer_spec.height) and (outer_var.is_counterbalanced or outer_var.is_random) and (inner_var.is_counterbalanced or inner_var.is_random):
                         interaction = MultiFactVariable([outer_var.variable, inner_var.variable])
                         self.interaction_effects.add(interaction)
 
-                    elif (inner_spec.height <= outer_spec.height) and (outer_check or (outer_var.is_counterbalanced or outer_var.is_random)) and (inner_var.is_counterbalanced or inner_var.is_random):
+                    elif (inner_spec.height <= outer_spec.height) and (outer_var.is_counterbalanced or outer_var.is_random) and (inner_var.is_counterbalanced or inner_var.is_random):
                         interaction = MultiFactVariable([outer_var.variable, inner_var.variable])
                         self.interaction_effects.add(interaction)
                         
