@@ -178,6 +178,8 @@ def nest(*, outer:Design, inner:Design):
     Returns:
         A new Design object representing the nested experimental design.
     """
+    outer.check_trials()
+    inner.check_trials()
     total_groups = inner.num_plans() * outer.num_plans()
     total_conditions = inner.get_width() * outer.get_width()
 

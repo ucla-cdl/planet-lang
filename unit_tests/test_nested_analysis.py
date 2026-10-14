@@ -52,11 +52,12 @@ class NestedAnalysis(unittest.TestCase):
 
     def test_ordered_inner_leaf_under_counterbalanced_outer(self):
         # Raised `TypeError: unsupported operand type(s) for *: 'int' and 'OuterBlock'`.
+        # The inner leaf has more trials than x has conditions, so nest now
+        # refuses it before the analysis can run.
         b, x = variable('b'), variable('x')
         inner = Design().within_subjects(x).order(x, ['0', '1']).num_trials(3)
-        design = nest(outer=Design().within_subjects(b).counterbalance(b), inner=inner)
-        result = self.analyse(design)
-        self.assertIn('b', {str(v) for v in result.main_effects})
+        with self.assertRaises(ValueError):
+            nest(outer=Design().within_subjects(b).counterbalance(b), inner=inner)
 
     def test_depth_two_nest_with_ordered_outer(self):
         # Raised `TypeError: unsupported operand type(s) for *: 'int' and 'InnerBlock'`

@@ -173,14 +173,16 @@ class Analysis:
 
         # Analyze time-varying effects
         # if self.design.get_width() > 1:
+        # Like a main effect, a time-varying effect needs two or more
+        # conditions of each variable it mentions (rule T-CB).
         for counterbalanced_variable in self.counterbalanced_variables:
-            if counterbalanced_variable.get_variable().is_multifact(): 
-                self.time_varying_effects.update(counterbalanced_variable.get_variable().get_variables())
-                subvars = counterbalanced_variable.get_variable().get_variables()
+            if counterbalanced_variable.get_variable().is_multifact():
+                subvars = [var for var in counterbalanced_variable.get_variable().get_variables()
+                           if len(var.conditions) >= 2]
                 self.time_varying_effects.update(subvars)
                 for var_a, var_b in combinations(subvars, 2):
                     self.time_varying_effects.add(MultiFactVariable([var_a, var_b]))
-            else: 
+            elif len(counterbalanced_variable.get_variable().conditions) >= 2:
                 self.time_varying_effects.add(counterbalanced_variable.get_variable())
                 
 
