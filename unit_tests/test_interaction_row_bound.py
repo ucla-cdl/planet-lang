@@ -160,9 +160,10 @@ class InteractionRowBound(unittest.TestCase):
 
 
     def test_spare_trials_of_fixed_and_ranked_variables_distinguish_rows(self):
-        # A between-subjects variable lifts the trial limit, so the third
-        # trial of the two-level variable c is outside its sequence. The
-        # design has four plans; its eight possible rows are not all present.
+        # The third trial of the two-level variable c is outside its sequence.
+        # The design has four plans; its eight possible rows are not all
+        # present. Generation refuses it, since c would repeat a condition,
+        # but the analysis does not report a-b either.
         for fix in ("order", "start_with"):
             with self.subTest(fix=fix):
                 a, b, c = variable("a", 2), variable("b", 2), variable("c", 2)
@@ -178,14 +179,8 @@ class InteractionRowBound(unittest.TestCase):
                 self.assertEqual(design.num_plans(), 4)
                 interactions = {str(v) for v in self.analyse(design).interaction_effects}
                 self.assertNotIn("a-b", interactions)
-                if fix == "order":
-                    # Four rows that differ in c's free trial and
-                    # contain only two of the four a-b pairs.
-                    rows = [["0-0-0", "0-0-1", "0-0-0"], ["0-0-0", "0-0-1", "0-0-1"],
-                            ["1-1-0", "1-1-1", "1-1-0"], ["1-1-0", "1-1-1", "1-1-1"]]
-                    designer = setup(design)
-                    designer.solver.name_to_encoding(rows)
-                    self.assertEqual(designer.solver.solver.check(), sat)
+                with self.assertRaises(ValueError):
+                    setup(design)
 
 
     def test_refused_plan_limit_does_not_stop_the_analysis(self):

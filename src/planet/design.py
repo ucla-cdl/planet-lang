@@ -57,14 +57,43 @@ class Design:
 
         # the maximum width is the smallest maximum width of all variables in
         # the design. The maximum width of a variables is determined by its
-        # constraints. 
+        # constraints. A blocked variable, such as a between-subjects one, has
+        # no maximum (-1) and does not lift the maximum of the others.
         valid_variables = (spec for spec in self.design_variables.values() if is_not_in_multifact(spec))
-        max_width = min(spec.max_width() for spec in valid_variables)
+        widths = [w for w in (spec.max_width() for spec in valid_variables) if w > -1]
 
-        return max_width
-    
+        return min(widths) if widths else -1
+
     def set_minimum_trials(self, n:int):
         self._minimum_trials = n
+
+    def check_trials(self):
+        """Refuse trials that the variables of a leaf design cannot fill.
+
+        A within-subjects variable shows each of its conditions at most once,
+        and a fixed order lists each condition once, so a leaf design has at
+        most as many trials as a within-subjects variable has conditions, and
+        exactly as many as a fixed order has. nest and cross check their two
+        sides, so a composed design is checked through its leaf designs.
+        """
+        trials = self.get_width()
+        if self.maximum_trials > -1 and trials > self.maximum_trials:
+            raise ValueError(
+                f"Design specifies {trials} trial(s), "
+                f"but there are only {self.maximum_trials} possible conditions. "
+                "Reduce trials or use nesting to repeat conditions."
+            )
+
+        if self.composition is None:
+            for variable, dvar in self.design_variables.items():
+                if dvar.is_ordered:
+                    length = len(dvar.constraint_spec["Order"].sequence)
+                    if trials != length:
+                        raise ValueError(
+                            f"The order of {variable} lists {length} condition(s), "
+                            f"so its design needs {length} trial(s), but it specifies {trials}. "
+                            "Use nesting to repeat the order."
+                        )
 
     # FIXME: this is slow
     @property

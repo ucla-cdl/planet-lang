@@ -102,7 +102,9 @@ def cross(design1, design2):
         Combined design object
     """
 
- 
+    design1.check_trials()
+    design2.check_trials()
+
     # Calculate the total number of groups in the combined design
     total_groups = design1.num_plans() * design2.num_plans()
     # Combine variables from both designs

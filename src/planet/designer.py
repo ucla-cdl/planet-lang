@@ -39,13 +39,8 @@ class Designer:
     
     
     def check_trial_compatibility(self):
-        if self.design.maximum_trials > -1 and self.num_trials > self.design.maximum_trials:
-            raise ValueError(
-                f"Design specifies {self.num_trials} trial(s), "
-                f"but there are only {self.design.maximum_trials} possible conditions. "
-                "Reduce trials or use nesting to repeat conditions."
-            )
-        
+        self.design.check_trials()
+
         if self.design._minimum_trials > 1 and self.num_trials < self.design._minimum_trials:
             raise ValueError(
                 f"Design specifies {self.num_trials} trial(s), "
