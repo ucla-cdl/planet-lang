@@ -1,0 +1,320 @@
++ /Users/emjun/Git/planet-lang/.venv/bin/python /Users/emjun/Git/planet-lang-perf/benchmarks/run_benchmark.py --src /Users/emjun/Git/planet-lang-perf/src --examples /Users/emjun/Git/planet-lang-perf/src/eval_examples --reps 3 --timeout 300.0 --label b33ade0 --out benchmarks/results/2026-10-10_b33ade0/corpus_b33ade0.json --python /Users/emjun/Git/planet-lang/.venv/bin/python
+[b33ade0] 15 scripts x 3 reps, timeout 300s
+  src/eval_examples/artist.py                   rep0 ok                 wall=   0.34s solve=   0.04s plans=4 
+  src/eval_examples/artist.py                   rep1 ok                 wall=   0.27s solve=   0.00s plans=4 
+  src/eval_examples/artist.py                   rep2 ok                 wall=   0.27s solve=   0.00s plans=4 
+  src/eval_examples/artist2.py                  rep0 ok                 wall=   1.10s solve=   0.72s plans=25 
+  src/eval_examples/artist2.py                  rep1 ok                 wall=   1.08s solve=   0.71s plans=25 
+  src/eval_examples/artist2.py                  rep2 ok                 wall=   1.09s solve=   0.71s plans=25 
+  src/eval_examples/dont_ask_just_tell.py       rep0 ok                 wall=   0.28s solve=   0.01s plans=204 
+  src/eval_examples/dont_ask_just_tell.py       rep1 ok                 wall=   0.28s solve=   0.00s plans=204 
+  src/eval_examples/dont_ask_just_tell.py       rep2 ok                 wall=   0.28s solve=   0.01s plans=204 
+  src/eval_examples/mousering.py                rep0 ok                 wall=  48.30s solve=  45.81s plans=12 
+  src/eval_examples/mousering.py                rep1 ok                 wall=  47.67s solve=  45.07s plans=12 
+  src/eval_examples/mousering.py                rep2 ok                 wall=  48.12s solve=  45.46s plans=12 
+  src/eval_examples/mousering2.py               rep0 ok                 wall=   2.71s solve=   2.03s plans=12 
+  src/eval_examples/mousering2.py               rep1 ok                 wall=   2.63s solve=   2.03s plans=12 
+  src/eval_examples/mousering2.py               rep2 ok                 wall=   2.64s solve=   2.04s plans=12 
+  src/eval_examples/ok_google.py                rep0 ok                 wall=   0.28s solve=   0.01s plans=51 
+  src/eval_examples/ok_google.py                rep1 ok                 wall=   0.28s solve=   0.01s plans=51 
+  src/eval_examples/ok_google.py                rep2 ok                 wall=   0.28s solve=   0.01s plans=51 
+  src/eval_examples/perception.py               rep0 ok                 wall=   0.27s solve=   0.00s plans=506 
+  src/eval_examples/perception.py               rep1 ok                 wall=   0.27s solve=   0.00s plans=506 
+  src/eval_examples/perception.py               rep2 ok                 wall=   0.26s solve=   0.00s plans=506 
+  src/eval_examples/rambler.py                  rep0 ok                 wall=   0.26s solve=   0.00s plans=2 
+  src/eval_examples/rambler.py                  rep1 ok                 wall=   0.26s solve=   0.00s plans=2 
+  src/eval_examples/rambler.py                  rep2 ok                 wall=   0.27s solve=   0.00s plans=2 
+  src/eval_examples/recommender.py              rep0 ok                 wall=   0.27s solve=   0.00s plans=341 
+  src/eval_examples/recommender.py              rep1 ok                 wall=   0.26s solve=   0.00s plans=341 
+  src/eval_examples/recommender.py              rep2 ok                 wall=   0.26s solve=   0.00s plans=341 
+  src/eval_examples/seated_wip.py               rep0 ok                 wall=   0.71s solve=   0.43s plans=9 
+  src/eval_examples/seated_wip.py               rep1 ok                 wall=   0.72s solve=   0.43s plans=9 
+  src/eval_examples/seated_wip.py               rep2 ok                 wall=   0.71s solve=   0.43s plans=9 
+  src/eval_examples/shaping_compliance.py       rep0 ok                 wall=   1.25s solve=   0.87s plans=12 
+  src/eval_examples/shaping_compliance.py       rep1 ok                 wall=   1.26s solve=   0.87s plans=12 
+  src/eval_examples/shaping_compliance.py       rep2 ok                 wall=   1.25s solve=   0.86s plans=12 
+  src/eval_examples/shaping_compliance2.py      rep0 ok                 wall=   0.27s solve=   0.00s plans=12 
+  src/eval_examples/shaping_compliance2.py      rep1 ok                 wall=   0.27s solve=   0.00s plans=12 
+  src/eval_examples/shaping_compliance2.py      rep2 ok                 wall=   0.27s solve=   0.00s plans=12 
+  src/eval_examples/silver.py                   rep0 ok                 wall=   0.27s solve=   0.00s plans=210 
+  src/eval_examples/silver.py                   rep1 ok                 wall=   0.28s solve=   0.00s plans=210 
+  src/eval_examples/silver.py                   rep2 ok                 wall=   0.27s solve=   0.00s plans=210 
+  src/eval_examples/skinergy.py                 rep0 ok                 wall=   0.31s solve=   0.02s plans=10 
+  src/eval_examples/skinergy.py                 rep1 ok                 wall=   0.30s solve=   0.02s plans=10 
+  src/eval_examples/skinergy.py                 rep2 ok                 wall=   0.31s solve=   0.02s plans=10 
+  src/eval_examples/sweating_details.py         rep0 ok                 wall=   0.39s solve=   0.09s plans=12 
+  src/eval_examples/sweating_details.py         rep1 ok                 wall=   0.39s solve=   0.09s plans=12 
+  src/eval_examples/sweating_details.py         rep2 ok                 wall=   0.39s solve=   0.09s plans=12 
+wrote benchmarks/results/2026-10-10_b33ade0/corpus_b33ade0.json (45 records)
++ /Users/emjun/Git/planet-lang/.venv/bin/python /Users/emjun/Git/planet-lang-perf/benchmarks/run_benchmark.py --src /Users/emjun/Git/planet-lang-perf/src --examples /Users/emjun/Git/planet-lang-perf/src/examples --reps 1 --timeout 300.0 --label b33ade0 --out benchmarks/results/2026-10-10_b33ade0/examples_b33ade0.json --python /Users/emjun/Git/planet-lang/.venv/bin/python
+[b33ade0] 39 scripts x 1 reps, timeout 300s
+  src/examples/analysis/mixed.py                rep0 ok                 wall=   0.27s solve=   0.01s plans=3 
+  src/examples/analysis/multifact.py            rep0 ok                 wall=   0.40s solve=   0.12s plans=8 
+  src/examples/analysis/replicate_btw.py        rep0 ok                 wall=   2.71s solve=   2.39s plans=48 
+  src/examples/balance.py                       rep0 ok                 wall=   0.28s solve=   0.01s plans=4 
+  src/examples/chi2026.py                       rep0 ok                 wall=   0.28s solve=   0.01s plans=2 
+  src/examples/cluster.py                       rep0 error:ModuleNotFoundError wall=   0.26s solve=   n/a  plans=None ModuleNotFoundError: No module named 'lib'
+  src/examples/compare.py                       rep0 ok                 wall=   0.26s solve=   n/a  plans=None 
+  src/examples/compose-btw.py                   rep0 ok                 wall=   0.27s solve=   0.00s plans=4 
+  src/examples/cross.py                         rep0 ok                 wall=   0.27s solve=   0.00s plans=4 
+  src/examples/cross_nest.py                    rep0 ok                 wall=   0.30s solve=   0.02s plans=6 
+  src/examples/cross_test.py                    rep0 error:ModuleNotFoundError wall=   0.26s solve=   n/a  plans=None ModuleNotFoundError: No module named 'lib'
+  src/examples/demo.py                          rep0 error:ModuleNotFoundError wall=   0.26s solve=   n/a  plans=None ModuleNotFoundError: No module named 'lib'
+  src/examples/ffl.py                           rep0 ok                 wall=   0.28s solve=   0.01s plans=4 
+  src/examples/ffl_alt.py                       rep0 ok                 wall=   0.26s solve=   n/a  plans=None 
+  src/examples/fix-order.py                     rep0 ok                 wall=   0.27s solve=   0.00s plans=1 
+  src/examples/full_counterbalance.py           rep0 ok                 wall=   0.28s solve=   0.01s plans=6 
+  src/examples/fun.py                           rep0 ok                 wall=   0.27s solve=   0.01s plans=4 
+  src/examples/funky_balance.py                 rep0 ok                 wall=   0.28s solve=   0.01s plans=12 
+  src/examples/latin_square.py                  rep0 ok                 wall=   0.27s solve=   0.01s plans=4 
+  src/examples/mixed.py                         rep0 ok                 wall=   0.27s solve=   0.00s plans=2 
+  src/examples/mixed_nest.py                    rep0 ok                 wall=   0.27s solve=   0.00s plans=4 
+  src/examples/multi_but_not_all.py             rep0 ok                 wall=   0.38s solve=   0.09s plans=24 
+  src/examples/multifact.py                     rep0 ok                 wall=   0.71s solve=   0.43s plans=9 
+  src/examples/nest.py                          rep0 ok                 wall=   0.30s solve=   0.02s plans=8 
+  src/examples/nest_random.py                   rep0 ok                 wall=   0.26s solve=   0.00s plans=4 
+  src/examples/order_analysis.py                rep0 ok                 wall=   0.28s solve=   0.01s plans=4 
+  src/examples/random_order.py                  rep0 ok                 wall=   0.27s solve=   0.00s plans=8 
+  src/examples/rank_twice.py                    rep0 ok                 wall=   0.27s solve=   0.00s plans=1 
+  src/examples/ranking.py                       rep0 ok                 wall=   0.27s solve=   0.00s plans=2 
+  src/examples/replicate_btw.py                 rep0 ok                 wall=   0.27s solve=   0.00s plans=10 
+  src/examples/replication/repeat.py            rep0 ok                 wall=   0.28s solve=   0.01s plans=6 
+  src/examples/scaling.py                       rep0 timeout            wall= 300.29s solve=   n/a  plans=None exceeded 300.0s
+  src/examples/snapshot.py                      rep0 ok                 wall=   0.40s solve=   0.01s plans=6 
+  src/examples/test.py                          rep0 ok                 wall=   0.27s solve=   0.00s plans=2 
+  src/examples/tutorial.py                      rep0 ok                 wall=   0.27s solve=   0.01s plans=6 
+  src/examples/weird_counterbalance.py          rep0 ok                 wall=   0.33s solve=   0.05s plans=24 
+  src/examples/weird_rank.py                    rep0 ok                 wall=   0.27s solve=   0.01s plans=3 
+  src/examples/whoa.py                          rep0 ok                 wall=   0.28s solve=   0.01s plans=16 
+  src/examples/yuwei.py                         rep0 ok                 wall=   0.27s solve=   0.00s plans=12 
+wrote benchmarks/results/2026-10-10_b33ade0/examples_b33ade0.json (39 records)
++ /Users/emjun/Git/planet-lang/.venv/bin/python /Users/emjun/Git/planet-lang-perf/benchmarks/scaling.py --src /Users/emjun/Git/planet-lang-perf/src --timeout 600.0 --reps 3 --label b33ade0 --out benchmarks/results/2026-10-10_b33ade0/scaling_b33ade0.json --python /Users/emjun/Git/planet-lang/.venv/bin/python
+[b33ade0] scaling: ['latin_square', 'full_counterbalance', 'plans', 'nested_latin_squares', 'crossed_latin_squares', 'trials', 'nested_variable'], 3 rep(s), timeout 600s
+  latin_square           n=  2 rep0 ok                 wall=    0.26s solve=    0.00s plans=2 trials=2 
+  latin_square           n=  2 rep1 ok                 wall=    0.26s solve=    0.00s plans=2 trials=2 
+  latin_square           n=  2 rep2 ok                 wall=    0.26s solve=    0.00s plans=2 trials=2 
+  latin_square           n=  3 rep0 ok                 wall=    0.27s solve=    0.01s plans=3 trials=3 
+  latin_square           n=  3 rep1 ok                 wall=    0.27s solve=    0.01s plans=3 trials=3 
+  latin_square           n=  3 rep2 ok                 wall=    0.27s solve=    0.01s plans=3 trials=3 
+  latin_square           n=  4 rep0 ok                 wall=    0.28s solve=    0.01s plans=4 trials=4 
+  latin_square           n=  4 rep1 ok                 wall=    0.28s solve=    0.01s plans=4 trials=4 
+  latin_square           n=  4 rep2 ok                 wall=    0.28s solve=    0.01s plans=4 trials=4 
+  latin_square           n=  5 rep0 ok                 wall=    0.29s solve=    0.02s plans=5 trials=5 
+  latin_square           n=  5 rep1 ok                 wall=    0.29s solve=    0.02s plans=5 trials=5 
+  latin_square           n=  5 rep2 ok                 wall=    0.29s solve=    0.02s plans=5 trials=5 
+  latin_square           n=  6 rep0 ok                 wall=    0.31s solve=    0.04s plans=6 trials=6 
+  latin_square           n=  6 rep1 ok                 wall=    0.31s solve=    0.04s plans=6 trials=6 
+  latin_square           n=  6 rep2 ok                 wall=    0.30s solve=    0.04s plans=6 trials=6 
+  latin_square           n=  7 rep0 ok                 wall=    0.32s solve=    0.05s plans=7 trials=7 
+  latin_square           n=  7 rep1 ok                 wall=    0.31s solve=    0.05s plans=7 trials=7 
+  latin_square           n=  7 rep2 ok                 wall=    0.31s solve=    0.05s plans=7 trials=7 
+  latin_square           n=  8 rep0 ok                 wall=    0.36s solve=    0.08s plans=8 trials=8 
+  latin_square           n=  8 rep1 ok                 wall=    0.36s solve=    0.08s plans=8 trials=8 
+  latin_square           n=  8 rep2 ok                 wall=    0.36s solve=    0.08s plans=8 trials=8 
+  latin_square           n=  9 rep0 ok                 wall=    0.44s solve=    0.16s plans=9 trials=9 
+  latin_square           n=  9 rep1 ok                 wall=    0.44s solve=    0.16s plans=9 trials=9 
+  latin_square           n=  9 rep2 ok                 wall=    0.44s solve=    0.16s plans=9 trials=9 
+  latin_square           n= 10 rep0 ok                 wall=    0.75s solve=    0.47s plans=10 trials=10 
+  latin_square           n= 10 rep1 ok                 wall=    0.74s solve=    0.46s plans=10 trials=10 
+  latin_square           n= 10 rep2 ok                 wall=    0.74s solve=    0.46s plans=10 trials=10 
+  latin_square           n= 11 rep0 ok                 wall=    0.62s solve=    0.33s plans=11 trials=11 
+  latin_square           n= 11 rep1 ok                 wall=    0.62s solve=    0.34s plans=11 trials=11 
+  latin_square           n= 11 rep2 ok                 wall=    0.61s solve=    0.33s plans=11 trials=11 
+  latin_square           n= 12 rep0 ok                 wall=    0.91s solve=    0.62s plans=12 trials=12 
+  latin_square           n= 12 rep1 ok                 wall=    0.85s solve=    0.56s plans=12 trials=12 
+  latin_square           n= 12 rep2 ok                 wall=    0.88s solve=    0.57s plans=12 trials=12 
+  full_counterbalance    n=  2 rep0 ok                 wall=    0.26s solve=    0.00s plans=2 trials=2 
+  full_counterbalance    n=  2 rep1 ok                 wall=    0.26s solve=    0.00s plans=2 trials=2 
+  full_counterbalance    n=  2 rep2 ok                 wall=    0.26s solve=    0.00s plans=2 trials=2 
+  full_counterbalance    n=  3 rep0 ok                 wall=    0.27s solve=    0.01s plans=6 trials=3 
+  full_counterbalance    n=  3 rep1 ok                 wall=    0.27s solve=    0.01s plans=6 trials=3 
+  full_counterbalance    n=  3 rep2 ok                 wall=    0.27s solve=    0.01s plans=6 trials=3 
+  full_counterbalance    n=  4 rep0 ok                 wall=    0.35s solve=    0.07s plans=24 trials=4 
+  full_counterbalance    n=  4 rep1 ok                 wall=    0.34s solve=    0.07s plans=24 trials=4 
+  full_counterbalance    n=  4 rep2 ok                 wall=    0.34s solve=    0.07s plans=24 trials=4 
+  full_counterbalance    n=  5 rep0 timeout            wall=  600.02s solve=     n/a  plans=None trials=None exceeded 600.0s
+  full_counterbalance: stopping after timeout at n=5
+  plans                  p=  5 rep0 ok                 wall=    0.30s solve=    0.02s plans=5 trials=5 
+  plans                  p=  5 rep1 ok                 wall=    0.29s solve=    0.02s plans=5 trials=5 
+  plans                  p=  5 rep2 ok                 wall=    0.29s solve=    0.02s plans=5 trials=5 
+  plans                  p= 10 rep0 ok                 wall=    0.31s solve=    0.04s plans=10 trials=5 
+  plans                  p= 10 rep1 ok                 wall=    0.30s solve=    0.04s plans=10 trials=5 
+  plans                  p= 10 rep2 ok                 wall=    0.30s solve=    0.04s plans=10 trials=5 
+  plans                  p= 15 rep0 ok                 wall=    0.34s solve=    0.07s plans=15 trials=5 
+  plans                  p= 15 rep1 ok                 wall=    0.33s solve=    0.07s plans=15 trials=5 
+  plans                  p= 15 rep2 ok                 wall=    0.34s solve=    0.07s plans=15 trials=5 
+  plans                  p= 20 rep0 ok                 wall=    0.37s solve=    0.09s plans=20 trials=5 
+  plans                  p= 20 rep1 ok                 wall=    0.37s solve=    0.10s plans=20 trials=5 
+  plans                  p= 20 rep2 ok                 wall=    0.37s solve=    0.10s plans=20 trials=5 
+  plans                  p= 25 rep0 ok                 wall=    2.68s solve=    2.39s plans=25 trials=5 
+  plans                  p= 25 rep1 ok                 wall=    2.67s solve=    2.38s plans=25 trials=5 
+  plans                  p= 25 rep2 ok                 wall=    2.67s solve=    2.39s plans=25 trials=5 
+  plans                  p= 30 rep0 ok                 wall=    0.80s solve=    0.52s plans=30 trials=5 
+  plans                  p= 30 rep1 ok                 wall=    0.80s solve=    0.51s plans=30 trials=5 
+  plans                  p= 30 rep2 ok                 wall=    0.80s solve=    0.52s plans=30 trials=5 
+  plans                  p= 40 rep0 timeout            wall=  600.01s solve=     n/a  plans=None trials=None exceeded 600.0s
+  plans: stopping after timeout at p=40
+  nested_latin_squares   n=  2 rep0 ok                 wall=    0.37s solve=    0.01s plans=4 trials=4 
+  nested_latin_squares   n=  2 rep1 ok                 wall=    0.27s solve=    0.01s plans=4 trials=4 
+  nested_latin_squares   n=  2 rep2 ok                 wall=    0.27s solve=    0.01s plans=4 trials=4 
+  nested_latin_squares   n=  3 rep0 ok                 wall=    0.32s solve=    0.04s plans=9 trials=9 
+  nested_latin_squares   n=  3 rep1 ok                 wall=    0.32s solve=    0.04s plans=9 trials=9 
+  nested_latin_squares   n=  3 rep2 ok                 wall=    0.32s solve=    0.04s plans=9 trials=9 
+  nested_latin_squares   n=  4 rep0 ok                 wall=    0.51s solve=    0.19s plans=16 trials=16 
+  nested_latin_squares   n=  4 rep1 ok                 wall=    0.53s solve=    0.20s plans=16 trials=16 
+  nested_latin_squares   n=  4 rep2 ok                 wall=    0.53s solve=    0.20s plans=16 trials=16 
+  nested_latin_squares   n=  5 rep0 ok                 wall=    1.21s solve=    0.77s plans=25 trials=25 
+  nested_latin_squares   n=  5 rep1 ok                 wall=    1.24s solve=    0.79s plans=25 trials=25 
+  nested_latin_squares   n=  5 rep2 ok                 wall=    1.19s solve=    0.75s plans=25 trials=25 
+  nested_latin_squares   n=  6 rep0 ok                 wall=    3.06s solve=    2.42s plans=36 trials=36 
+  nested_latin_squares   n=  6 rep1 ok                 wall=    3.06s solve=    2.39s plans=36 trials=36 
+  nested_latin_squares   n=  6 rep2 ok                 wall=    3.02s solve=    2.37s plans=36 trials=36 
+  nested_latin_squares   n=  7 rep0 ok                 wall=   10.59s solve=    9.55s plans=49 trials=49 
+  nested_latin_squares   n=  7 rep1 ok                 wall=   10.61s solve=    9.45s plans=49 trials=49 
+  nested_latin_squares   n=  7 rep2 ok                 wall=   10.56s solve=    9.41s plans=49 trials=49 
+  nested_latin_squares   n=  8 rep0 ok                 wall=   26.98s solve=   25.17s plans=64 trials=64 
+  nested_latin_squares   n=  8 rep1 ok                 wall=   26.86s solve=   25.10s plans=64 trials=64 
+  nested_latin_squares   n=  8 rep2 ok                 wall=   26.80s solve=   25.10s plans=64 trials=64 
+  nested_latin_squares   n=  9 rep0 ok                 wall=  284.65s solve=  281.06s plans=81 trials=81 
+  nested_latin_squares   n=  9 rep1 ok                 wall=  282.79s solve=  279.12s plans=81 trials=81 
+  nested_latin_squares   n=  9 rep2 ok                 wall=  284.42s solve=  281.16s plans=81 trials=81 
+  nested_latin_squares   n= 10 rep0 timeout            wall=  600.20s solve=     n/a  plans=None trials=None exceeded 600.0s
+  nested_latin_squares: stopping after timeout at n=10
+  crossed_latin_squares  n=  2 rep0 ok                 wall=    0.37s solve=    0.00s plans=4 trials=2 
+  crossed_latin_squares  n=  2 rep1 ok                 wall=    0.26s solve=    0.00s plans=4 trials=2 
+  crossed_latin_squares  n=  2 rep2 ok                 wall=    0.26s solve=    0.00s plans=4 trials=2 
+  crossed_latin_squares  n=  3 rep0 ok                 wall=    0.28s solve=    0.02s plans=9 trials=3 
+  crossed_latin_squares  n=  3 rep1 ok                 wall=    0.28s solve=    0.02s plans=9 trials=3 
+  crossed_latin_squares  n=  3 rep2 ok                 wall=    0.29s solve=    0.02s plans=9 trials=3 
+  crossed_latin_squares  n=  4 rep0 ok                 wall=    0.32s solve=    0.04s plans=16 trials=4 
+  crossed_latin_squares  n=  4 rep1 ok                 wall=    0.32s solve=    0.04s plans=16 trials=4 
+  crossed_latin_squares  n=  4 rep2 ok                 wall=    0.32s solve=    0.04s plans=16 trials=4 
+  crossed_latin_squares  n=  5 rep0 ok                 wall=    0.39s solve=    0.10s plans=25 trials=5 
+  crossed_latin_squares  n=  5 rep1 ok                 wall=    0.39s solve=    0.10s plans=25 trials=5 
+  crossed_latin_squares  n=  5 rep2 ok                 wall=    0.39s solve=    0.10s plans=25 trials=5 
+  crossed_latin_squares  n=  6 rep0 ok                 wall=    0.66s solve=    0.34s plans=36 trials=6 
+  crossed_latin_squares  n=  6 rep1 ok                 wall=    0.66s solve=    0.34s plans=36 trials=6 
+  crossed_latin_squares  n=  6 rep2 ok                 wall=    0.67s solve=    0.34s plans=36 trials=6 
+  crossed_latin_squares  n=  7 rep0 ok                 wall=    1.08s solve=    0.72s plans=49 trials=7 
+  crossed_latin_squares  n=  7 rep1 ok                 wall=    1.08s solve=    0.72s plans=49 trials=7 
+  crossed_latin_squares  n=  7 rep2 ok                 wall=    1.11s solve=    0.74s plans=49 trials=7 
+  crossed_latin_squares  n=  8 rep0 ok                 wall=    2.02s solve=    1.59s plans=64 trials=8 
+  crossed_latin_squares  n=  8 rep1 ok                 wall=    2.03s solve=    1.59s plans=64 trials=8 
+  crossed_latin_squares  n=  8 rep2 ok                 wall=    2.03s solve=    1.60s plans=64 trials=8 
+  crossed_latin_squares  n=  9 rep0 ok                 wall=    6.30s solve=    5.78s plans=81 trials=9 
+  crossed_latin_squares  n=  9 rep1 ok                 wall=    6.51s solve=    5.95s plans=81 trials=9 
+  crossed_latin_squares  n=  9 rep2 ok                 wall=    6.40s solve=    5.87s plans=81 trials=9 
+  crossed_latin_squares  n= 10 rep0 ok                 wall=   13.17s solve=   12.53s plans=100 trials=10 
+  crossed_latin_squares  n= 10 rep1 ok                 wall=   13.12s solve=   12.46s plans=100 trials=10 
+  crossed_latin_squares  n= 10 rep2 ok                 wall=   13.04s solve=   12.40s plans=100 trials=10 
+  crossed_latin_squares  n= 11 rep0 ok                 wall=   26.51s solve=   25.70s plans=121 trials=11 
+  crossed_latin_squares  n= 11 rep1 ok                 wall=   26.32s solve=   25.50s plans=121 trials=11 
+  crossed_latin_squares  n= 11 rep2 ok                 wall=   26.34s solve=   25.53s plans=121 trials=11 
+  crossed_latin_squares  n= 12 rep0 ok                 wall=   77.82s solve=   76.79s plans=144 trials=12 
+  crossed_latin_squares  n= 12 rep1 ok                 wall=   78.18s solve=   77.10s plans=144 trials=12 
+  crossed_latin_squares  n= 12 rep2 ok                 wall=   78.27s solve=   77.08s plans=144 trials=12 
+  trials                 k=  1 rep0 ok                 wall=    0.93s solve=    0.56s plans=12 trials=12 
+  trials                 k=  1 rep1 ok                 wall=    0.85s solve=    0.57s plans=12 trials=12 
+  trials                 k=  1 rep2 ok                 wall=    0.84s solve=    0.56s plans=12 trials=12 
+  trials                 k=  2 rep0 ok                 wall=    0.86s solve=    0.56s plans=12 trials=24 
+  trials                 k=  2 rep1 ok                 wall=    0.89s solve=    0.58s plans=12 trials=24 
+  trials                 k=  2 rep2 ok                 wall=    0.86s solve=    0.56s plans=12 trials=24 
+  trials                 k=  4 rep0 ok                 wall=    1.00s solve=    0.66s plans=12 trials=48 
+  trials                 k=  4 rep1 ok                 wall=    1.02s solve=    0.68s plans=12 trials=48 
+  trials                 k=  4 rep2 ok                 wall=    1.03s solve=    0.69s plans=12 trials=48 
+  trials                 k=  6 rep0 ok                 wall=    1.08s solve=    0.69s plans=12 trials=72 
+  trials                 k=  6 rep1 ok                 wall=    1.07s solve=    0.68s plans=12 trials=72 
+  trials                 k=  6 rep2 ok                 wall=    1.08s solve=    0.68s plans=12 trials=72 
+  trials                 k=  8 rep0 ok                 wall=    1.23s solve=    0.79s plans=12 trials=96 
+  trials                 k=  8 rep1 ok                 wall=    1.25s solve=    0.82s plans=12 trials=96 
+  trials                 k=  8 rep2 ok                 wall=    1.22s solve=    0.79s plans=12 trials=96 
+  trials                 k= 10 rep0 ok                 wall=    1.72s solve=    1.26s plans=12 trials=120 
+  trials                 k= 10 rep1 ok                 wall=    1.71s solve=    1.24s plans=12 trials=120 
+  trials                 k= 10 rep2 ok                 wall=    1.73s solve=    1.27s plans=12 trials=120 
+  trials                 k= 12 rep0 ok                 wall=    1.70s solve=    1.18s plans=12 trials=144 
+  trials                 k= 12 rep1 ok                 wall=    1.68s solve=    1.17s plans=12 trials=144 
+  trials                 k= 12 rep2 ok                 wall=    1.65s solve=    1.15s plans=12 trials=144 
+  trials                 k= 14 rep0 ok                 wall=    1.74s solve=    1.18s plans=12 trials=168 
+  trials                 k= 14 rep1 ok                 wall=    1.74s solve=    1.19s plans=12 trials=168 
+  trials                 k= 14 rep2 ok                 wall=    1.73s solve=    1.19s plans=12 trials=168 
+  trials                 k= 16 rep0 ok                 wall=    2.02s solve=    1.43s plans=12 trials=192 
+  trials                 k= 16 rep1 ok                 wall=    2.02s solve=    1.42s plans=12 trials=192 
+  trials                 k= 16 rep2 ok                 wall=    2.01s solve=    1.42s plans=12 trials=192 
+  trials                 k= 18 rep0 ok                 wall=    2.53s solve=    1.89s plans=12 trials=216 
+  trials                 k= 18 rep1 ok                 wall=    2.54s solve=    1.88s plans=12 trials=216 
+  trials                 k= 18 rep2 ok                 wall=    2.49s solve=    1.87s plans=12 trials=216 
+  trials                 k= 20 rep0 ok                 wall=    2.50s solve=    1.83s plans=12 trials=240 
+  trials                 k= 20 rep1 ok                 wall=    2.51s solve=    1.81s plans=12 trials=240 
+  trials                 k= 20 rep2 ok                 wall=    2.52s solve=    1.82s plans=12 trials=240 
+  trials                 k= 30 rep0 ok                 wall=    4.21s solve=    3.32s plans=12 trials=360 
+  trials                 k= 30 rep1 ok                 wall=    4.15s solve=    3.28s plans=12 trials=360 
+  trials                 k= 30 rep2 ok                 wall=    4.06s solve=    3.21s plans=12 trials=360 
+  trials                 k= 40 rep0 ok                 wall=    6.43s solve=    5.38s plans=12 trials=480 
+  trials                 k= 40 rep1 ok                 wall=    6.66s solve=    5.54s plans=12 trials=480 
+  trials                 k= 40 rep2 ok                 wall=    6.52s solve=    5.41s plans=12 trials=480 
+  trials                 k= 50 rep0 ok                 wall=   13.20s solve=   11.90s plans=12 trials=600 
+  trials                 k= 50 rep1 ok                 wall=   13.11s solve=   11.77s plans=12 trials=600 
+  trials                 k= 50 rep2 ok                 wall=   13.22s solve=   11.87s plans=12 trials=600 
+  trials                 k=100 rep0 ok                 wall=   31.36s solve=   29.05s plans=12 trials=1200 
+  trials                 k=100 rep1 ok                 wall=   31.48s solve=   29.04s plans=12 trials=1200 
+  trials                 k=100 rep2 ok                 wall=   31.66s solve=   29.24s plans=12 trials=1200 
+  trials                 k=200 rep0 ok                 wall=  102.29s solve=   97.69s plans=12 trials=2400 
+  trials                 k=200 rep1 ok                 wall=  103.95s solve=   99.26s plans=12 trials=2400 
+  trials                 k=200 rep2 ok                 wall=  102.50s solve=   97.77s plans=12 trials=2400 
+  trials                 k=400 rep0 ok                 wall=  381.24s solve=  372.11s plans=12 trials=4800 
+  trials                 k=400 rep1 ok                 wall=  365.22s solve=  356.26s plans=12 trials=4800 
+  trials                 k=400 rep2 ok                 wall=  373.81s solve=  364.92s plans=12 trials=4800 
+  nested_variable        m=  2 rep0 ok                 wall=    2.98s solve=    2.53s plans=12 trials=24 
+  nested_variable        m=  2 rep1 ok                 wall=    2.90s solve=    2.55s plans=12 trials=24 
+  nested_variable        m=  2 rep2 ok                 wall=    2.89s solve=    2.54s plans=12 trials=24 
+  nested_variable        m=  4 rep0 ok                 wall=    2.60s solve=    2.18s plans=12 trials=48 
+  nested_variable        m=  4 rep1 ok                 wall=    2.61s solve=    2.18s plans=12 trials=48 
+  nested_variable        m=  4 rep2 ok                 wall=    2.63s solve=    2.21s plans=12 trials=48 
+  nested_variable        m=  6 rep0 ok                 wall=    3.83s solve=    3.31s plans=12 trials=72 
+  nested_variable        m=  6 rep1 ok                 wall=    3.86s solve=    3.35s plans=12 trials=72 
+  nested_variable        m=  6 rep2 ok                 wall=    3.84s solve=    3.32s plans=12 trials=72 
+  nested_variable        m=  8 rep0 ok                 wall=    5.19s solve=    4.59s plans=12 trials=96 
+  nested_variable        m=  8 rep1 ok                 wall=    5.19s solve=    4.58s plans=12 trials=96 
+  nested_variable        m=  8 rep2 ok                 wall=    5.16s solve=    4.56s plans=12 trials=96 
+  nested_variable        m= 10 rep0 ok                 wall=    6.63s solve=    5.93s plans=12 trials=120 
+  nested_variable        m= 10 rep1 ok                 wall=    6.63s solve=    5.93s plans=12 trials=120 
+  nested_variable        m= 10 rep2 ok                 wall=    6.57s solve=    5.88s plans=12 trials=120 
+  nested_variable        m= 12 rep0 ok                 wall=    8.52s solve=    7.74s plans=12 trials=144 
+  nested_variable        m= 12 rep1 ok                 wall=    8.55s solve=    7.76s plans=12 trials=144 
+  nested_variable        m= 12 rep2 ok                 wall=    8.57s solve=    7.80s plans=12 trials=144 
+  nested_variable        m= 14 rep0 ok                 wall=    9.38s solve=    8.48s plans=12 trials=168 
+  nested_variable        m= 14 rep1 ok                 wall=    9.59s solve=    8.70s plans=12 trials=168 
+  nested_variable        m= 14 rep2 ok                 wall=    9.25s solve=    8.35s plans=12 trials=168 
+  nested_variable        m= 16 rep0 ok                 wall=   22.43s solve=   21.46s plans=12 trials=192 
+  nested_variable        m= 16 rep1 ok                 wall=   22.38s solve=   21.37s plans=12 trials=192 
+  nested_variable        m= 16 rep2 ok                 wall=   22.21s solve=   21.21s plans=12 trials=192 
+  nested_variable        m= 18 rep0 ok                 wall=   26.96s solve=   25.90s plans=12 trials=216 
+  nested_variable        m= 18 rep1 ok                 wall=   27.06s solve=   25.99s plans=12 trials=216 
+  nested_variable        m= 18 rep2 ok                 wall=   27.55s solve=   26.47s plans=12 trials=216 
+  nested_variable        m= 20 rep0 ok                 wall=   14.52s solve=   13.34s plans=12 trials=240 
+  nested_variable        m= 20 rep1 ok                 wall=   13.86s solve=   12.62s plans=12 trials=240 
+  nested_variable        m= 20 rep2 ok                 wall=   13.83s solve=   12.66s plans=12 trials=240 
+  nested_variable        m= 30 rep0 ok                 wall=   29.91s solve=   28.29s plans=12 trials=360 
+  nested_variable        m= 30 rep1 ok                 wall=   29.90s solve=   28.25s plans=12 trials=360 
+  nested_variable        m= 30 rep2 ok                 wall=   30.55s solve=   28.96s plans=12 trials=360 
+  nested_variable        m= 40 rep0 ok                 wall=   27.97s solve=   25.90s plans=12 trials=480 
+  nested_variable        m= 40 rep1 ok                 wall=   27.72s solve=   25.67s plans=12 trials=480 
+  nested_variable        m= 40 rep2 ok                 wall=   28.06s solve=   25.94s plans=12 trials=480 
+  nested_variable        m= 50 rep0 ok                 wall=   38.10s solve=   35.46s plans=12 trials=600 
+  nested_variable        m= 50 rep1 ok                 wall=   39.03s solve=   36.28s plans=12 trials=600 
+  nested_variable        m= 50 rep2 ok                 wall=   37.82s solve=   35.09s plans=12 trials=600 
+  nested_variable        m=100 rep0 ok                 wall=  255.50s solve=  249.01s plans=12 trials=1200 
+  nested_variable        m=100 rep1 ok                 wall=  253.95s solve=  247.70s plans=12 trials=1200 
+  nested_variable        m=100 rep2 ok                 wall=  252.66s solve=  246.34s plans=12 trials=1200 
+wrote benchmarks/results/2026-10-10_b33ade0/scaling_b33ade0.json (213 records)
++ /Users/emjun/Git/planet-lang/.venv/bin/python /Users/emjun/Git/planet-lang-perf/benchmarks/scaling.py --src /Users/emjun/Git/planet-lang-perf/src --timeout 3600.0 --reps 1 --rerun-timeouts benchmarks/results/2026-10-10_b33ade0/scaling_b33ade0.json --label b33ade0 --out benchmarks/results/2026-10-10_b33ade0/scaling_long_b33ade0.json --python /Users/emjun/Git/planet-lang/.venv/bin/python
+[b33ade0] re-running 3 timed-out point(s) of benchmarks/results/2026-10-10_b33ade0/scaling_b33ade0.json at 3600s
+  full_counterbalance    n=  5 rep0 ok                 wall= 1752.38s solve= 1751.86s plans=120 trials=5 
+  nested_latin_squares   n= 10 rep0 ok                 wall= 1034.64s solve= 1028.38s plans=100 trials=100 
+  plans                  p= 40 rep0 timeout            wall= 3600.01s solve=     n/a  plans=None trials=None exceeded 3600.0s
+wrote benchmarks/results/2026-10-10_b33ade0/scaling_long_b33ade0.json (3 records)
++ /Users/emjun/Git/planet-lang/.venv/bin/python /Users/emjun/Git/planet-lang-perf/benchmarks/summarize.py --out-dir benchmarks/results/2026-10-10_b33ade0 --corpus-new benchmarks/results/2026-10-10_b33ade0/corpus_b33ade0.json --examples-new benchmarks/results/2026-10-10_b33ade0/examples_b33ade0.json --scaling benchmarks/results/2026-10-10_b33ade0/scaling_b33ade0.json --scaling-long benchmarks/results/2026-10-10_b33ade0/scaling_long_b33ade0.json
+wrote benchmarks/results/2026-10-10_b33ade0/summary.md and benchmarks/results/2026-10-10_b33ade0/execution-times.tex
+
+results: benchmarks/results/2026-10-10_b33ade0
+run_all exit code: 0

@@ -1,0 +1,131 @@
+{
+ "meta": {
+  "label": "b33ade0",
+  "commit": "b33ade0",
+  "src": "/Users/emjun/Git/planet-lang-perf/src",
+  "python": "/Users/emjun/Git/planet-lang/.venv/bin/python",
+  "reps": 1,
+  "timeout": 3600.0,
+  "started": "2026-10-10T22:00:05",
+  "platform": "macOS-15.8-arm64-arm-64bit",
+  "machine": "arm64",
+  "cpu": "Apple M2",
+  "memory_gb": 24,
+  "rerun_of": "scaling_b33ade0.json",
+  "points": [
+   {
+    "family": "full_counterbalance",
+    "x": 5
+   },
+   {
+    "family": "nested_latin_squares",
+    "x": 10
+   },
+   {
+    "family": "plans",
+    "x": 40,
+    "n": 5
+   }
+  ],
+  "finished": "2026-10-10T23:46:32"
+ },
+ "records": [
+  {
+   "script": "full_counterbalance_n05.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.29520454200246604,
+    "solve": 1751.8618240840042,
+    "plans": 1752.0173790830013,
+    "assign": 1752.0196199170023,
+    "total": 1752.3155829169991
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 120,
+   "trials": 5,
+   "participants": 120,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 1752.382539000002,
+   "returncode": 0,
+   "family": "full_counterbalance",
+   "axis": "n",
+   "x": 5,
+   "n": 5,
+   "k": 1,
+   "p": null,
+   "m": null,
+   "expected_plans": 120,
+   "expected_width": 5,
+   "trials_total": 5,
+   "timeout": 3600.0,
+   "rep": 0
+  },
+  {
+   "script": "nested_latin_squares_n10.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.30702212499818415,
+    "solve": 1028.3820949170004,
+    "plans": 1034.1182028749972,
+    "assign": 1034.1220631659999,
+    "total": 1034.4300496249998
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 100,
+   "trials": 100,
+   "participants": 100,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 1034.6395144999988,
+   "returncode": 0,
+   "family": "nested_latin_squares",
+   "axis": "n",
+   "x": 10,
+   "n": 10,
+   "k": 1,
+   "p": null,
+   "m": null,
+   "expected_plans": 100,
+   "expected_width": 100,
+   "trials_total": 100,
+   "timeout": 3600.0,
+   "rep": 0
+  },
+  {
+   "status": "timeout",
+   "error": "exceeded 3600.0s",
+   "phases": {},
+   "calls": {},
+   "plans": null,
+   "trials": null,
+   "participants": null,
+   "wall": 3600.0133992500014,
+   "family": "plans",
+   "axis": "p",
+   "x": 40,
+   "n": 5,
+   "k": 1,
+   "p": 40,
+   "m": null,
+   "expected_plans": 40,
+   "expected_width": 5,
+   "trials_total": 5,
+   "script": "plans_n05_p040.py",
+   "timeout": 3600.0,
+   "rep": 0
+  }
+ ]
+}

@@ -1,0 +1,1061 @@
+{
+ "meta": {
+  "label": "1369473",
+  "commit": "1369473",
+  "src": "/Users/emjun/Git/planet-lang/src",
+  "examples": [
+   "/Users/emjun/Git/planet-lang/src/examples"
+  ],
+  "python": "/Users/emjun/Git/planet-lang/.venv/bin/python",
+  "reps": 1,
+  "timeout": 300.0,
+  "started": "2026-10-09T22:12:52",
+  "platform": "macOS-15.8-arm64-arm-64bit",
+  "machine": "arm64",
+  "cpu": "Apple M2",
+  "memory_gb": 24,
+  "finished": "2026-10-09T22:18:07"
+ },
+ "records": [
+  {
+   "script": "src/examples/analysis/mixed.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.22567454201634973,
+    "solve": 0.005619333009235561,
+    "plans": 0.008970083959866315,
+    "assign": 0.011079874995630234,
+    "analysis": 4.212500061839819e-05,
+    "total": 0.23932387499371544
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 3,
+   "trials": 3,
+   "participants": 10,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.28284379199612886,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/analysis/multifact.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.2299593749921769,
+    "solve": 0.11866720794932917,
+    "plans": 0.14550775103271008,
+    "assign": 0.14739662496140227,
+    "analysis": 7.833295967429876e-05,
+    "total": 0.38005525001790375
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 8,
+   "trials": 8,
+   "participants": 1,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.4251227079657838,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/analysis/replicate_btw.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.2164148329757154,
+    "solve": 2.378578624979127,
+    "plans": 2.4331424579722807,
+    "assign": 2.4352700830204412,
+    "analysis": 9.912502719089389e-05,
+    "total": 2.6553180419723503
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 48,
+   "trials": 4,
+   "participants": 10,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 2.704459584027063,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/balance.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.22088712500408292,
+    "solve": 0.008592708967626095,
+    "plans": 0.013671874941792339,
+    "assign": 0.015562832995783538,
+    "analysis": 9.170797420665622e-05,
+    "total": 0.2415603330009617
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 4,
+   "trials": 2,
+   "participants": 4,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.2867289170389995,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/chi2026.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.2204126249998808,
+    "solve": 0.014501376019325107,
+    "plans": 0.018635832995641977,
+    "assign": 0.020516583987046033,
+    "total": 0.24362208397360519
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 2,
+   "trials": 4,
+   "participants": 12,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.28822145803133026,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/cluster.py",
+   "status": "error:ModuleNotFoundError",
+   "error": "ModuleNotFoundError: No module named 'lib'",
+   "phases": {
+    "import": 0.21883858396904543,
+    "total": 0.22456000000238419
+   },
+   "calls": {
+    "import": 1
+   },
+   "plans": null,
+   "trials": null,
+   "participants": null,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.2681497089797631,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/compare.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.2153642499470152,
+    "analysis": 0.0008296250598505139,
+    "total": 0.21768866595812142
+   },
+   "calls": {
+    "import": 1,
+    "analysis": 2
+   },
+   "plans": null,
+   "trials": null,
+   "participants": null,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.2604416669928469,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/compose-btw.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.21530162502313033,
+    "solve": 0.0024527080240659416,
+    "plans": 0.005496583005879074,
+    "assign": 0.0072902500396594405,
+    "analysis": 7.47920130379498e-05,
+    "total": 0.22606741701019928
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 4,
+   "trials": 1,
+   "participants": 48,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.27008525002747774,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/cross.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.21753291599452496,
+    "solve": 0.004528916964773089,
+    "plans": 0.008907333016395569,
+    "assign": 0.011005208012647927,
+    "analysis": 0.00018599891336634755,
+    "total": 0.23253612499684095
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1,
+    "analysis": 3
+   },
+   "plans": 4,
+   "trials": 2,
+   "participants": 12,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.2788500830065459,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/cross_nest.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.21435333404224366,
+    "solve": 0.02346820803359151,
+    "plans": 0.03859041701070964,
+    "assign": 0.040660709026269615,
+    "analysis": 0.00012824998702853918,
+    "total": 0.2587865000241436
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 6,
+   "trials": 6,
+   "participants": 16,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.30836733302567154,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/cross_test.py",
+   "status": "error:ModuleNotFoundError",
+   "error": "ModuleNotFoundError: No module named 'lib'",
+   "phases": {
+    "import": 0.22137716598808765,
+    "total": 0.22372329101199284
+   },
+   "calls": {
+    "import": 1
+   },
+   "plans": null,
+   "trials": null,
+   "participants": null,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.2682823749491945,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/demo.py",
+   "status": "error:ModuleNotFoundError",
+   "error": "ModuleNotFoundError: No module named 'lib'",
+   "phases": {
+    "import": 0.22137941600522026,
+    "total": 0.2236316250055097
+   },
+   "calls": {
+    "import": 1
+   },
+   "plans": null,
+   "trials": null,
+   "participants": null,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.2708299170481041,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/ffl.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.22317379200831056,
+    "solve": 0.00915704102953896,
+    "plans": 0.01748179196147248,
+    "assign": 0.019836375024169683,
+    "analysis": 0.0001331249950453639,
+    "total": 0.24658587499288842
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 4,
+   "trials": 4,
+   "participants": 16,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.2979678749688901,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/ffl_alt.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.24187154200626537,
+    "analysis": 0.00021058303536847234,
+    "total": 0.2434163749567233
+   },
+   "calls": {
+    "import": 1,
+    "analysis": 2
+   },
+   "plans": null,
+   "trials": null,
+   "participants": null,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.2921130420290865,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/fix-order.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.21367062500212342,
+    "solve": 0.0013138329959474504,
+    "plans": 0.00412212498486042,
+    "assign": 0.006242416973691434,
+    "analysis": 4.0583021473139524e-05,
+    "total": 0.22356420900905505
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 1,
+   "trials": 4,
+   "participants": 16,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.26976462500169873,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/full_counterbalance.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.2190173749695532,
+    "solve": 0.006034457997884601,
+    "plans": 0.010593167040497065,
+    "assign": 0.01259950001258403,
+    "analysis": 3.583298530429602e-05,
+    "total": 0.23462562501663342
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 6,
+   "trials": 2,
+   "participants": 48,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.28328425000654534,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/fun.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.21477920800680295,
+    "solve": 0.007249748974572867,
+    "plans": 0.01156433398136869,
+    "assign": 0.013555875048041344,
+    "total": 0.23121866694418713
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 12,
+   "trials": 2,
+   "participants": 12,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.2751598749891855,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/funky_balance.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.22298370796488598,
+    "solve": 0.014037750021088868,
+    "plans": 0.01996312494156882,
+    "assign": 0.022097625012975186,
+    "analysis": 3.825000021606684e-05,
+    "total": 0.2479320410056971
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 12,
+   "trials": 2,
+   "participants": 24,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.29563883400987834,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/latin_square.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.2264739579986781,
+    "solve": 0.006610875017940998,
+    "plans": 0.011264208995271474,
+    "assign": 0.013250541989691556,
+    "analysis": 7.999996887519956e-05,
+    "total": 0.24248520797118545
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 4,
+   "trials": 2,
+   "participants": 3,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.29082170902984217,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/mixed.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.22316087497165427,
+    "solve": 0.0026185839669778943,
+    "plans": 0.006108416069764644,
+    "assign": 0.008061249973252416,
+    "analysis": 0.00020483299158513546,
+    "total": 0.2343020419939421
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 2,
+   "trials": 2,
+   "participants": 1,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.2837201250367798,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/mixed_nest.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.22047654201742262,
+    "solve": 0.004371624963823706,
+    "plans": 0.008755834016483277,
+    "assign": 0.01066116604488343,
+    "analysis": 0.00019391701789572835,
+    "total": 0.23406749998684973
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 4,
+   "trials": 2,
+   "participants": 1,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.2821723750093952,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/multi_but_not_all.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.2203387079644017,
+    "solve": 0.09145545901264995,
+    "plans": 0.11910800100304186,
+    "assign": 0.12124983296962455,
+    "total": 0.3444132909644395
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 24,
+   "trials": 4,
+   "participants": 1,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.3917025839909911,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/multifact.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.22640841599786654,
+    "solve": 0.43517008295748383,
+    "plans": 0.45963604195276275,
+    "assign": 0.46190558397211134,
+    "analysis": 7.008301327005029e-05,
+    "total": 0.6918709999881685
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 9,
+   "trials": 9,
+   "participants": 1,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.7384598330245353,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/nest.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.2236658749752678,
+    "solve": 0.021084415959194303,
+    "plans": 0.035402750014327466,
+    "assign": 0.03740333399036899,
+    "analysis": 0.0001296660047955811,
+    "total": 0.26446216698968783
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 8,
+   "trials": 4,
+   "participants": 48,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.3124337499612011,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/nest_random.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.21450766699854285,
+    "solve": 0.0015052920207381248,
+    "plans": 0.004825082956813276,
+    "assign": 0.006830000027548522,
+    "total": 0.22392004204448313
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 4,
+   "trials": 4,
+   "participants": 4,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.2699434580281377,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/order_analysis.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.2215362919960171,
+    "solve": 0.00821870903018862,
+    "plans": 0.021769332990515977,
+    "assign": 0.02374020905699581,
+    "analysis": 0.00012412498472258449,
+    "total": 0.24832625000271946
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 4,
+   "trials": 4,
+   "participants": 16,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.2936626669834368,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/random_order.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.21501666703261435,
+    "solve": 0.0030598750454373658,
+    "plans": 0.006765833997633308,
+    "assign": 0.008889124961569905,
+    "analysis": 0.0002074579824693501,
+    "total": 0.2275216670241207
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 8,
+   "trials": 2,
+   "participants": 8,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.27355383400572464,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/rank_twice.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.21969033300410956,
+    "solve": 0.002993375004734844,
+    "plans": 0.006102707993704826,
+    "assign": 0.00816579203819856,
+    "analysis": 0.00022595899645239115,
+    "total": 0.2315908339805901
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 1,
+   "trials": 2,
+   "participants": 8,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.27777916699415073,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/ranking.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.21994687500409782,
+    "solve": 0.0042971670045517385,
+    "plans": 0.007935832953080535,
+    "assign": 0.011647666047792882,
+    "analysis": 0.00018762500258162618,
+    "total": 0.23480704199755564
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 2,
+   "trials": 2,
+   "participants": 16,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.2799346660031006,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/replicate_btw.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.23821250000037253,
+    "solve": 0.0025791249936446548,
+    "plans": 0.005802500003483146,
+    "assign": 0.007750082993879914,
+    "analysis": 0.00020524999126791954,
+    "total": 0.24892820901004598
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1,
+    "analysis": 1
+   },
+   "plans": 10,
+   "trials": 2,
+   "participants": 10,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.29487300000619143,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/replication/repeat.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.2251795000047423,
+    "solve": 0.010735791991464794,
+    "plans": 0.01773425005376339,
+    "assign": 0.01975829101866111,
+    "total": 0.24779183301143348
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 6,
+   "trials": 6,
+   "participants": 24,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.2932046669884585,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "status": "timeout",
+   "error": "exceeded 300.0s",
+   "phases": {},
+   "calls": {},
+   "plans": null,
+   "trials": null,
+   "participants": null,
+   "wall": 300.3384173750528,
+   "script": "src/examples/scaling.py",
+   "rep": 0
+  },
+  {
+   "script": "src/examples/snapshot.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.3080412090057507,
+    "solve": 0.014451292052399367,
+    "plans": 0.02109258295968175,
+    "assign": 0.02444145898334682,
+    "total": 0.3364830000209622
+   },
+   "calls": {
+    "import": 1,
+    "solve": 4,
+    "plans": 4,
+    "assign": 2
+   },
+   "plans": 6,
+   "trials": 2,
+   "participants": 12,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.3918424579896964,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/test.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.2135653339792043,
+    "solve": 0.0048173340037465096,
+    "plans": 0.008926625014282763,
+    "assign": 0.010863915958907455,
+    "total": 0.2273114169947803
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 2,
+   "trials": 4,
+   "participants": 10,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.26872487500077114,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/tutorial.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.2149833749863319,
+    "solve": 0.005947833997197449,
+    "plans": 0.009611624001991004,
+    "assign": 0.011485708004329354,
+    "total": 0.22910979198059067
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 6,
+   "trials": 2,
+   "participants": 12,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.2712675840011798,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/vis_example.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.2164973330218345,
+    "solve": 0.12831637501949444,
+    "analysis": 0.0007426260854117572,
+    "total": 0.3766039159963839
+   },
+   "calls": {
+    "import": 1,
+    "solve": 6,
+    "analysis": 6
+   },
+   "plans": 18,
+   "trials": 9,
+   "participants": null,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.42361316696042195,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/weird_counterbalance.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.21225945901824161,
+    "solve": 0.0501369169796817,
+    "plans": 0.06215949996840209,
+    "assign": 0.06395166699076071,
+    "total": 0.278748375014402
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 24,
+   "trials": 3,
+   "participants": 4,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.32212687499122694,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/weird_rank.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.21152633300516754,
+    "solve": 0.005099250003695488,
+    "plans": 0.008700999955181032,
+    "assign": 0.010583334020338953,
+    "total": 0.22472737496718764
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 3,
+   "trials": 4,
+   "participants": 16,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.26711862499359995,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/whoa.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.21271504100877792,
+    "solve": 0.005748041032347828,
+    "plans": 0.011193416954483837,
+    "assign": 0.014293208019807935,
+    "total": 0.23089075001189485
+   },
+   "calls": {
+    "import": 1,
+    "solve": 4,
+    "plans": 4,
+    "assign": 2
+   },
+   "plans": 16,
+   "trials": 4,
+   "participants": 16,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.2726998330326751,
+   "returncode": 0,
+   "rep": 0
+  },
+  {
+   "script": "src/examples/yuwei.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.21351016697008163,
+    "solve": 0.0023088339366950095,
+    "plans": 0.0068414160050451756,
+    "assign": 0.008715042029507458,
+    "total": 0.22481849999167025
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 12,
+   "trials": 9,
+   "participants": 12,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.2669403749750927,
+   "returncode": 0,
+   "rep": 0
+  }
+ ]
+}

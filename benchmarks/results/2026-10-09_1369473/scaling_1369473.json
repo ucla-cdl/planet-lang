@@ -1,0 +1,758 @@
+{
+ "meta": {
+  "label": "1369473",
+  "commit": "1369473",
+  "src": "/Users/emjun/Git/planet-lang/src",
+  "python": "/Users/emjun/Git/planet-lang/.venv/bin/python",
+  "reps": 1,
+  "timeout": 600.0,
+  "ns": [
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   10
+  ],
+  "trials_n": 4,
+  "ks": [
+   1,
+   2,
+   3,
+   4,
+   5
+  ],
+  "started": "2026-10-09T22:28:24",
+  "platform": "macOS-15.8-arm64-arm-64bit",
+  "machine": "arm64",
+  "cpu": "Apple M2",
+  "memory_gb": 24,
+  "finished": "2026-10-09T22:49:12"
+ },
+ "records": [
+  {
+   "script": "latin_square_n02.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.22579804196720943,
+    "solve": 0.0022952499566599727,
+    "plans": 0.0048288750112988055,
+    "assign": 0.006612959026824683,
+    "total": 0.23293645802186802
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 2,
+   "trials": 2,
+   "participants": 2,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.27657545800320804,
+   "returncode": 0,
+   "family": "latin_square",
+   "n": 2,
+   "k": 1,
+   "trials_total": 2,
+   "rep": 0
+  },
+  {
+   "script": "latin_square_n03.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.21609474997967482,
+    "solve": 0.005649959028232843,
+    "plans": 0.00909408403094858,
+    "assign": 0.010995500022545457,
+    "total": 0.2276033329544589
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 3,
+   "trials": 3,
+   "participants": 3,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.2760241670184769,
+   "returncode": 0,
+   "family": "latin_square",
+   "n": 3,
+   "k": 1,
+   "trials_total": 3,
+   "rep": 0
+  },
+  {
+   "script": "latin_square_n04.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.21689991699531674,
+    "solve": 0.012387416965793818,
+    "plans": 0.01665270800003782,
+    "assign": 0.01860166701953858,
+    "total": 0.23601849999977276
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 4,
+   "trials": 4,
+   "participants": 4,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.28335379099007696,
+   "returncode": 0,
+   "family": "latin_square",
+   "n": 4,
+   "k": 1,
+   "trials_total": 4,
+   "rep": 0
+  },
+  {
+   "script": "latin_square_n05.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.22060908301500604,
+    "solve": 0.022444750007707626,
+    "plans": 0.02806462493026629,
+    "assign": 0.030035957985091954,
+    "total": 0.25120529194828123
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 5,
+   "trials": 5,
+   "participants": 5,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.2984811660135165,
+   "returncode": 0,
+   "family": "latin_square",
+   "n": 5,
+   "k": 1,
+   "trials_total": 5,
+   "rep": 0
+  },
+  {
+   "script": "latin_square_n06.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.21506316697923467,
+    "solve": 0.034275665937457234,
+    "plans": 0.04121337499236688,
+    "assign": 0.04313770798034966,
+    "total": 0.2587126669823192
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 6,
+   "trials": 6,
+   "participants": 6,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.30342916602967307,
+   "returncode": 0,
+   "family": "latin_square",
+   "n": 6,
+   "k": 1,
+   "trials_total": 6,
+   "rep": 0
+  },
+  {
+   "script": "latin_square_n07.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.2147253750008531,
+    "solve": 0.04762441705679521,
+    "plans": 0.05643487494671717,
+    "assign": 0.058391249971464276,
+    "total": 0.2736202499945648
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 7,
+   "trials": 7,
+   "participants": 7,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.31797270802780986,
+   "returncode": 0,
+   "family": "latin_square",
+   "n": 7,
+   "k": 1,
+   "trials_total": 7,
+   "rep": 0
+  },
+  {
+   "script": "latin_square_n08.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.21737029199721292,
+    "solve": 0.08087020897073671,
+    "plans": 0.09243416599929333,
+    "assign": 0.09430395800154656,
+    "total": 0.3121859590173699
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 8,
+   "trials": 8,
+   "participants": 8,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.3574968749890104,
+   "returncode": 0,
+   "family": "latin_square",
+   "n": 8,
+   "k": 1,
+   "trials_total": 8,
+   "rep": 0
+  },
+  {
+   "script": "latin_square_n10.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.21427574998233467,
+    "solve": 0.46215550001943484,
+    "plans": 0.47958775004372,
+    "assign": 0.4816652500303462,
+    "total": 0.6964545410010032
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 10,
+   "trials": 10,
+   "participants": 10,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.7414302079705521,
+   "returncode": 0,
+   "family": "latin_square",
+   "n": 10,
+   "k": 1,
+   "trials_total": 10,
+   "rep": 0
+  },
+  {
+   "script": "full_counterbalance_n02.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.2278539579710923,
+    "solve": 0.002398083044681698,
+    "plans": 0.005091999017167836,
+    "assign": 0.006953791016712785,
+    "total": 0.23536854196572676
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 2,
+   "trials": 2,
+   "participants": 2,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.28167554194806144,
+   "returncode": 0,
+   "family": "full_counterbalance",
+   "n": 2,
+   "k": 1,
+   "trials_total": 2,
+   "rep": 0
+  },
+  {
+   "script": "full_counterbalance_n03.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.2249943750211969,
+    "solve": 0.00891549896914512,
+    "plans": 0.013583792024292052,
+    "assign": 0.015419500006828457,
+    "total": 0.24097862496273592
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 6,
+   "trials": 3,
+   "participants": 6,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.2859703750000335,
+   "returncode": 0,
+   "family": "full_counterbalance",
+   "n": 3,
+   "k": 1,
+   "trials_total": 3,
+   "rep": 0
+  },
+  {
+   "script": "full_counterbalance_n04.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.21630258398363367,
+    "solve": 0.06777849997160956,
+    "plans": 0.08367941703181714,
+    "assign": 0.0858257919899188,
+    "total": 0.30265879101352766
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 24,
+   "trials": 4,
+   "participants": 24,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.34961095900507644,
+   "returncode": 0,
+   "family": "full_counterbalance",
+   "n": 4,
+   "k": 1,
+   "trials_total": 4,
+   "rep": 0
+  },
+  {
+   "status": "timeout",
+   "error": "exceeded 600.0s",
+   "phases": {},
+   "calls": {},
+   "plans": null,
+   "trials": null,
+   "participants": null,
+   "wall": 600.0285032500396,
+   "family": "full_counterbalance",
+   "n": 5,
+   "k": 1,
+   "trials_total": 5,
+   "script": "full_counterbalance_n05.py",
+   "rep": 0
+  },
+  {
+   "script": "nested_latin_squares_n02.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.3250587080256082,
+    "solve": 0.005995250015985221,
+    "plans": 0.012001791968941689,
+    "assign": 0.013844917004462332,
+    "total": 0.3397630830295384
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 4,
+   "trials": 4,
+   "participants": 4,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.39665237499866635,
+   "returncode": 0,
+   "family": "nested_latin_squares",
+   "n": 2,
+   "k": 1,
+   "trials_total": 2,
+   "rep": 0
+  },
+  {
+   "script": "nested_latin_squares_n03.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.2144082080340013,
+    "solve": 0.040411083959043026,
+    "plans": 0.0629212919739075,
+    "assign": 0.06491029204335064,
+    "total": 0.27996658300980926
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 9,
+   "trials": 9,
+   "participants": 9,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.3222517920075916,
+   "returncode": 0,
+   "family": "nested_latin_squares",
+   "n": 3,
+   "k": 1,
+   "trials_total": 3,
+   "rep": 0
+  },
+  {
+   "script": "nested_latin_squares_n04.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.21066937502473593,
+    "solve": 0.40255404100753367,
+    "plans": 0.4744142920244485,
+    "assign": 0.47641054197447374,
+    "total": 0.6877467079902999
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 16,
+   "trials": 16,
+   "participants": 16,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.7319983330089599,
+   "returncode": 0,
+   "family": "nested_latin_squares",
+   "n": 4,
+   "k": 1,
+   "trials_total": 4,
+   "rep": 0
+  },
+  {
+   "script": "nested_latin_squares_n05.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.21645320899551734,
+    "solve": 0.7425207500346005,
+    "plans": 0.9099348749732599,
+    "assign": 0.912027666985523,
+    "total": 1.1291394580039196
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 25,
+   "trials": 25,
+   "participants": 25,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 1.1768916670116596,
+   "returncode": 0,
+   "family": "nested_latin_squares",
+   "n": 5,
+   "k": 1,
+   "trials_total": 5,
+   "rep": 0
+  },
+  {
+   "script": "nested_latin_squares_n06.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.21196962497197092,
+    "solve": 2.2993740419624373,
+    "plans": 2.6542270840145648,
+    "assign": 2.6562914999667555,
+    "total": 2.868942416040227
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 36,
+   "trials": 36,
+   "participants": 36,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 2.9250353749957867,
+   "returncode": 0,
+   "family": "nested_latin_squares",
+   "n": 6,
+   "k": 1,
+   "trials_total": 6,
+   "rep": 0
+  },
+  {
+   "script": "nested_latin_squares_n07.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.21912841603625566,
+    "solve": 9.363275666953996,
+    "plans": 10.09870333300205,
+    "assign": 10.10081433400046,
+    "total": 10.320672791043762
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 49,
+   "trials": 49,
+   "participants": 49,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 10.391495874966495,
+   "returncode": 0,
+   "family": "nested_latin_squares",
+   "n": 7,
+   "k": 1,
+   "trials_total": 7,
+   "rep": 0
+  },
+  {
+   "script": "nested_latin_squares_n08.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.2907304170075804,
+    "solve": 24.998215582978446,
+    "plans": 26.42105016595451,
+    "assign": 26.42338083300274,
+    "total": 26.715020832954906
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 64,
+   "trials": 64,
+   "participants": 64,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 26.814088500046637,
+   "returncode": 0,
+   "family": "nested_latin_squares",
+   "n": 8,
+   "k": 1,
+   "trials_total": 8,
+   "rep": 0
+  },
+  {
+   "status": "timeout",
+   "error": "exceeded 600.0s",
+   "phases": {},
+   "calls": {},
+   "plans": null,
+   "trials": null,
+   "participants": null,
+   "wall": 600.3098694169894,
+   "family": "nested_latin_squares",
+   "n": 10,
+   "k": 1,
+   "trials_total": 10,
+   "script": "nested_latin_squares_n10.py",
+   "rep": 0
+  },
+  {
+   "script": "trials_n04_k1.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.31223945901729167,
+    "solve": 0.012592916958965361,
+    "plans": 0.016928625002037734,
+    "assign": 0.018800334015395492,
+    "total": 0.3317728749825619
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 4,
+   "trials": 4,
+   "participants": 4,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.387233333021868,
+   "returncode": 0,
+   "family": "trials",
+   "n": 4,
+   "k": 1,
+   "trials_total": 4,
+   "rep": 0
+  },
+  {
+   "script": "trials_n04_k2.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.21915145905222744,
+    "solve": 0.013745875970926136,
+    "plans": 0.020103333052247763,
+    "assign": 0.021964249957818538,
+    "total": 0.24174458405468613
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 4,
+   "trials": 8,
+   "participants": 4,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.28359004098456353,
+   "returncode": 0,
+   "family": "trials",
+   "n": 4,
+   "k": 2,
+   "trials_total": 8,
+   "rep": 0
+  },
+  {
+   "script": "trials_n04_k3.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.21738587494473904,
+    "solve": 0.01519729197025299,
+    "plans": 0.02350387506885454,
+    "assign": 0.0253847919520922,
+    "total": 0.24340450001182035
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 4,
+   "trials": 12,
+   "participants": 4,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.2850605839630589,
+   "returncode": 0,
+   "family": "trials",
+   "n": 4,
+   "k": 3,
+   "trials_total": 12,
+   "rep": 0
+  },
+  {
+   "script": "trials_n04_k4.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.21350337500916794,
+    "solve": 0.017257334024179727,
+    "plans": 0.027655999001581222,
+    "assign": 0.0295413329731673,
+    "total": 0.2436215000343509
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 4,
+   "trials": 16,
+   "participants": 4,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.28571816702606156,
+   "returncode": 0,
+   "family": "trials",
+   "n": 4,
+   "k": 4,
+   "trials_total": 16,
+   "rep": 0
+  },
+  {
+   "script": "trials_n04_k5.py",
+   "status": "ok",
+   "error": "",
+   "phases": {
+    "import": 0.21257441700436175,
+    "solve": 0.020110499986913055,
+    "plans": 0.032738542067818344,
+    "assign": 0.03461799997603521,
+    "total": 0.24777658301172778
+   },
+   "calls": {
+    "import": 1,
+    "solve": 2,
+    "plans": 2,
+    "assign": 1
+   },
+   "plans": 4,
+   "trials": 20,
+   "participants": 4,
+   "python": "3.12.0",
+   "z3": "4.13.3",
+   "wall": 0.2890766659984365,
+   "returncode": 0,
+   "family": "trials",
+   "n": 4,
+   "k": 5,
+   "trials_total": 20,
+   "rep": 0
+  }
+ ]
+}
